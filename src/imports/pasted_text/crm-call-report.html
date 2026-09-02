@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM дуудлагын тайлан — OnTime</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#070a11;--panel:#111726;--panel-hi:#161d30;--line:#232c42;--track:#1e2637;
+  --blue:#4ea8ff;--teal:#2fd3a5;--violet:#9d8cff;--gold:#f5c451;--coral:#ff7d6b;--pink:#f078c8;--amber:#ffb020;--green:#4fd08a;
+  --text:#eef1f7;--muted:#8792a8;--muted2:#5a6377;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased}
+body{background:
+  radial-gradient(900px 500px at 8% -8%, rgba(47,211,165,.10), transparent 60%),
+  radial-gradient(1000px 600px at 96% -6%, rgba(78,168,255,.12), transparent 60%),
+  radial-gradient(700px 500px at 60% 110%, rgba(157,140,255,.08), transparent 60%),
+  var(--bg);min-height:100vh;padding:22px 26px 44px}
+.num{font-family:'Space Grotesk','Inter',sans-serif}
+
+.wrap{max-width:1340px;margin:0 auto}
+.topbar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:16px}
+.brand{display:flex;align-items:center;gap:15px}
+.logo-img{height:54px;width:auto;filter:drop-shadow(0 4px 18px rgba(47,211,165,.45))}
+.brand h1{font-size:19px;font-weight:800;letter-spacing:1px}
+.brand .sub{font-size:12px;color:var(--muted);letter-spacing:.4px;margin-top:4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.badge{font-size:10px;font-weight:700;letter-spacing:.5px;padding:3px 9px;border-radius:999px;text-transform:uppercase}
+.badge.real{color:#0a1a12;background:linear-gradient(135deg,var(--teal),#25b98d)}
+.badge.est{color:#241800;background:linear-gradient(135deg,var(--amber),#e69a12)}
+
+/* date controls */
+.ctrls{display:flex;flex-direction:column;gap:9px;align-items:flex-end}
+.seg{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px}
+.seg button{border:none;background:transparent;color:var(--muted);font-size:12.5px;font-weight:600;padding:8px 16px;border-radius:9px;cursor:pointer;transition:.18s;font-family:inherit}
+.seg button.on{background:linear-gradient(135deg,var(--blue),#2f7fe0);color:#fff;box-shadow:0 4px 16px rgba(78,168,255,.35)}
+.ctrl-row{display:flex;gap:8px;align-items:center}
+.ctrl-row select,.ctrl-row input[type=date]{background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:9px;padding:8px 12px;font-size:12.5px;font-family:inherit}
+.ctrl-row input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.7)}
+.ctrl-row label{font-size:11px;color:var(--muted)}
+.editpill{display:inline-flex;align-items:center;gap:7px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:7px 13px;font-size:12px;color:var(--muted);cursor:pointer;user-select:none;transition:.18s}
+.editpill.active{background:linear-gradient(135deg,var(--gold),#e0a930);color:#241800;border-color:transparent;font-weight:600}
+.daychip{background:var(--panel);border:1px solid var(--line);color:var(--muted);font-size:11px;font-family:inherit;padding:5px 8px;border-radius:8px;cursor:pointer;transition:.15s}
+.daychip:hover{border-color:#39445e;color:var(--text)}
+.daychip.on{background:linear-gradient(135deg,var(--blue),#2f7fe0);color:#fff;border-color:transparent;font-weight:600}
+.daybtn-mini{background:var(--panel);border:1px solid var(--line);color:var(--muted);font-size:11px;font-family:inherit;padding:5px 10px;border-radius:8px;cursor:pointer}
+.daybtn-mini:hover{color:var(--text);border-color:#39445e}
+.dot{width:8px;height:8px;border-radius:50%;background:currentColor}
+
+.grid{display:grid;gap:15px}
+.kpis{grid-template-columns:repeat(4,1fr)}
+.mid{grid-template-columns:1fr 1fr 1.1fr}
+.charts{grid-template-columns:1.6fr 1fr}
+.two{grid-template-columns:1fr 1fr}
+
+.card{background:linear-gradient(180deg,var(--panel-hi),var(--panel));border:1px solid var(--line);border-radius:18px;padding:17px 19px;position:relative;overflow:hidden}
+.card-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;gap:8px}
+.card-title{font-size:11px;letter-spacing:1.6px;color:var(--muted);text-transform:uppercase;font-weight:700;display:flex;align-items:center;gap:8px}
+.tdot{width:7px;height:7px;border-radius:2px}
+
+/* KPI */
+.kpi{position:relative}
+.kpi .top{display:flex;align-items:center;gap:10px}
+.kpi .ic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:18px}
+.clabel{font-size:10px;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;font-weight:600}
+.cbig{font-size:29px;font-weight:700;margin-top:2px;letter-spacing:.4px}
+.spark{margin-top:10px}
+
+.substrip{display:flex;gap:13px;flex-wrap:wrap;margin-bottom:15px}
+.subchip{flex:1;min-width:150px;background:linear-gradient(180deg,var(--panel-hi),var(--panel));border:1px solid var(--line);border-radius:14px;padding:12px 15px;display:flex;align-items:center;gap:11px}
+.subchip .sic{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:14px}
+.subchip .sv{font-size:18px;font-weight:700}
+.subchip .sl{font-size:10.5px;color:var(--muted);letter-spacing:.4px}
+
+.tk-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px dashed rgba(255,255,255,.05)}
+.tk-row:last-child{border-bottom:none}
+.tk-l{display:flex;align-items:center;gap:10px;font-size:13px;color:#c9cfdc}
+.tk-mk{width:9px;height:9px;border-radius:3px}
+.tk-v{font-size:19px;font-weight:700}
+.tk-pct{font-size:11px;color:var(--muted);margin-left:6px;font-weight:500}
+
+.sat-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center}
+.sat-score{font-size:38px;font-weight:700;line-height:1}
+.sat-of{font-size:12px;color:var(--muted);margin-top:2px}
+.satdist{margin-top:12px}
+.sd-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:11px}
+.sd-row .st{color:var(--gold);width:30px}
+.sd-bar{flex:1;height:6px;background:var(--track);border-radius:3px;overflow:hidden}
+.sd-bar>span{display:block;height:100%;border-radius:3px}
+.sd-n{color:var(--muted);width:22px;text-align:right}
+.sat-rate{margin-top:11px;font-size:11.5px;color:var(--muted);text-align:center}
+.sat-rate b{color:var(--teal)}
+
+.donut-wrap{display:flex;align-items:center;gap:16px}
+.donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
+.dc-val{font-size:22px;font-weight:700}
+.dc-lab{font-size:9.5px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+.legend{display:flex;flex-direction:column;gap:8px;flex:1}
+.lg{display:flex;align-items:center;justify-content:space-between;font-size:12px}
+.lg-l{display:flex;align-items:center;gap:8px;color:#c9cfdc}
+.lg-mk{width:8px;height:8px;border-radius:2px}
+.lg-v{font-weight:600}
+.lg-c{color:var(--muted);font-weight:500;font-size:11px;margin-left:6px}
+
+.hbar{margin-bottom:11px}
+.hbar-top{display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px}
+.hbar-top .n{color:#c9cfdc}
+.hbar-top .v{font-weight:600}
+.hbar-track{height:8px;background:var(--track);border-radius:4px;overflow:hidden}
+.hbar-fill{height:100%;border-radius:4px}
+
+.legend-inline{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:8px}
+.legend-inline span{display:inline-flex;align-items:center;gap:6px}
+.legend-inline i{width:9px;height:9px;border-radius:2px;display:inline-block}
+
+.callout{background:linear-gradient(135deg,rgba(255,125,107,.12),rgba(255,176,32,.06));border:1px solid rgba(255,125,107,.28);border-radius:14px;padding:13px 15px;margin-top:12px;font-size:12px;color:#e7c9c4;line-height:1.55}
+.callout b{color:var(--coral)}
+
+.tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.tbl th{text-align:left;color:var(--muted);font-weight:600;font-size:10px;letter-spacing:.8px;text-transform:uppercase;padding:8px 9px;border-bottom:1px solid var(--line)}
+.tbl td{padding:8px 9px;border-bottom:1px solid rgba(255,255,255,.04);color:#d6dae3}
+.tbl tr:hover td{background:rgba(78,168,255,.05)}
+.tbl td.rank{font-weight:700;width:30px}
+.tbl td.name{color:var(--text);font-weight:500}
+.tbl .barcell{width:110px}
+.tbl-bar{height:6px;background:var(--track);border-radius:3px;overflow:hidden}
+.tbl-bar>span{display:block;height:100%;border-radius:3px}
+.stars{color:var(--gold);letter-spacing:1px}
+.norate{color:var(--muted2);font-size:11px}
+.tag{font-size:9.5px;padding:2px 7px;border-radius:6px;font-weight:600}
+
+.recv{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px dashed rgba(255,255,255,.05);font-size:12.5px}
+.recv:last-child{border-bottom:none}
+.recv .rn{color:var(--text);font-weight:500}
+.recv .rr{font-size:10.5px;color:var(--muted)}
+.recv .rv{display:flex;gap:8px;align-items:center}
+.pillmini{font-size:10.5px;padding:2px 7px;border-radius:6px;font-weight:600}
+
+.hint{font-size:11px;color:var(--muted2);text-align:center;margin-top:26px;letter-spacing:.3px;line-height:1.7}
+.hint b{color:var(--gold)}
+
+@media(max-width:1080px){.kpis{grid-template-columns:repeat(2,1fr)}.mid,.charts,.two{grid-template-columns:1fr}}
+@media(max-width:560px){.kpis{grid-template-columns:1fr}.ctrls{align-items:flex-start}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brand">
+      <img class="logo-img" src="data:image/png;base64,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" alt="OnTime">
+      <div>
+        <h1>CRM дуудлагын тайлан</h1>
+        <div class="sub">
+          <span>OnTime Support</span> ·
+          <span id="periodLbl" data-k="period">2026.07.06 – 2026.07.20</span>
+          <span class="badge real" id="badge">Бодит тайлан</span>
+        </div>
+      </div>
+    </div>
+    <div class="ctrls">
+      <div class="seg" id="repSeg">
+        <button class="on" data-rep="A">Тайлан А</button>
+        <button data-rep="B">Тайлан Б</button>
+        <button data-rep="ALL">Нэгдсэн</button>
+      </div>
+      <div class="ctrl-row" id="ctrlArea"></div>
+    </div>
+  </div>
+
+  <!-- KPI -->
+  <div class="grid kpis" style="margin-bottom:14px">
+    <div class="card kpi">
+      <div class="top"><div class="ic" style="background:rgba(78,168,255,.16);color:var(--blue)">📞</div>
+        <div><div class="clabel">Нийт дуудлага</div><div class="cbig num" data-k="total">1,670</div></div></div>
+      <div class="spark" id="sp1"></div>
+    </div>
+    <div class="card kpi">
+      <div class="top"><div class="ic" style="background:rgba(47,211,165,.16);color:var(--teal)">✅</div>
+        <div><div class="clabel">Авсан дуудлага</div><div class="cbig num" data-k="answered">1,427</div></div></div>
+      <div class="spark" id="sp2"></div>
+    </div>
+    <div class="card kpi">
+      <div class="top"><div class="ic" style="background:rgba(157,140,255,.16);color:var(--violet)">👥</div>
+        <div><div class="clabel">Давхцаагүй хэрэглэгч</div><div class="cbig num" data-k="uniq">845</div></div></div>
+      <div class="spark" id="sp3"></div>
+    </div>
+    <div class="card kpi">
+      <div class="top"><div class="ic" style="background:rgba(245,196,81,.16);color:var(--gold)">📊</div>
+        <div><div class="clabel">Амжилтын хувь</div><div class="cbig num"><span data-k="success">85.4</span>%</div></div></div>
+      <div class="spark" id="sp4"></div>
+    </div>
+  </div>
+
+  <!-- sub strip -->
+  <div class="substrip">
+    <div class="subchip"><div class="sic" style="background:rgba(255,125,107,.16);color:var(--coral)">📵</div>
+      <div><div class="sv num" data-k="missed">243</div><div class="sl">Missed call</div></div></div>
+    <div class="subchip"><div class="sic" style="background:rgba(157,140,255,.16);color:var(--violet)">↗️</div>
+      <div><div class="sv num" data-k="callTransferred">20</div><div class="sl">Дуудлага шилжүүлсэн</div></div></div>
+    <div class="subchip"><div class="sic" style="background:rgba(47,211,165,.16);color:var(--teal)">🎫</div>
+      <div><div class="sv num"><span id="tkTotal">1,400</span></div><div class="sl">Нийт тикет</div></div></div>
+    <div class="subchip"><div class="sic" style="background:rgba(78,168,255,.16);color:var(--blue)">📅</div>
+      <div><div class="sv num" id="daysCount">15</div><div class="sl">Тайлант хоног</div></div></div>
+  </div>
+
+  <!-- MID -->
+  <div class="grid mid" style="margin-bottom:14px">
+    <div class="card">
+      <div class="card-h"><div class="card-title"><span class="tdot" style="background:var(--teal)"></span>Тикетийн статус</div></div>
+      <div class="tk-row"><div class="tk-l"><span class="tk-mk" style="background:var(--teal)"></span>Шийдэгдсэн</div><div><span class="tk-v num" data-k="resolved">1328</span><span class="tk-pct" id="pctRes">94.9%</span></div></div>
+      <div class="tk-row"><div class="tk-l"><span class="tk-mk" style="background:var(--amber)"></span>Шийдэгдээгүй</div><div><span class="tk-v num" data-k="unresolved">20</span><span class="tk-pct" id="pctUnr">1.4%</span></div></div>
+      <div class="tk-row"><div class="tk-l"><span class="tk-mk" style="background:var(--violet)"></span>Шилжүүлсэн</div><div><span class="tk-v num" data-k="tkTransferred">52</span><span class="tk-pct" id="pctTr">3.7%</span></div></div>
+      <div id="tkbar" style="margin-top:13px"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><div class="card-title"><span class="tdot" style="background:var(--gold)"></span>Сэтгэл ханамж</div></div>
+      <div class="sat-wrap"><div id="satgauge"></div></div>
+      <div class="satdist" id="satdist"></div>
+      <div class="sat-rate">Хариу өгсөн: <b id="satRate">21.2%</b> (<span id="satR">54</span>/<span id="satS">255</span>)</div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><div class="card-title"><span class="tdot" style="background:var(--blue)"></span>Харилцсан суваг</div></div>
+      <div class="donut-wrap">
+        <div style="position:relative;width:140px;height:140px">
+          <div id="donut"></div>
+          <div class="donut-center"><div class="dc-val num" id="dcVal">79.7%</div><div class="dc-lab" id="dcLab">Утасаар</div></div>
+        </div>
+        <div class="legend" id="chanLegend"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- daily + products -->
+  <div class="grid charts" style="margin-bottom:14px">
+    <div class="card">
+      <div class="card-h"><div class="card-title"><span class="tdot" style="background:var(--blue)"></span>Өдрийн дуудлага — сувгаар</div>
+        <div style="font-size:11px;color:var(--muted)" id="dailyRangeLbl"></div></div>
+      <div id="dailyChart"></div>
+      <div class="legend-inline" id="dailyLegend"></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div class="card-title"><span class="tdot" style="background:var(--gold)"></span>Бүтээгдэхүүний төрөл</div></div>
+      <div id="productBars" style="margin-top:4px"></div>
+    </div>
+  </div>
+
+  <!-- hourly -->
+  <div class="grid" style="grid-template-columns:1fr;margin-bottom:14px">
+    <div class="card">
+      <div class="card-h"><div class="card-title"><span class="tdot" style="background:var(--teal)"></span>Цагийн ачаалал</div>
+        <div class="legend-inline"><span><i style="background:var(--teal)"></i>Авсан</span><span><i style="background:var(--amber)"></i>Таслагдсан</span><span><i style="background:var(--coral)"></i>Timeout</span></div>
+      </div>
+      <div id="hourChart"></div>
+      <div class="callout" id="outageNote">⚠️ <b>Гэнэтийн ачаалал:</b> 7 сарын 7-ны 12:00 цагт MBusiness Plus дээр бүх хэрэглэгч НӨАТ баримт гаргаж чадахгүй саатал үүсэж, 12:30-д хэвийн болсон. Тухайн үед 316 дуудлага, 233 авсан (73.7%).</div>
+    </div>
+  </div>
+
+  <!-- issues -->
+  <div class="grid" style="grid-template-columns:1fr;margin-bottom:14px">
+    <div class="card">
+      <div class="card-h"><div class="card-title"><span class="tdot" style="background:var(--violet)"></span>Топ асуудлын төрөл</div></div>
+      <div id="issueList" style="margin-top:4px"></div>
+    </div>
+  </div>
+
+  <!-- agents + transferred -->
+  <div class="grid two" style="grid-template-columns:1.7fr 1fr">
+    <div class="card">
+      <div class="card-h"><div class="card-title"><span class="tdot" style="background:var(--gold)"></span>Ажилтны үзүүлэлт</div>
+        <div style="font-size:11px;color:var(--muted)" id="agentSummary"></div></div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr><th>#</th><th>Нэр</th><th>📞</th><th>Ачаалал</th><th>📋</th><th>⏱ мин</th><th style="text-align:right">Үнэлгээ</th></tr></thead>
+          <tbody id="agentBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div class="card-title"><span class="tdot" style="background:var(--coral)"></span>Шилжүүлсэн тикет — хүлээн авагчид</div></div>
+      <div id="recvList"></div>
+      <div id="recvNote" style="font-size:11px;color:var(--muted);margin-top:12px;line-height:1.6"></div>
+    </div>
+  </div>
+
+  <div class="hint">💡 Дээд талд <b>«Тайлан А / Тайлан Б / Нэгдсэн»</b>-ээс тайлангаа сонгоно. Доор нь өдрийн чипээр эсвэл графикийн <b>багана дээр дарж</b> хүссэн өдрүүдээ шүүнэ — зөвхөн сонгосон өдрүүдийн дата харагдана. Нийт/авсан дуудлага, амжилт, сэтгэл ханамж өдөр тутмын бодит датагаар; тикет, суваг, ажилтан зэрэг нь сонгосон өдрүүдэд тохирч тооцоологдоно.</div>
+</div>
+
+<script>
+const C={blue:"#4ea8ff",teal:"#2fd3a5",violet:"#9d8cff",gold:"#f5c451",coral:"#ff7d6b",pink:"#f078c8",amber:"#ffb020",green:"#4fd08a"};
+
+/* ---- real daily data (per channel) 07/06–07/20 ---- */
+const DAILY_A=[
+ {d:"2026-07-06",lab:"07/06",ts:119,mb:47,pos:23,loan:13,nd:0,a:175,sat:[1,0,0,1,7],sent:31},
+ {d:"2026-07-07",lab:"07/07",ts:160,mb:119,pos:24,loan:13,nd:0,a:247,sat:[2,0,2,0,9],sent:48},
+ {d:"2026-07-08",lab:"07/08",ts:111,mb:49,pos:25,loan:8,nd:0,a:171,sat:[0,0,0,0,7],sent:29},
+ {d:"2026-07-09",lab:"07/09",ts:116,mb:39,pos:24,loan:3,nd:0,a:159,sat:[0,0,0,0,3],sent:28},
+ {d:"2026-07-10",lab:"07/10",ts:17,mb:5,pos:0,loan:0,nd:91,a:94,sat:[0,0,0,0,1],sent:17},
+ {d:"2026-07-11",lab:"07/11",ts:0,mb:0,pos:0,loan:0,nd:47,a:42,sat:[0,0,0,0,0],sent:7},
+ {d:"2026-07-12",lab:"07/12",ts:0,mb:0,pos:0,loan:0,nd:25,a:23,sat:[0,0,0,1,0],sent:4},
+ {d:"2026-07-13",lab:"07/13",ts:0,mb:0,pos:0,loan:0,nd:45,a:41,sat:[0,0,0,0,2],sent:7},
+ {d:"2026-07-14",lab:"07/14",ts:0,mb:0,pos:0,loan:0,nd:34,a:31,sat:[0,0,0,0,0],sent:5},
+ {d:"2026-07-15",lab:"07/15",ts:0,mb:0,pos:0,loan:0,nd:67,a:60,sat:[0,0,0,0,1],sent:10},
+ {d:"2026-07-16",lab:"07/16",ts:0,mb:0,pos:0,loan:0,nd:69,a:61,sat:[1,0,0,0,3],sent:11},
+ {d:"2026-07-17",lab:"07/17",ts:0,mb:0,pos:0,loan:0,nd:84,a:72,sat:[0,0,0,0,3],sent:13},
+ {d:"2026-07-18",lab:"07/18",ts:36,mb:8,pos:7,loan:0,nd:0,a:45,sat:[0,0,0,0,3],sent:8},
+ {d:"2026-07-19",lab:"07/19",ts:45,mb:8,pos:6,loan:0,nd:0,a:53,sat:[0,0,0,0,1],sent:9},
+ {d:"2026-07-20",lab:"07/20",ts:89,mb:41,pos:31,loan:22,nd:0,a:153,sat:[0,0,1,0,5],sent:28}
+];
+const DAILY_B=[
+ {d:"2026-07-20",lab:"07/20",ts:131,mb:72,pos:59,loan:32,nd:0,a:257,sat:[0,0,0,1,16],sent:34},
+ {d:"2026-07-21",lab:"07/21",ts:109,mb:73,pos:33,loan:16,nd:0,a:182,sat:[1,0,0,0,7],sent:26},
+ {d:"2026-07-22",lab:"07/22",ts:147,mb:78,pos:38,loan:24,nd:0,a:213,sat:[0,0,0,2,7],sent:33},
+ {d:"2026-07-23",lab:"07/23",ts:150,mb:70,pos:28,loan:28,nd:0,a:194,sat:[0,0,0,0,11],sent:32},
+ {d:"2026-07-24",lab:"07/24",ts:207,mb:86,pos:47,loan:20,nd:0,a:206,sat:[0,0,0,0,7],sent:41},
+ {d:"2026-07-25",lab:"07/25",ts:82,mb:53,pos:26,loan:0,nd:0,a:114,sat:[0,0,0,0,2],sent:18},
+ {d:"2026-07-26",lab:"07/26",ts:89,mb:30,pos:17,loan:2,nd:0,a:90,sat:[0,0,0,0,2],sent:16}
+];
+const DAILY_ALL=DAILY_A.filter(r=>r.d<="2026-07-19").concat(DAILY_B);
+let DAILY=DAILY_A;
+const HOURLY=[["08",32,5,6],["09",150,25,43],["10",189,25,37],["11",144,10,22],["12",190,46,80],["13",135,19,12],["14",149,24,40],["15",114,23,26],["16",132,15,16],["17",124,23,26],["18",39,17,43],["19",29,11,43]];
+const CH=[{k:"ts",n:"Technical support",c:C.blue},{k:"mb",n:"MBusiness Plus",c:C.teal},
+  {k:"pos",n:"MBank POS",c:C.violet},{k:"loan",n:"Business loan",c:C.gold},{k:"nd",n:"Naadam 2026",c:C.coral}];
+const dayTot=r=>r.ts+r.mb+r.pos+r.loan+r.nd;
+const MINDATE="2026-07-06",MAXDATE="2026-07-20";
+
+/* ---- report aggregates ---- */
+const CHCOL=[C.blue,C.teal,C.violet,C.gold,C.coral];
+const PRCOL=[C.gold,C.teal,C.blue,C.violet,C.coral];
+const mkCh=a=>a.map((x,i)=>({n:x[0],v:x[1],c:CHCOL[i%CHCOL.length]}));
+const mkPr=a=>a.map((x,i)=>({n:x[0],v:x[1],c:PRCOL[i%PRCOL.length]}));
+const mkIs=a=>a.map(x=>({n:x[0],v:x[1],t:x[2]}));
+const mkAg=a=>a.map(x=>({n:x[0],c:x[1],tk:x[2],t:x[3],r:x[4]}));
+const A_RECV=[
+  {n:"Baaska.U",team:"Суулгалт/Сургалт",ok:6,wait:0},{n:"Tsogbayar (IT)",team:"Техникийн засвар",ok:6,wait:0},
+  {n:"Tsenguun",team:"MPOS тохиргоо",ok:2,wait:3},{n:"Bymbatogtokh.T",team:"Техникийн дэмжлэг",ok:0,wait:5},
+  {n:"Tugssaikhan.G",team:"MBPlus дэмжлэг",ok:1,wait:3},{n:"Odbayar.Ts",team:"ProPOS/LitePOS",ok:2,wait:1},
+  {n:"Erdenebayar",team:"Техникийн баг",ok:0,wait:2},{n:"Otgonbayar",team:"Техникийн баг",ok:0,wait:2},
+  {n:"Khaliunaa.P",team:"Санхүүгийн дэмжлэг",ok:2,wait:0},{n:"Octa.Tuguldur",team:"Техникийн баг",ok:0,wait:2}];
+
+const RA={uniq:845,callTransferred:20,resolved:1328,unresolved:20,tkTransferred:52,
+  channels:mkCh([["Утасаар",1116],["AnyDesk",224],["Сошиал",56],["Биечлэн",3],["Дуудлагаар",1]]),
+  products:mkPr([["PROPOS",970],["MPLUS",337],["MPOS",83],["MOBILEPOS",5],["LITEPOS",5]]),
+  issues:mkIs([["Программын тохиргоо",92,"Тохиргоо"],["Бусад мэдээлэл",80,"Мэдээлэл"],["MBusiness Plus мэдээлэл",71,"Мэдээлэл"],["MBusiness Plus алдаа",58,"Алдаа"],["MBusiness Plus засвар",55,"Засвар"],["Нөхөж залгасан",54,"Мэдээлэл"],["MBusiness Plus сургалт",49,"Сургалт"],["Төлбөрийн мэдээлэл",47,"Санхүү"],["MBusiness Plus бүтээгдэхүүн",39,"Бүтээгдэхүүн"],["Мбанк пос мэдээлэл",36,"Мэдээлэл"],["Интернет мэдээлэл",33,"Мэдээлэл"],["Ибаримттай холбоотой",29,"Мэдээлэл"],["Принтерийн тохиргоо",28,"Тохиргоо"],["Принтер засвар",28,"Засвар"],["Мбанк бусад",28,"Мэдээлэл"]]),
+  agents:mkAg([["Otgonbayar.L",222,219,5.3,4.7],["Soyolzul.Ts",173,190,4.9,3.9],["Zolbayar.G",156,85,5.5,3.2],["Zolbayar.U",143,135,4.5,5.0],["Bymbatogtokh",123,103,5.9,5.0],["Bujinlkham.T",85,88,4.9,null],["Tugssaikhan.G",83,79,3.0,null],["Tsogbayar",80,120,5.2,4.5],["Saranchimeg",79,48,6.1,5.0],["Baasanjargal",76,110,3.9,null],["Turmandakh.O",57,123,4.0,5.0],["Unubold.T",39,27,5.2,null],["Baterdene",30,33,4.0,null],["Bayarmaa.T",24,0,2.0,5.0],["Khaliunaa.P",21,24,3.7,null],["Bayarmaa.N",21,1,2.5,5.0],["Tsevelmaa",11,0,2.0,null],["Bayarsaikhan.E",2,8,1.1,null],["Sumiya.D",2,2,1.2,null]]),
+  recv:A_RECV};
+
+const RB={uniq:618,callTransferred:null,resolved:1222,unresolved:23,tkTransferred:11,
+  channels:mkCh([["Утасаар",1143],["AnyDesk",38],["Сошиал",63],["Биечлэн",13],["Дуудлагаар",0]]),
+  products:mkPr([["PROPOS",813],["MPLUS",339],["MPOS",100],["MOBILEPOS",0],["LITEPOS",4]]),
+  issues:mkIs([["Программын тохиргоо",77,"Тохиргоо"],["Бусад мэдээлэл",70,"Мэдээлэл"],["MBusiness Plus мэдээлэл",55,"Мэдээлэл"],["Мбанк пос мэдээлэл",42,"Мэдээлэл"],["MBusiness Plus сургалт",38,"Сургалт"],["РД солих",29,"Засвар"],["Төлбөрийн мэдээлэл",28,"Санхүү"],["Нөхөж залгасан",27,"Мэдээлэл"],["Мбанк бусад",26,"Мэдээлэл"],["MBusiness Plus бүтээгдэхүүн",22,"Бүтээгдэхүүн"]]),
+  agents:mkAg([["Otgonbayar.L",242,null,11.5,null],["Zolbayar.U",149,null,25.8,null],["Bymbatogtokh",134,null,23.2,null],["Zolbayar.G",132,null,21.2,null],["Bujinlkham.T",122,null,8.5,null],["Tugssaikhan.G",118,null,13.7,null],["Soyolzul.Ts",114,null,25.0,null],["Yumjirdulam",84,null,27.5,null],["Bayarsaikhan.E",73,null,16.4,null],["Saranchimeg",70,null,14.4,null],["Turmandakh.O",49,null,20.0,null],["Bayarmaa.N",38,null,42.5,null],["Bayarmaa.T",38,null,10.2,null],["Tsevelmaa",38,null,24.0,null],["Baasanjargal",10,null,13.3,null]]),
+  recv:[]};
+
+const RALL={uniq:1463,callTransferred:null,resolved:2550,unresolved:43,tkTransferred:63,
+  channels:mkCh([["Утасаар",2259],["AnyDesk",262],["Сошиал",119],["Биечлэн",16],["Дуудлагаар",1]]),
+  products:mkPr([["PROPOS",1783],["MPLUS",676],["MPOS",183],["MOBILEPOS",5],["LITEPOS",9]]),
+  issues:mkIs([["Программын тохиргоо",169,"Тохиргоо"],["Бусад мэдээлэл",150,"Мэдээлэл"],["MBusiness Plus мэдээлэл",126,"Мэдээлэл"],["MBusiness Plus сургалт",87,"Сургалт"],["Нөхөж залгасан",81,"Мэдээлэл"],["Мбанк пос мэдээлэл",78,"Мэдээлэл"],["Төлбөрийн мэдээлэл",75,"Санхүү"],["MBusiness Plus бүтээгдэхүүн",61,"Бүтээгдэхүүн"],["MBusiness Plus алдаа",58,"Алдаа"],["MBusiness Plus засвар",55,"Засвар"],["Мбанк бусад",54,"Мэдээлэл"],["Интернет мэдээлэл",33,"Мэдээлэл"],["Ибаримттай холбоотой",29,"Мэдээлэл"],["РД солих",29,"Засвар"],["Принтерийн тохиргоо",28,"Тохиргоо"]]),
+  agents:mkAg([["Otgonbayar.L",464,219,8.5,4.7],["Zolbayar.U",292,135,15.4,5.0],["Zolbayar.G",288,85,12.7,3.2],["Soyolzul.Ts",287,190,12.9,3.9],["Bymbatogtokh",257,103,14.9,5.0],["Bujinlkham.T",207,88,7.0,null],["Tugssaikhan.G",201,79,9.3,null],["Saranchimeg",149,48,10.0,5.0],["Turmandakh.O",106,123,11.4,5.0],["Baasanjargal",86,110,5.0,null],["Yumjirdulam",84,0,27.5,null],["Tsogbayar",80,120,5.2,4.5],["Bayarsaikhan.E",75,8,16.0,null],["Bayarmaa.T",62,0,7.0,5.0],["Bayarmaa.N",59,1,28.3,5.0],["Tsevelmaa",49,0,19.1,null],["Unubold.T",39,27,5.2,null],["Baterdene",30,33,4.0,null],["Khaliunaa.P",21,24,3.7,null],["Sumiya.D",2,2,1.2,null]]),
+  recv:A_RECV};
+
+const REPORTS={A:{daily:DAILY_A,agg:RA,name:"Тайлан А · 07.06–07.20"},B:{daily:DAILY_B,agg:RB,name:"Тайлан Б · 07.20–07.26"},ALL:{daily:DAILY_ALL,agg:RALL,name:"Нэгдсэн · 07.06–07.26"}};
+let R=RA;
+const TAGCOL={"Тохиргоо":C.blue,"Мэдээлэл":C.teal,"Алдаа":C.coral,"Засвар":C.amber,"Сургалт":C.violet,"Санхүү":C.gold,"Бүтээгдэхүүн":C.pink};
+
+/* ---- state / factor (selectable day set) ---- */
+let REP="A";
+let selDays=new Set(DAILY.map(r=>r.d)); // default: all days of active report
+function refSum(){return DAILY.reduce((a,r)=>a+dayTot(r),0);}
+const $=s=>document.querySelector(s);
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const isSel=r=>selDays.has(r.d);
+function selRows(){return DAILY.filter(isSel);}
+function selSum(){return selRows().reduce((a,r)=>a+dayTot(r),0);}
+function factor(){const s=refSum();return s?selSum()/s:0;}
+function daysInRange(){return selDays.size;}
+function selAnswered(){return selRows().reduce((a,r)=>a+r.a,0);}
+function selSat(){const s=[0,0,0,0,0];selRows().forEach(r=>r.sat.forEach((v,i)=>s[i]+=v));return s;}
+function selSent(){return selRows().reduce((a,r)=>a+r.sent,0);}
+function selSuccess(){const t=selSum();return t?selAnswered()/t*100:0;}
+
+function setReport(rep){REP=rep;DAILY=REPORTS[rep].daily;R=REPORTS[rep].agg;selDays=new Set(DAILY.map(r=>r.d));afterSelChange();}
+function toggleDay(d){selDays.has(d)?selDays.delete(d):selDays.add(d);afterSelChange();}
+function setDays(arr){selDays=new Set(arr);afterSelChange();}
+function selectAllDays(){setDays(DAILY.map(r=>r.d));}
+function clearDays(){setDays([]);}
+function afterSelChange(){updatePeriodLabel();buildChips();renderAll();}
+function updatePeriodLabel(){
+  const ds=[...selDays].sort();
+  if(!ds.length){$('#periodLbl').textContent="Өдөр сонгоогүй";return;}
+  const min=ds[0],max=ds[ds.length-1];
+  const contiguous=ds.length===DAILY.filter(r=>r.d>=min&&r.d<=max).length;
+  $('#periodLbl').textContent=contiguous?`${min.replace(/-/g,'.')} – ${max.replace(/-/g,'.')}`:`${ds.length} өдөр сонгосон`;
+}
+
+/* ---- controls (always-on day picker for active report) ---- */
+function buildCtrl(){
+  const a=$('#ctrlArea');
+  a.innerHTML=`<div style="display:flex;flex-direction:column;gap:7px;align-items:flex-end">
+    <div style="display:flex;gap:6px"><button class="daybtn-mini" id="allBtn">Бүх өдөр</button><button class="daybtn-mini" id="clrBtn">Цэвэрлэх</button></div>
+    <div id="dayChips" style="display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end;max-width:560px"></div></div>`;
+  $('#allBtn').onclick=selectAllDays;$('#clrBtn').onclick=clearDays;
+  buildChips();
+}
+function buildChips(){
+  const c=$('#dayChips');if(!c)return;
+  c.innerHTML=DAILY.map(r=>`<button class="daychip${selDays.has(r.d)?' on':''}" onclick="toggleDay('${r.d}')">${r.lab}</button>`).join('');
+}
+
+/* ---- sparkline ---- */
+function sparkPath(vals,w,h,pad){const min=Math.min(...vals),max=Math.max(...vals),rng=(max-min)||1;
+  const pts=vals.map((v,i)=>[pad+i*(w-2*pad)/(vals.length-1||1),h-pad-((v-min)/rng)*(h-2*pad)]);
+  let d=`M ${pts[0][0]} ${pts[0][1]}`;for(let i=0;i<pts.length-1;i++){const[x0,y0]=pts[i],[x1,y1]=pts[i+1];const cx=(x0+x1)/2;d+=` C ${cx} ${y0} ${cx} ${y1} ${x1} ${y1}`;}return{d,pts};}
+function sparkline(el,vals,color){const w=el.clientWidth||220,h=40,pad=5;const{d,pts}=sparkPath(vals,w,h,pad);
+  const last=pts[pts.length-1],hi=pts[vals.indexOf(Math.max(...vals))];
+  el.innerHTML=`<svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+   <defs><linearGradient id="g${el.id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${color}" stop-opacity=".3"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>
+   <path d="${d} L ${last[0]} ${h} L ${pts[0][0]} ${h} Z" fill="url(#g${el.id})"/>
+   <path d="${d}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" style="filter:drop-shadow(0 0 4px ${color}88)"/>
+   <circle cx="${hi[0]}" cy="${hi[1]}" r="3" fill="${color}" style="filter:drop-shadow(0 0 5px ${color})"/></svg>`;}
+
+/* ---- daily stacked chart ---- */
+function dailyChart(){
+  const rows=DAILY;
+  $('#dailyRangeLbl').textContent=`${selDays.size} өдөр сонгосон · ${fmt(selSum())} дуудлага`;
+  const w=760,h=244,padB=34,padT=16,padL=30;
+  const max=Math.max(...rows.map(dayTot),1)*1.12;
+  const bw=(w-padL-8)/rows.length, barW=Math.min(bw*0.62,30);
+  let grid="";for(let g=0;g<=4;g++){const y=padT+(h-padT-padB)*g/4;const val=Math.round(max*(1-g/4));
+    grid+=`<line x1="${padL}" y1="${y}" x2="${w-4}" y2="${y}" stroke="#1a2233" stroke-width="1"/><text x="0" y="${y+3}" fill="#4a5468" font-size="9">${val}</text>`;}
+  let bars="";
+  rows.forEach((r,i)=>{const sel=selDays.has(r.d);const x=padL+i*bw+(bw-barW)/2;let yy=h-padB;
+    bars+=`<rect x="${padL+i*bw}" y="${padT}" width="${bw}" height="${h-padT-padB+20}" fill="transparent" style="cursor:pointer" onclick="toggleDay('${r.d}')"/>`;
+    CH.forEach(ch=>{const val=r[ch.k];if(val<=0)return;const bh=val/max*(h-padT-padB);yy-=bh;
+      bars+=`<rect x="${x}" y="${yy}" width="${barW}" height="${bh}" fill="${ch.c}" rx="1.5" opacity="${sel?1:0.2}" style="pointer-events:none"/>`;});
+    const tot=dayTot(r);
+    bars+=`<text x="${x+barW/2}" y="${(h-padB)-tot/max*(h-padT-padB)-4}" fill="${sel?'#c9cfdc':'#414b60'}" font-size="9" text-anchor="middle" font-weight="600" style="pointer-events:none">${tot||''}</text>
+     <text x="${x+barW/2}" y="${h-padB+14}" fill="${sel?'#cfd6e4':'#586074'}" font-size="9" text-anchor="middle" font-weight="${sel?700:400}" style="pointer-events:none">${r.lab}</text>`;
+    if(sel)bars+=`<rect x="${x}" y="${h-padB+18}" width="${barW}" height="2.5" rx="1.2" fill="${C.blue}" style="pointer-events:none"/>`;
+  });
+  $('#dailyChart').innerHTML=`<svg width="100%" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet">${grid}${bars}</svg>`;
+  $('#dailyLegend').innerHTML=CH.map(c=>`<span><i style="background:${c.c}"></i>${c.n}</span>`).join('')+' · <span style="color:var(--muted2)">👆 багана дээр дарж өдөр нэмэх/хасах</span>';
+}
+
+/* ---- hourly stacked ---- */
+function hourChart(){
+  const f=factor();const data=HOURLY.map(r=>[r[0],r[1]*f,r[2]*f,r[3]*f]);
+  const w=900,h=210,padB=26,padT=14,padL=28;
+  const max=Math.max(...data.map(r=>r[1]+r[2]+r[3]),1)*1.1;
+  const bw=(w-padL-8)/data.length,barW=Math.min(bw*0.62,44);
+  const cols=[C.teal,C.amber,C.coral];
+  let grid="";for(let g=0;g<=4;g++){const y=padT+(h-padT-padB)*g/4;grid+=`<line x1="${padL}" y1="${y}" x2="${w-4}" y2="${y}" stroke="#1a2233"/><text x="0" y="${y+3}" fill="#4a5468" font-size="9">${Math.round(max*(1-g/4))}</text>`;}
+  let bars="";
+  data.forEach((r,i)=>{const x=padL+i*bw+(bw-barW)/2;let yy=h-padB;
+    [1,2,3].forEach((idx,j)=>{const val=r[idx];const bh=val/max*(h-padT-padB);yy-=bh;bars+=`<rect x="${x}" y="${yy}" width="${barW}" height="${bh}" fill="${cols[j]}" rx="1.5"/>`;});
+    bars+=`<text x="${x+barW/2}" y="${h-padB+14}" fill="#8792a8" font-size="9" text-anchor="middle">${r[0]}</text>`;});
+  $('#hourChart').innerHTML=`<svg width="100%" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet">${grid}${bars}</svg>`;
+}
+
+/* ---- donut / products ---- */
+function donut(){
+  const f=factor();const box=$('#donut');const size=140,r=54,cx=70,cy=70,sw=14;const C2=2*Math.PI*r;let off=0;
+  const tot=R.channels.reduce((a,c)=>a+c.v,0)||1;let arcs="";
+  R.channels.forEach((c,i)=>{const frac=c.v/tot;const len=C2*frac;
+    arcs+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${c.c}" stroke-width="${sw}" stroke-dasharray="${len} ${C2-len}" stroke-dashoffset="${-off}" transform="rotate(-90 ${cx} ${cy})"/>`;off+=len;});
+  box.innerHTML=`<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#1a2233" stroke-width="${sw}"/>${arcs}</svg>`;
+  const top=R.channels[0];$('#dcVal').textContent=(top.v/tot*100).toFixed(1)+"%";$('#dcLab').textContent=top.n;
+  $('#chanLegend').innerHTML=R.channels.map(c=>`<div class="lg"><div class="lg-l"><span class="lg-mk" style="background:${c.c}"></span>${c.n}</div><div><span class="lg-v">${(c.v/tot*100).toFixed(1)}%</span><span class="lg-c">${fmt(c.v*f)}</span></div></div>`).join('');
+}
+function productBars(){
+  const f=factor();const tot=R.products.reduce((a,p)=>a+p.v,0)||1;const max=Math.max(...R.products.map(p=>p.v));
+  $('#productBars').innerHTML=R.products.map(p=>`<div class="hbar"><div class="hbar-top"><span class="n">${p.n}</span><span class="v" style="color:${p.c}">${(p.v/tot*100).toFixed(1)}% · ${fmt(p.v*f)}</span></div><div class="hbar-track"><div class="hbar-fill" style="width:${Math.max(p.v/max*100,2)}%;background:linear-gradient(90deg,${p.c}99,${p.c});box-shadow:0 0 10px ${p.c}66"></div></div></div>`).join('');
+}
+
+/* ---- tickets / satisfaction ---- */
+function ticketBar(){
+  const tot=R.resolved+R.unresolved+R.tkTransferred||1;
+  $('#pctRes').textContent=(R.resolved/tot*100).toFixed(1)+'%';
+  $('#pctUnr').textContent=(R.unresolved/tot*100).toFixed(1)+'%';
+  $('#pctTr').textContent=(R.tkTransferred/tot*100).toFixed(1)+'%';
+  const segs=[[R.resolved,C.teal],[R.unresolved,C.amber],[R.tkTransferred,C.violet]];
+  $('#tkbar').innerHTML=`<div style="display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--track)">${segs.map(([v,c])=>`<div style="width:${v/tot*100}%;background:${c}"></div>`).join('')}</div>`;
+}
+function satGauge(){
+  const dist=selSat();const resp=dist.reduce((a,b)=>a+b,0);const sent=selSent();
+  const score=resp?dist.reduce((a,c,i)=>a+c*(i+1),0)/resp:0;
+  const size=132,r=50,cx=66,cy=66,sw=11;const C2=2*Math.PI*r;const len=C2*(score/5);
+  $('#satgauge').innerHTML=`<div style="position:relative;width:${size}px;height:${size}px">
+   <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#1a2233" stroke-width="${sw}"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${C.gold}" stroke-width="${sw}" stroke-dasharray="${len} ${C2-len}" stroke-linecap="round" transform="rotate(-90 ${cx} ${cy})" style="filter:drop-shadow(0 0 6px ${C.gold}aa)"/></svg>
+   <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center">
+    <div class="sat-score num">${resp?score.toFixed(2):'—'}</div><div class="sat-of">/ 5.0 ★</div></div></div>`;
+  const cols=[C.coral,C.amber,C.gold,C.blue,C.teal];const mx=Math.max(...dist,1);
+  $('#satdist').innerHTML=[5,4,3,2,1].map(s=>{const n=dist[s-1];return `<div class="sd-row"><span class="st">${s}★</span><div class="sd-bar"><span style="width:${n/mx*100}%;background:${cols[s-1]}"></span></div><span class="sd-n">${n}</span></div>`;}).join('');
+  $('#satRate').textContent=sent?(resp/sent*100).toFixed(1)+'%':'—';
+  $('#satR').textContent=resp;$('#satS').textContent=sent;
+}
+
+/* ---- issues ---- */
+function issueList(){
+  const f=factor();const max=R.issues[0].v;
+  $('#issueList').innerHTML=R.issues.map((it,i)=>{const col=TAGCOL[it.t]||C.blue;return `<div class="hbar"><div class="hbar-top"><span class="n"><b style="color:var(--muted);margin-right:6px">${i+1}</b>${it.n} <span class="tag" style="background:${col}22;color:${col}">${it.t}</span></span><span class="v" style="color:${col}">${Math.round(it.v*f)}</span></div><div class="hbar-track"><div class="hbar-fill" style="width:${it.v/max*100}%;background:linear-gradient(90deg,${col}88,${col})"></div></div></div>`;}).join('');
+}
+
+/* ---- agents ---- */
+function agentTable(){
+  const f=factor();const max=Math.max(...R.agents.map(a=>a.c));
+  const rated=R.agents.filter(a=>a.r!=null);const avgR=rated.length?rated.reduce((a,x)=>a+x.r,0)/rated.length:null;
+  $('#agentSummary').textContent=`${R.agents.length} ажилтан · ${fmt(selAnswered())} дуудлага${avgR!=null?' · ★ '+avgR.toFixed(2):''}`;
+  $('#agentBody').innerHTML=R.agents.map((a,i)=>{const rc=i<3?C.gold:'var(--muted)';
+    const stars=a.r!=null?`<span class="stars">${'★'.repeat(Math.round(a.r))}${'☆'.repeat(5-Math.round(a.r))}</span> ${a.r.toFixed(1)}`:`<span class="norate">үнэлгээгүй</span>`;
+    const tkCell=a.tk!=null?`${Math.round(a.tk*f)}`:'<span class="norate">—</span>';
+    return `<tr><td class="rank" style="color:${rc}">${i+1}</td><td class="name">${a.n}</td>
+     <td class="num" style="color:${C.blue};font-weight:600">${Math.round(a.c*f)}</td>
+     <td class="barcell"><div class="tbl-bar"><span style="width:${a.c/max*100}%;background:linear-gradient(90deg,${C.blue}88,${C.blue})"></span></div></td>
+     <td class="num" style="color:${C.teal}">${tkCell}</td>
+     <td class="num" style="color:${a.t>5.5?C.coral:a.t<3?C.teal:'#c9cfdc'}">${a.t.toFixed(1)}</td>
+     <td style="text-align:right;font-size:11.5px">${stars}</td></tr>`;}).join('');
+}
+
+/* ---- transferred recipients ---- */
+function recvList(){
+  if(!R.recv.length){$('#recvList').innerHTML=`<div style="font-size:12px;color:var(--muted);padding:8px 0">Энэ тайланд шилжүүлсэн тикетийн ажилтны задаргаа алга.</div>`;$('#recvNote').innerHTML='';return;}
+  $('#recvList').innerHTML=R.recv.map(r=>{const tot=r.ok+r.wait;return `<div class="recv"><div><div class="rn">${r.n}</div><div class="rr">${r.team}</div></div>
+   <div class="rv"><span class="pillmini" style="background:${C.teal}22;color:${C.teal}">✅ ${r.ok}</span><span class="pillmini" style="background:${C.amber}22;color:${C.amber}">⏳ ${r.wait}</span><b class="num" style="width:18px;text-align:right">${tot}</b></div></div>`;}).join('');
+  $('#recvNote').innerHTML=`Baaska.U, Tsogbayar тус бүр 6 тикет бүгдийг шийдсэн · Bymbatogtokh.T 5 тикет хүлээгдэж буй.`;
+}
+
+/* ---- render ---- */
+function renderScalars(){
+  const f=factor();const selT=selSum(),selA=selAnswered();
+  $('[data-k=total]').textContent=fmt(selT);
+  $('[data-k=answered]').textContent=fmt(selA);
+  $('[data-k=uniq]').textContent=fmt(R.uniq*f);
+  $('[data-k=success]').textContent=selT?selSuccess().toFixed(1):'0';
+  $('[data-k=missed]').textContent=fmt(Math.max(selT-selA,0));
+  $('[data-k=callTransferred]').textContent=R.callTransferred==null?'—':fmt(R.callTransferred*f);
+  $('#tkTotal').textContent=fmt((R.resolved+R.unresolved+R.tkTransferred)*f);
+  $('[data-k=resolved]').textContent=fmt(R.resolved*f);
+  $('[data-k=unresolved]').textContent=fmt(R.unresolved*f);
+  $('[data-k=tkTransferred]').textContent=fmt(R.tkTransferred*f);
+  $('#daysCount').textContent=daysInRange();
+  const f1=Math.abs(f-1)<0.005;
+  const b=$('#badge');b.className='badge '+(f1?'real':'est');b.textContent=f1?'Бодит тайлан':'Сонгосон өдрүүд';
+}
+function renderSparks(){
+  const rows=selRows();const vals=rows.map(dayTot);const sv=vals.length>1?vals:[0,0];
+  sparkline($('#sp1'),sv,C.blue);
+  const av=rows.map(r=>r.a);sparkline($('#sp2'),av.length>1?av:[0,0],C.teal);
+  sparkline($('#sp3'),sv.map(v=>v*R.uniq/(refSum()||1)),C.violet);
+  const sc=rows.map(r=>dayTot(r)?r.a/dayTot(r)*100:0);sparkline($('#sp4'),sc.length>1?sc:[0,0],C.gold);
+}
+function renderAll(){
+  const on=$('#outageNote');if(on)on.style.display=selDays.has("2026-07-07")?'block':'none';
+  renderScalars();renderSparks();dailyChart();hourChart();donut();productBars();ticketBar();satGauge();issueList();agentTable();recvList();
+}
+
+/* ---- init ---- */
+document.querySelectorAll('#repSeg button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#repSeg button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');setReport(b.dataset.rep);
+}));
+buildCtrl();
+setReport("A"); // initial: Report A, all days
+window.addEventListener('resize',renderSparks);
+</script>
+</body>
+</html>
