@@ -1,6 +1,72 @@
-import { useState, useMemo, Component } from 'react'
+import { useState, useMemo, useEffect, useRef, useLayoutEffect, Component } from 'react'
 import type { ReactNode } from 'react'
 import ontimeLogo from './imports/OnTime__________________.png'
+
+// ── Motion helpers ────────────────────────────────────────────────────────────
+function useReducedMotion() {
+  const [reduced, setReduced] = useState(
+    () => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches,
+  )
+  useEffect(() => {
+    if (typeof matchMedia === 'undefined') return
+    const m = matchMedia('(prefers-reduced-motion: reduce)')
+    const h = () => setReduced(m.matches)
+    m.addEventListener('change', h)
+    return () => m.removeEventListener('change', h)
+  }, [])
+  return reduced
+}
+
+/** Eases a number toward `target` on each change; returns the live value. */
+function useCountUp(target: number, dur = 650) {
+  const reduced = useReducedMotion()
+  const [val, setVal] = useState(0)
+  const curRef = useRef(0)
+  useEffect(() => { curRef.current = val })
+  useEffect(() => {
+    if (reduced || curRef.current === target || !isFinite(target)) { setVal(target); curRef.current = target; return }
+    const from = curRef.current
+    const start = performance.now()
+    let raf = 0
+      const p = Math.min(1, (now - start) / dur)
+      const e = 1 - Math.pow(1 - p, 3)
+      const v = from + (target - from) * e
+      setVal(v); curRef.current = v
+      if (p < 1) raf = requestAnimationFrame(tick)
+      else { setVal(target); curRef.current = target }
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [target, dur, reduced])
+  return val
+}
+
+function CountUp({ value, format = fmt }: { value: number; format?: (n: number) => string }) {
+  return <>{format(useCountUp(value))}</>
+}
+
+/** Fades/slides children in the first time they scroll into view. */
+function Reveal({ children, className, style }: { children: ReactNode; className?: string; style?: React.CSSProperties }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [seen, setSeen] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    if (typeof IntersectionObserver === 'undefined') { setSeen(true); return }
+    const io = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setSeen(true); io.disconnect() } },
+      { rootMargin: '0px 0px -30px 0px' },
+    )
+    io.observe(el)
+    const fb = window.setTimeout(() => setSeen(true), 1500)
+    return () => { io.disconnect(); window.clearTimeout(fb) }
+  }, [])
+  return (
+    <div ref={ref} className={`reveal${seen ? ' in' : ''}${className ? ' ' + className : ''}`} style={style}>
+      {children}
+    </div>
+  )
+}
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { err: string | null }> {
   constructor(props: { children: ReactNode }) {
@@ -510,93 +576,180 @@ function mkSparkSvg(id: string, vals: number[], color: string) {
       <stop offset="0" stop-color="${color}" stop-opacity=".3"/>
       <stop offset="1" stop-color="${color}" stop-opacity="0"/>
     </linearGradient></defs>
-    <path d="${d} L ${last[0]} ${h} L ${pts[0][0]} ${h} Z" fill="url(#g${id})"/>
-    <path d="${d}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" style="filter:drop-shadow(0 0 4px ${color}88)"/>
-    <circle cx="${hi[0]}" cy="${hi[1]}" r="3" fill="${color}" style="filter:drop-shadow(0 0 5px ${color})"/>
+    <path class="spk-fill" d="${d} L ${last[0]} ${h} L ${pts[0][0]} ${h} Z" fill="url(#g${id})"/>
+    <path class="spk-line" pathLength="1" d="${d}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" style="filter:drop-shadow(0 0 4px ${color}88)"/>
+    <circle class="spk-dot" cx="${hi[0]}" cy="${hi[1]}" r="3" fill="${color}" style="filter:drop-shadow(0 0 5px ${color})"/>
   </svg>`
 }
 
-function mkDailyChartSvg(rows: DayRow[], selDays: Set<string>, selSumVal: number, selChan: string | null) {
-  const w = 760, h = 244, padB = 34, padT = 16, padL = 30
-  // chTot-based max prevents overflow when a channel is selected (avoids selChan-only scale)
-  const getChanVal = (r: DayRow) => selChan ? ((r as unknown) as Record<string, number>)[selChan] as number : chTot(r)
+/** rAF flag → false on mount, true next frame, so bars can transition up from 0. */
+function useMountFlag() {
+  const [lit, setLit] = useState(false)
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setLit(true))
+    return () => cancelAnimationFrame(id)
+  }, [])
+  return lit
+}
+
+function DailyChart({ rows, selDays, selChan, onToggle }: {
+  rows: DayRow[]
+  selDays: Set<string>
+  selChan: string | null
+  onToggle: (d: string) => void
+}) {
+  const w = 760, h = 244, padB = 34, padT = 16, padL = 30, plot = h - padT - padB
+  const [hover, setHover] = useState<string | null>(null)
+  const lit = useMountFlag()
   const max = Math.max(...rows.map(r => chTot(r)), 1) * 1.12
   const bw = (w - padL - 8) / rows.length
   const barW = Math.min(bw * 0.62, 30)
-  let grid = ''
-  for (let g = 0; g <= 4; g++) {
-    const y = padT + (h - padT - padB) * g / 4
-    grid += `<line x1="${padL}" y1="${y}" x2="${w - 4}" y2="${y}" stroke="#1a2233" stroke-width="1"/>
-      <text x="0" y="${y + 3}" fill="#4a5468" font-size="9">${Math.round(max * (1 - g / 4))}</text>`
-  }
-  let bars = ''
-  rows.forEach((r, i) => {
-    const sel = selDays.has(r.d)
-    const x = padL + i * bw + (bw - barW) / 2
-    let yy = h - padB
-    bars += `<rect x="${padL + i * bw}" y="${padT}" width="${bw}" height="${h - padT - padB + 20}" fill="transparent" style="cursor:pointer" data-day="${r.d}"/>`
-    CH.forEach(ch => {
-      const val = ((r as unknown) as Record<string, number>)[ch.k] as number
-      if (val <= 0) return
-      const bh = val / max * (h - padT - padB)
-      yy -= bh
-      const isHighlight = !selChan || selChan === ch.k
-      const op = sel ? (isHighlight ? 1 : 0.06) : (isHighlight ? 0.2 : 0.04)
-      bars += `<rect x="${x}" y="${yy}" width="${barW}" height="${bh}" fill="${ch.c}" rx="1.5" opacity="${op}" style="pointer-events:none"/>`
-    })
-    const dispTot = getChanVal(r)
-    const stackTop = (h - padB) - chTot(r) / max * (h - padT - padB)
-    bars += `<text x="${x + barW / 2}" y="${stackTop - 4}" fill="${sel ? '#c9cfdc' : '#414b60'}" font-size="9" text-anchor="middle" font-weight="600" style="pointer-events:none">${dispTot || ''}</text>
-      <text x="${x + barW / 2}" y="${h - padB + 14}" fill="${sel ? '#cfd6e4' : '#586074'}" font-size="9" text-anchor="middle" font-weight="${sel ? 700 : 400}" style="pointer-events:none">${r.lab}</text>`
-    if (sel) bars += `<rect x="${x}" y="${h - padB + 18}" width="${barW}" height="2.5" rx="1.2" fill="${C.blue}" style="pointer-events:none"/>`
-  })
-  const chanTot = selChan ? rows.filter(r => selDays.has(r.d)).reduce((a, r) => a + getChanVal(r), 0) : selSumVal
-  return {
-    svg: `<svg width="100%" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet">${grid}${bars}</svg>`,
-    rangeLabel: `${selDays.size} өдөр · ${fmt(chanTot)} дуудлага${selChan ? ` (${CH.find(c=>c.k===selChan)?.n})` : ''}`,
-  }
+  const chanVal = (r: DayRow) => selChan ? ((r as unknown) as Record<string, number>)[selChan] as number : chTot(r)
+  const barTr = 'height .45s var(--ease-out), y .45s var(--ease-out), opacity .25s ease'
+  return (
+    <div className="chart-host" onMouseLeave={() => setHover(null)}>
+      <svg width="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="xMidYMid meet">
+        {[0, 1, 2, 3, 4].map(g => {
+          const y = padT + plot * g / 4
+          return (
+            <g key={g}>
+              <line x1={padL} y1={y} x2={w - 4} y2={y} stroke="#1a2233" strokeWidth={1} />
+              <text x={0} y={y + 3} fill="#4a5468" fontSize={9}>{Math.round(max * (1 - g / 4))}</text>
+            </g>
+          )
+        })}
+        {rows.map((r, i) => {
+          const sel = selDays.has(r.d)
+          const hovd = hover === r.d
+          const x = padL + i * bw + (bw - barW) / 2
+          const cx = padL + i * bw + bw / 2
+          let acc = 0
+          const segs = CH.map(ch => {
+            const val = ((r as unknown) as Record<string, number>)[ch.k] as number
+            const bh = lit && val > 0 ? val / max * plot : 0
+            const y = h - padB - acc - bh
+            acc += bh
+            const isHl = !selChan || selChan === ch.k
+            let op = sel ? (isHl ? 1 : 0.06) : (isHl ? 0.2 : 0.04)
+            if (hovd && !sel && isHl) op = Math.min(1, op + 0.4)
+            return { ch, bh, y, op, val }
+          })
+          const stackTop = h - padB - (lit ? chTot(r) / max * plot : 0)
+          return (
+            <g key={i}>
+              <rect x={padL + i * bw} y={padT} width={bw} height={plot + 20} fill="transparent"
+                style={{ cursor: 'pointer' }} onClick={() => onToggle(r.d)} onMouseEnter={() => setHover(r.d)} />
+              {segs.map((s, j) => s.val > 0 && (
+                <rect key={j} className="cz-bar" x={x} y={s.y} width={barW} height={s.bh} fill={s.ch.c} rx={1.5}
+                  opacity={s.op} style={{ pointerEvents: 'none', transition: barTr }} />
+              ))}
+              <text x={cx} y={stackTop - 4} fill={sel ? '#c9cfdc' : '#414b60'} fontSize={9} textAnchor="middle"
+                fontWeight={600} style={{ pointerEvents: 'none', transition: 'y .45s var(--ease-out)' }}>{chanVal(r) || ''}</text>
+              <text x={cx} y={h - padB + 14} fill={sel ? '#cfd6e4' : '#586074'} fontSize={9} textAnchor="middle"
+                fontWeight={sel ? 700 : 400} style={{ pointerEvents: 'none' }}>{r.lab}</text>
+              {sel && <rect x={x} y={h - padB + 18} width={barW} height={2.5} rx={1.2} fill={C.blue} style={{ pointerEvents: 'none' }} />}
+              {hovd && <line x1={cx} y1={padT} x2={cx} y2={h - padB} stroke="#4ea8ff55" strokeWidth={1} strokeDasharray="3 3" style={{ pointerEvents: 'none' }} />}
+            </g>
+          )
+        })}
+      </svg>
+      {hover != null && (() => {
+        const i = rows.findIndex(r => r.d === hover)
+        if (i < 0) return null
+        const r = rows[i]
+        const leftPct = ((padL + i * bw + bw / 2) / w) * 100
+        return (
+          <div className="chart-tip" style={{ left: `clamp(64px, ${leftPct}%, calc(100% - 64px))` }}>
+            <div className="chart-tip-h">{r.lab}</div>
+            {CH.map(ch => {
+              const v = ((r as unknown) as Record<string, number>)[ch.k] as number
+              return v > 0 ? (
+                <div key={ch.k} className="chart-tip-row">
+                  <span><i style={{ background: ch.c }} />{ch.n}</span><b>{v}</b>
+                </div>
+              ) : null
+            })}
+            <div className="chart-tip-row chart-tip-tot"><span>Нийт</span><b>{chTot(r)}</b></div>
+            <div className="chart-tip-row"><span>Авсан</span><b>{r.a}</b></div>
+          </div>
+        )
+      })()}
+    </div>
+  )
 }
 
-function mkHourSvg(hourly: HourRow[], fac: number) {
-  const data = hourly.map(r => [r[0], r[1] * fac, r[2] * fac, r[3] * fac] as [string, number, number, number])
-  const w = 900, h = 210, padB = 26, padT = 14, padL = 28
-  // merge missed + timeout → алдсан
-  const merged = data.map(r => [r[0], r[1], r[2] + r[3]] as [string, number, number])
+function HourChart({ hourly, fac }: { hourly: HourRow[]; fac: number }) {
+  const w = 900, h = 210, padB = 26, padT = 14, padL = 28, plot = h - padT - padB
+  const [hover, setHover] = useState<number | null>(null)
+  const lit = useMountFlag()
+  const merged = hourly.map(r => [r[0], r[1] * fac, (r[2] + r[3]) * fac] as [string, number, number])
   const max = Math.max(...merged.map(r => r[1] + r[2]), 1) * 1.1
   const bw = (w - padL - 8) / merged.length
   const barW = Math.min(bw * 0.62, 44)
-  let grid = ''
-  for (let g = 0; g <= 4; g++) {
-    const y = padT + (h - padT - padB) * g / 4
-    grid += `<line x1="${padL}" y1="${y}" x2="${w - 4}" y2="${y}" stroke="#1a2233"/>
-      <text x="0" y="${y + 3}" fill="#4a5468" font-size="9">${Math.round(max * (1 - g / 4))}</text>`
-  }
-  let bars = ''
-  merged.forEach((r, i) => {
-    const x = padL + i * bw + (bw - barW) / 2
-    let yy = h - padB
-    const tot = r[1] + r[2]
-    const ansBh = r[1] / max * (h - padT - padB)
-    const lossBh = r[2] / max * (h - padT - padB)
-    // loss (coral) on bottom, answered (teal) on top
-    const lossY = h - padB - lossBh
-    const ansY  = lossY - ansBh
-    if (lossBh > 0) bars += `<rect x="${x}" y="${lossY}" width="${barW}" height="${lossBh}" fill="${C.coral}" rx="1.5"/>`
-    if (ansBh  > 0) bars += `<rect x="${x}" y="${ansY}"  width="${barW}" height="${ansBh}"  fill="${C.teal}"  rx="1.5"/>`
-    const topY = h - padB - tot / max * (h - padT - padB)
-    if (tot > 0) {
-      const ansRate  = Math.round(r[1] / tot * 100)
-      const lossRate = 100 - ansRate
-      // total count above bar
-      bars += `<text x="${x + barW / 2}" y="${topY - 4}" fill="#c9cfdc" font-size="8.5" text-anchor="middle" font-weight="600" font-family="Space Grotesk,Inter,sans-serif">${Math.round(tot)}</text>`
-      // answer % inside teal segment
-      if (ansBh >= 13) bars += `<text x="${x + barW / 2}" y="${ansY + ansBh / 2 + 3}" fill="#0d1b2a" font-size="7.5" text-anchor="middle" font-weight="800" font-family="Space Grotesk,Inter,sans-serif">${ansRate}%</text>`
-      // loss % inside coral segment
-      if (lossBh >= 13) bars += `<text x="${x + barW / 2}" y="${lossY + lossBh / 2 + 3}" fill="#fff" font-size="7.5" text-anchor="middle" font-weight="700" font-family="Space Grotesk,Inter,sans-serif">${lossRate}%</text>`
-    }
-    bars += `<text x="${x + barW / 2}" y="${h - padB + 14}" fill="#8792a8" font-size="9" text-anchor="middle">${r[0]}</text>`
-  })
-  return `<svg width="100%" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet">${grid}${bars}</svg>`
+  const barTr = 'height .5s var(--ease-out), y .5s var(--ease-out), opacity .2s ease'
+  return (
+    <div className="chart-host" onMouseLeave={() => setHover(null)}>
+      <svg width="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="xMidYMid meet">
+        {[0, 1, 2, 3, 4].map(g => {
+          const y = padT + plot * g / 4
+          return (
+            <g key={g}>
+              <line x1={padL} y1={y} x2={w - 4} y2={y} stroke="#1a2233" />
+              <text x={0} y={y + 3} fill="#4a5468" fontSize={9}>{Math.round(max * (1 - g / 4))}</text>
+            </g>
+          )
+        })}
+        {merged.map((r, i) => {
+          const x = padL + i * bw + (bw - barW) / 2
+          const cx = padL + i * bw + bw / 2
+          const tot = r[1] + r[2]
+          const ansBh = lit ? r[1] / max * plot : 0
+          const lossBh = lit ? r[2] / max * plot : 0
+          const lossY = h - padB - lossBh
+          const ansY = lossY - ansBh
+          const topY = h - padB - (lit ? tot / max * plot : 0)
+          const ansRate = tot > 0 ? Math.round(r[1] / tot * 100) : 0
+          const hv = hover === i
+          return (
+            <g key={i}>
+              <rect x={padL + i * bw} y={padT} width={bw} height={plot + 20} fill="transparent"
+                onMouseEnter={() => setHover(i)} />
+              {lossBh > 0 && <rect className="hz-bar" x={x} y={lossY} width={barW} height={lossBh} fill={C.coral} rx={1.5}
+                opacity={hv ? 1 : 0.92} style={{ pointerEvents: 'none', transition: barTr }} />}
+              {ansBh > 0 && <rect className="hz-bar" x={x} y={ansY} width={barW} height={ansBh} fill={C.teal} rx={1.5}
+                opacity={hv ? 1 : 0.92} style={{ pointerEvents: 'none', transition: barTr }} />}
+              {tot > 0 && (
+                <text x={cx} y={topY - 4} fill="#c9cfdc" fontSize={8.5} textAnchor="middle" fontWeight={600}
+                  style={{ pointerEvents: 'none', fontFamily: 'Space Grotesk,Inter,sans-serif', transition: 'y .5s var(--ease-out)' }}>{Math.round(tot)}</text>
+              )}
+              {ansBh >= 13 && (
+                <text x={cx} y={ansY + ansBh / 2 + 3} fill="#0d1b2a" fontSize={7.5} textAnchor="middle" fontWeight={800}
+                  style={{ pointerEvents: 'none', fontFamily: 'Space Grotesk,Inter,sans-serif' }}>{ansRate}%</text>
+              )}
+              {lossBh >= 13 && (
+                <text x={cx} y={lossY + lossBh / 2 + 3} fill="#fff" fontSize={7.5} textAnchor="middle" fontWeight={700}
+                  style={{ pointerEvents: 'none', fontFamily: 'Space Grotesk,Inter,sans-serif' }}>{100 - ansRate}%</text>
+              )}
+              <text x={cx} y={h - padB + 14} fill="#8792a8" fontSize={9} textAnchor="middle" style={{ pointerEvents: 'none' }}>{r[0]}</text>
+            </g>
+          )
+        })}
+      </svg>
+      {hover != null && merged[hover] && (() => {
+        const r = merged[hover]
+        const tot = r[1] + r[2]
+        const leftPct = ((padL + hover * bw + bw / 2) / w) * 100
+        return (
+          <div className="chart-tip" style={{ left: `clamp(64px, ${leftPct}%, calc(100% - 64px))` }}>
+            <div className="chart-tip-h">{r[0]}:00</div>
+            <div className="chart-tip-row"><span><i style={{ background: C.teal }} />Авсан</span><b>{Math.round(r[1])}</b></div>
+            <div className="chart-tip-row"><span><i style={{ background: C.coral }} />Алдсан</span><b>{Math.round(r[2])}</b></div>
+            <div className="chart-tip-row chart-tip-tot"><span>Нийт</span><b>{Math.round(tot)}</b></div>
+          </div>
+        )
+      })()}
+    </div>
+  )
 }
 
 function mkDonutSvg(channels: typeof RA.channels) {
@@ -606,7 +759,7 @@ function mkDonutSvg(channels: typeof RA.channels) {
   let off = 0, arcs = ''
   channels.forEach(c => {
     const frac = c.v / tot; const len = C2 * frac
-    arcs += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${c.c}" stroke-width="${sw}" stroke-dasharray="${len} ${C2 - len}" stroke-dashoffset="${-off}" transform="rotate(-90 ${cx} ${cy})"/>`
+    arcs += `<circle class="dn-arc" cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${c.c}" stroke-width="${sw}" stroke-dasharray="${len} ${C2 - len}" stroke-dashoffset="${-off}" transform="rotate(-90 ${cx} ${cy})"/>`
     off += len
   })
   return { svg: `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#1a2233" stroke-width="${sw}"/>${arcs}</svg>`, tot }
@@ -619,7 +772,7 @@ function mkSatGaugeSvg(dist: number[]) {
   const C2 = 2 * Math.PI * r; const len = C2 * (score / 5)
   return { svg: `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
     <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#1a2233" stroke-width="${sw}"/>
-    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${C.gold}" stroke-width="${sw}" stroke-dasharray="${len} ${C2 - len}" stroke-linecap="round" transform="rotate(-90 ${cx} ${cy})" style="filter:drop-shadow(0 0 6px ${C.gold}aa)"/>
+    <circle class="gg-arc" cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${C.gold}" stroke-width="${sw}" stroke-dasharray="${len} ${C2 - len}" stroke-linecap="round" transform="rotate(-90 ${cx} ${cy})" style="filter:drop-shadow(0 0 6px ${C.gold}aa)"/>
   </svg>`, score, resp }
 }
 
@@ -630,6 +783,9 @@ export default function App() {
   const [rep, setRep] = useState<RepKey>('W1')
   const [selDays, setSelDays] = useState<Set<string>>(new Set(REPORTS.W1.defaultDays))
   const [selProd, setSelProd] = useState<string | null>(null)
+  const reducedMotion = useReducedMotion()
+  const segRef = useRef<HTMLDivElement>(null)
+  const [thumb, setThumb] = useState<{ x: number; w: number } | null>(null)
 
   const { daily, agg: R, hourly } = REPORTS[rep]
 
@@ -683,7 +839,27 @@ export default function App() {
   }, [selProd, R.issues])
 
   const toggleDay = (d: string) => setSelDays(prev => { const n = new Set(prev); n.has(d) ? n.delete(d) : n.add(d); return n })
-  const handleRepChange = (key: RepKey) => { setRep(key); setSelDays(new Set(REPORTS[key].defaultDays)); setSelProd(null) }
+  const applyRep = (key: RepKey) => { setRep(key); setSelDays(new Set(REPORTS[key].defaultDays)); setSelProd(null) }
+  const handleRepChange = (key: RepKey) => {
+    if (key === rep) return
+    const vt = (document as { startViewTransition?: (cb: () => void) => void }).startViewTransition
+    if (vt && !reducedMotion) vt.call(document, () => applyRep(key))
+    else applyRep(key)
+  }
+
+  // Slide the segmented-control highlight to the active week button
+  useLayoutEffect(() => {
+    const seg = segRef.current
+    if (!seg) return
+    const measure = () => {
+      const btn = seg.querySelector<HTMLButtonElement>('button.on')
+      if (btn) setThumb({ x: btn.offsetLeft, w: btn.offsetWidth })
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(seg)
+    return () => ro.disconnect()
+  }, [rep])
 
   const periodLabel = useMemo(() => {
     const ds = [...selDays].sort()
@@ -695,8 +871,13 @@ export default function App() {
 
   const isAllSel = Math.abs(factor - 1) < 0.005
 
-  const { svg: dailySvg, rangeLabel } = useMemo(() => mkDailyChartSvg(daily, selDays, chSelSum, prodChanKey), [daily, selDays, chSelSum, prodChanKey])
-  const hourSvg  = useMemo(() => mkHourSvg(hourly, factor * (prodChanKey ? hourFrac : 1)), [hourly, factor, prodChanKey, hourFrac])
+  const hourFac = factor * (prodChanKey ? hourFrac : 1)
+  const rangeLabel = useMemo(() => {
+    const ct = prodChanKey
+      ? selRows.reduce((a, r) => a + (((r as unknown) as Record<string, number>)[prodChanKey] as number || 0), 0)
+      : chSelSum
+    return `${selDays.size} өдөр · ${fmt(ct)} дуудлага${prodChanKey ? ` (${CH.find(c => c.k === prodChanKey)?.n})` : ''}`
+  }, [selRows, prodChanKey, chSelSum, selDays])
   const { svg: donutSvg, tot: chanTot } = useMemo(() => mkDonutSvg(R.channels), [R.channels])
   const { svg: satSvg, score: satScore, resp: satResp } = useMemo(() => mkSatGaugeSvg(selSat), [selSat])
 
@@ -726,11 +907,6 @@ export default function App() {
     }
   }, [selRows, R.uniq, refSum, prodChanKey, rep, selAnswered])
 
-  const handleDailyClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const day = (e.target as SVGElement).getAttribute('data-day')
-    if (day) toggleDay(day)
-  }
-
   const tkTot = R.resolved + R.unresolved + R.tkTransferred || 1
   const satCols = [C.coral, C.amber, C.gold, C.blue, C.teal]
   const satMax = Math.max(...selSat, 1)
@@ -759,19 +935,20 @@ export default function App() {
           </div>
         </div>
         <div className="ctrls">
-          <div className="seg">
+          <div className="seg" ref={segRef}>
+            <span className="seg-thumb" style={{ transform: `translateX(${thumb?.x ?? 0}px)`, width: thumb?.w ?? 0, opacity: thumb ? 1 : 0 }} />
             {repKeys.map(k => (
               <button key={k} className={rep === k ? 'on' : ''} onClick={() => handleRepChange(k)}>
                 {REPORTS[k].label}
               </button>
             ))}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 7, alignItems: 'flex-end' }}>
-            <div style={{ display: 'flex', gap: 6 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 7, alignItems: 'stretch' }}>
+            <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
               <button className="daybtn-mini" onClick={() => setSelDays(new Set(daily.map(r => r.d)))}>Бүх өдөр</button>
               <button className="daybtn-mini" onClick={() => setSelDays(new Set())}>Цэвэрлэх</button>
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, justifyContent: 'flex-end', maxWidth: 'min(600px, 100%)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(58px, 1fr))', gap: 5 }}>
               {daily.map(r => (
                 <button key={r.d} className={`daychip${selDays.has(r.d) ? ' on' : ''}`} onClick={() => toggleDay(r.d)}>{r.lab}</button>
               ))}
@@ -782,7 +959,7 @@ export default function App() {
 
       {/* KPI */}
       {selProd && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, padding: '6px 12px', background: `${C.gold}12`, border: `1px solid ${C.gold}33`, borderRadius: 8, fontSize: 12 }}>
+        <div className="prod-banner" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, padding: '6px 12px', background: `${C.gold}12`, border: `1px solid ${C.gold}33`, borderRadius: 8, fontSize: 12 }}>
           <span style={{ width: 8, height: 8, borderRadius: 2, background: C.gold, display: 'inline-block', flexShrink: 0 }} />
           <span style={{ color: C.gold, fontWeight: 600 }}>{selProd}</span>
           <span style={{ color: 'var(--muted)', fontWeight: 400 }}>бүтээгдэхүүнээр шүүсэн дата</span>
@@ -795,7 +972,7 @@ export default function App() {
             <div className="ic" style={{ background: 'rgba(78,168,255,.16)', color: C.blue }}>📞</div>
             <div>
               <div className="clabel">Нийт дуудлага</div>
-              <div className="cbig num">{fmt(prodChanKey ? prodTotalCalls : chSelSum)}</div>
+              <div className="cbig num"><CountUp value={prodChanKey ? prodTotalCalls : chSelSum} /></div>
             </div>
           </div>
           <div className="spark" dangerouslySetInnerHTML={{ __html: sparkSvgs.sp1 }} />
@@ -805,7 +982,7 @@ export default function App() {
             <div className="ic" style={{ background: 'rgba(47,211,165,.16)', color: C.teal }}>✅</div>
             <div>
               <div className="clabel">Авсан дуудлага</div>
-              <div className="cbig num">{fmt(prodChanKey ? prodAnswered : selAnswered)}</div>
+              <div className="cbig num"><CountUp value={prodChanKey ? prodAnswered : selAnswered} /></div>
             </div>
           </div>
           <div className="spark" dangerouslySetInnerHTML={{ __html: sparkSvgs.sp2 }} />
@@ -815,7 +992,7 @@ export default function App() {
             <div className="ic" style={{ background: 'rgba(157,140,255,.16)', color: C.violet }}>👥</div>
             <div>
               <div className="clabel">Давхцаагүй хэрэглэгч</div>
-              <div className="cbig num">{fmt(prodChanKey ? prodUniq : R.uniq * factor)}</div>
+              <div className="cbig num"><CountUp value={prodChanKey ? prodUniq : R.uniq * factor} /></div>
             </div>
           </div>
           <div className="spark" dangerouslySetInnerHTML={{ __html: sparkSvgs.sp3 }} />
@@ -825,7 +1002,11 @@ export default function App() {
             <div className="ic" style={{ background: 'rgba(245,196,81,.16)', color: C.gold }}>📊</div>
             <div>
               <div className="clabel">Амжилтын хувь</div>
-              <div className="cbig num"><span>{(prodChanKey ? prodTotalCalls : chSelSum) ? (prodChanKey ? prodSuccess : selSuccess).toFixed(1) : '0'}</span>%</div>
+              <div className="cbig num">
+                {(prodChanKey ? prodTotalCalls : chSelSum)
+                  ? <CountUp value={prodChanKey ? prodSuccess : selSuccess} format={n => n.toFixed(1)} />
+                  : '0'}%
+              </div>
             </div>
           </div>
           <div className="spark" dangerouslySetInnerHTML={{ __html: sparkSvgs.sp4 }} />
@@ -836,7 +1017,7 @@ export default function App() {
       <div className="substrip">
         <div className="subchip">
           <div className="sic" style={{ background: 'rgba(255,125,107,.16)', color: C.coral }}>📵</div>
-          <div><div className="sv num">{fmt(Math.max((prodChanKey ? prodTotalCalls : selSum) - (prodChanKey ? prodAnswered : selAnswered), 0))}</div><div className="sl">Missed call</div></div>
+          <div><div className="sv num"><CountUp value={Math.max((prodChanKey ? prodTotalCalls : selSum) - (prodChanKey ? prodAnswered : selAnswered), 0)} /></div><div className="sl">Missed call</div></div>
         </div>
         {/* Compact callback info chip */}
         <div className="subchip" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 4, padding: '8px 12px', minWidth: 140 }}>
@@ -860,7 +1041,7 @@ export default function App() {
         </div>
         <div className="subchip">
           <div className="sic" style={{ background: 'rgba(47,211,165,.16)', color: C.teal }}>🎫</div>
-          <div><div className="sv num">{fmt((R.resolved + R.unresolved + R.tkTransferred) * prodFactor)}</div><div className="sl">Нийт тикет{selProd ? ` · ${selProd}` : ''}</div></div>
+          <div><div className="sv num"><CountUp value={(R.resolved + R.unresolved + R.tkTransferred) * prodFactor} /></div><div className="sl">Нийт тикет{selProd ? ` · ${selProd}` : ''}</div></div>
         </div>
         <div className="subchip">
           <div className="sic" style={{ background: 'rgba(78,168,255,.16)', color: C.blue }}>📅</div>
@@ -950,13 +1131,13 @@ export default function App() {
       </div>
 
       {/* Daily chart + products */}
-      <div className="grid charts" style={{ marginBottom: 14 }}>
+      <Reveal className="grid charts" style={{ marginBottom: 14 }}>
         <div className="card">
           <div className="card-h">
             <div className="card-title"><span className="tdot" style={{ background: C.blue }} />Өдрийн дуудлага — сувгаар</div>
             <div style={{ fontSize: 11, color: 'var(--muted)' }}>{rangeLabel}</div>
           </div>
-          <div onClick={handleDailyClick} dangerouslySetInnerHTML={{ __html: dailySvg }} />
+          <DailyChart rows={daily} selDays={selDays} selChan={prodChanKey} onToggle={toggleDay} />
           <div className="legend-inline">
             {CH.map(c => <span key={c.k}><i style={{ background: c.c }} />{c.n}</span>)}
             <span style={{ color: 'var(--muted2)' }}>👆 багана дарж өдөр нэмэх/хасах</span>
@@ -990,10 +1171,10 @@ export default function App() {
             })()}
           </div>
         </div>
-      </div>
+      </Reveal>
 
       {/* Hourly */}
-      <div className="grid" style={{ gridTemplateColumns: '1fr', marginBottom: 14 }}>
+      <Reveal className="grid" style={{ gridTemplateColumns: '1fr', marginBottom: 14 }}>
         <div className="card">
           <div className="card-h">
             <div className="card-title"><span className="tdot" style={{ background: C.teal }} />Цагийн ачаалал</div>
@@ -1002,24 +1183,24 @@ export default function App() {
               <span><i style={{ background: C.coral }} />Алдсан</span>
             </div>
           </div>
-          <div dangerouslySetInnerHTML={{ __html: hourSvg }} />
+          <HourChart hourly={hourly} fac={hourFac} />
           {showOutage && (
             <div className="callout">
               ⚠️ <b>Гэнэтийн ачаалал:</b> 7 сарын 7-ны 12:00 цагт MBusiness Plus дээр бүх хэрэглэгч НӨАТ баримт гаргаж чадахгүй саатал үүсэж, 12:30-д хэвийн болсон. Тухайн үед 316 дуудлага, 233 авсан (73.7%).
             </div>
           )}
         </div>
-      </div>
+      </Reveal>
 
       {/* Issues */}
-      <div className="grid" style={{ gridTemplateColumns: '1fr', marginBottom: 14 }}>
+      <Reveal className="grid" style={{ gridTemplateColumns: '1fr', marginBottom: 14 }}>
         <div className="card">
           <div className="card-h">
             <div className="card-title"><span className="tdot" style={{ background: C.violet }} />Топ асуудлын төрөл
               {selProd && <span style={{ fontSize: 10, color: C.gold, fontWeight: 600, marginLeft: 10, letterSpacing: .5 }}>· {selProd}</span>}
             </div>
           </div>
-          <div style={{ marginTop: 4 }}>
+          <div style={{ marginTop: 4 }} key={selProd ?? 'all'} className="issue-list">
             {filteredIssues.map((it, i) => {
               const col = TAGCOL[it.t] || C.blue
               return (
@@ -1036,10 +1217,10 @@ export default function App() {
             })}
           </div>
         </div>
-      </div>
+      </Reveal>
 
       {/* Agents + transferred */}
-      <div className="grid two">
+      <Reveal className="grid two">
         <div className="card">
           <div className="card-h">
             <div className="card-title"><span className="tdot" style={{ background: C.gold }} />Ажилтны үзүүлэлт</div>
@@ -1148,7 +1329,7 @@ export default function App() {
             )
           })()}
         </div>
-      </div>
+      </Reveal>
 
       <div className="hint">
         💡 Дээд талд <b>«W1–W8 · Нэгдсэн»</b>-ээс долоо хоногоо сонгоно.
