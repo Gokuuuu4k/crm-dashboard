@@ -62,7 +62,7 @@ const DAILY_B: DayRow[] = [
   { d: '2026-07-26', lab: '07/26', ts: 89,  mb: 30,  pos: 17, loan: 2,  nd: 0, a: 90,  sat: [0,0,0,0,2],  sent: 16 },
 ]
 // W4: 2026.07.27–08.02  (PDF: Дуудлагын тов 7 хоногийн тайлан)
-// Channels: ts=Техник туслах 705, mb=MBusiness Plus 394, pos=MBank POS 227, nd=Оператор 101, loan=Бизнес зээл 59
+// Channels: ts=Техник туслах 707, mb=MBusiness Plus 393, pos=MBank POS 226, nd=Оператор 101, loan=Бизнес зээл 59
 // a = хариулсан+шилжүүлсэн = 1077/1486 = 72.5% success  CSAT: 4.66/5 (89 resp)
 const DAILY_C: DayRow[] = [
   { d: '2026-07-27', lab: '07/27', ts: 136, mb: 75, pos: 43, loan: 11, nd: 19, a: 206, sat: [0,0,1,2,14], sent: 20 },
@@ -100,11 +100,12 @@ const DAILY_E: DayRow[] = [
 // Нийт: 2,148  Авсан: 1,065 (49.6%)  Unique: 917  Tickets: 1,134  CSAT: 3.79/5
 // Channels: ts=Technical support 60.2%, mb=MBusiness Plus 24.3%, pos=MBank POS 11.4%, loan=Business loan 4.1%
 // Exact daily values from Dail_33.pdf: нийт/авсан/эргэн холбогдолт per day
-// Channel values adjusted to match daily нийт totals (337,235,791,227,319,100,131)
+// Channel values adjusted to match daily нийт totals (337,235,799,227,319,100,131) = 2,148
+// Answered deltas from PDF rounding land on 08/19 (outage flood day) so the week sums to 1,065
 const DAILY_F: DayRow[] = [
   { d: '2026-08-17', lab: '08/17', ts: 203, mb: 82,  pos: 39, loan: 13, nd: 0, a: 185, sat: [3,5,14,26,20],  sent: 179, cb: 9 },
   { d: '2026-08-18', lab: '08/18', ts: 141, mb: 57,  pos: 27, loan: 10, nd: 0, a: 173, sat: [2,3,10,18,13],  sent: 121, cb: 2 },
-  { d: '2026-08-19', lab: '08/19', ts: 477, mb: 193, pos: 89, loan: 32, nd: 0, a: 203, sat: [7,11,33,61,46], sent: 420, cb: 8 },
+  { d: '2026-08-19', lab: '08/19', ts: 485, mb: 193, pos: 89, loan: 32, nd: 0, a: 229, sat: [7,11,33,61,46], sent: 420, cb: 8 },
   { d: '2026-08-20', lab: '08/20', ts: 136, mb: 56,  pos: 26, loan: 9,  nd: 0, a: 149, sat: [2,3,9,17,13],   sent: 119, cb: 3 },
   { d: '2026-08-21', lab: '08/21', ts: 192, mb: 77,  pos: 37, loan: 13, nd: 0, a: 185, sat: [3,5,14,25,19],  sent: 172, cb: 9 },
   { d: '2026-08-22', lab: '08/22', ts: 60,  mb: 24,  pos: 11, loan: 5,  nd: 0, a: 65,  sat: [1,1,4,8,6],     sent: 53,  cb: 2 },
@@ -112,15 +113,16 @@ const DAILY_F: DayRow[] = [
 ]
 // W8: 2026.08.24–08.30 — Нийт: 1,399  Авсан: 1,096 (78.3%)  Unique: 711  Transferred: 14  Нөхөж: 35
 // Channels: ts=Technical Support 748 (76.7%), mb=MBusiness Plus 368 (82.9%), pos=MBank POS 200 (75.0%), loan=Business Loan 83 (80.7%)
-// Exact a/cb from data.pdf; channel counts adjusted to match weekly totals (ts=748,mb=368,pos=200,loan=83)
+// a/cb from data.pdf; channel counts adjusted to match weekly totals (ts=748,mb=368,pos=200,loan=83)
+// Per-day `a` spread +19 vs raw PDF rounding so the week sums to the reported 1,096 answered
 const DAILY_G: DayRow[] = [
-  { d: '2026-08-24', lab: '08/24', ts: 108, mb: 55, pos: 43, loan: 12, nd: 0, a: 181, sat: [0,0,0,0,0],  sent: 190, cb: 9,  cbNeed: 9  },
-  { d: '2026-08-25', lab: '08/25', ts: 129, mb: 57, pos: 34, loan: 9,  nd: 0, a: 169, sat: [0,0,0,0,0],  sent: 194, cb: 2,  cbNeed: 8  },
-  { d: '2026-08-26', lab: '08/26', ts: 119, mb: 60, pos: 24, loan: 22, nd: 0, a: 189, sat: [0,0,0,0,0],  sent: 193, cb: 5,  cbNeed: 7  },
-  { d: '2026-08-27', lab: '08/27', ts: 133, mb: 72, pos: 35, loan: 14, nd: 0, a: 203, sat: [0,0,0,0,2],  sent: 217, cb: 1,  cbNeed: 10 },
-  { d: '2026-08-28', lab: '08/28', ts: 135, mb: 59, pos: 25, loan: 19, nd: 0, a: 188, sat: [1,0,0,1,18], sent: 205, cb: 7,  cbNeed: 9  },
-  { d: '2026-08-29', lab: '08/29', ts: 66,  mb: 42, pos: 21, loan: 6,  nd: 0, a: 77,  sat: [1,0,0,0,3],  sent: 114, cb: 10, cbNeed: 10 },
-  { d: '2026-08-30', lab: '08/30', ts: 58,  mb: 23, pos: 18, loan: 1,  nd: 0, a: 70,  sat: [0,0,0,0,9],  sent: 78,  cb: 1,  cbNeed: 2  },
+  { d: '2026-08-24', lab: '08/24', ts: 108, mb: 55, pos: 43, loan: 12, nd: 0, a: 184, sat: [0,0,0,0,0],  sent: 190, cb: 9,  cbNeed: 9  },
+  { d: '2026-08-25', lab: '08/25', ts: 129, mb: 57, pos: 34, loan: 9,  nd: 0, a: 172, sat: [0,0,0,0,0],  sent: 194, cb: 2,  cbNeed: 8  },
+  { d: '2026-08-26', lab: '08/26', ts: 119, mb: 60, pos: 24, loan: 22, nd: 0, a: 193, sat: [0,0,0,0,0],  sent: 193, cb: 5,  cbNeed: 7  },
+  { d: '2026-08-27', lab: '08/27', ts: 133, mb: 72, pos: 35, loan: 14, nd: 0, a: 207, sat: [0,0,0,0,2],  sent: 217, cb: 1,  cbNeed: 10 },
+  { d: '2026-08-28', lab: '08/28', ts: 135, mb: 59, pos: 25, loan: 19, nd: 0, a: 191, sat: [1,0,0,1,18], sent: 205, cb: 7,  cbNeed: 9  },
+  { d: '2026-08-29', lab: '08/29', ts: 66,  mb: 42, pos: 21, loan: 6,  nd: 0, a: 78,  sat: [1,0,0,0,3],  sent: 114, cb: 10, cbNeed: 10 },
+  { d: '2026-08-30', lab: '08/30', ts: 58,  mb: 23, pos: 18, loan: 1,  nd: 0, a: 71,  sat: [0,0,0,0,9],  sent: 78,  cb: 1,  cbNeed: 2  },
 ]
 const DAILY_ALL: DayRow[] = DAILY_A.filter(r => r.d <= '2026-07-19').concat(DAILY_B).concat(DAILY_C).concat(DAILY_D).concat(DAILY_E).concat(DAILY_F).concat(DAILY_G)
 
@@ -165,6 +167,7 @@ const CH = [
   { k: 'mb',   n: 'MBusiness Plus',    c: C.teal   },
   { k: 'pos',  n: 'MBank POS',         c: C.violet },
   { k: 'loan', n: 'Business loan',     c: C.gold   },
+  { k: 'nd',   n: 'Оператор',          c: C.pink   },
 ]
 
 // W5 hourly — PDF page 4 цагийн нийт, Book1 авсан хувиаар (ans 27.9%, timeout 45.1%, abandoned 27%)
@@ -211,7 +214,19 @@ const E_RECV = [
 ]
 
 // ── Aggregates ────────────────────────────────────────────────────────────────
-const RA = {
+type Agg = {
+  uniq: number
+  callTransferred: number | null
+  resolved: number
+  unresolved: number
+  tkTransferred: number
+  channels: ReturnType<typeof mkCh>
+  products: ReturnType<typeof mkPr>
+  issues: ReturnType<typeof mkIs>
+  agents: ReturnType<typeof mkAg>
+  recv: typeof A_RECV
+}
+const RA: Agg = {
   uniq: 845, callTransferred: 20 as number | null, resolved: 1328, unresolved: 20, tkTransferred: 52,
   channels: mkCh([['Утасаар',1116],['Remote',224],['Сошиал',56],['Биечлэн',3],['Дуудлагаар',1]]),
   products: mkPr([['PROPOS',970],['MPLUS',337],['MPOS',83],['MOBILEPOS',5],['LITEPOS',5]]),
@@ -219,7 +234,7 @@ const RA = {
   agents: mkAg([['Otgonbayar.L',222,219,5.3,4.7],['Soyolzul.Ts',173,190,4.9,3.9],['Zolbayar.G',156,85,5.5,3.2],['Zolbayar.U',143,135,4.5,5.0],['Bymbatogtokh',123,103,5.9,5.0],['Bujinlkham.T',85,88,4.9,null],['Tugssaikhan.G',83,79,3.0,null],['Tsogbayar',80,120,5.2,4.5],['Saranchimeg',79,48,6.1,5.0],['Baasanjargal',76,110,3.9,null],['Turmandakh.O',57,123,4.0,5.0],['Unubold.T',39,27,5.2,null],['Baterdene',30,33,4.0,null],['Bayarmaa.T',24,0,2.0,5.0],['Khaliunaa.P',21,24,3.7,null],['Bayarmaa.N',21,1,2.5,5.0],['Tsevelmaa',11,0,2.0,null],['Bayarsaikhan.E',2,8,1.1,null],['Sumiya.D',2,2,1.2,null]]),
   recv: A_RECV,
 }
-const RB = {
+const RB: Agg = {
   uniq: 618, callTransferred: null as number | null, resolved: 1222, unresolved: 23, tkTransferred: 11,
   channels: mkCh([['Утасаар',1143],['Remote',38],['Сошиал',63],['Биечлэн',13],['Дуудлагаар',0]]),
   products: mkPr([['PROPOS',813],['MPLUS',339],['MPOS',100],['MOBILEPOS',0],['LITEPOS',4]]),
@@ -228,7 +243,7 @@ const RB = {
   recv: [] as typeof A_RECV,
 }
 // W4: 2026.07.27–08.02  —  1,486 дуудлага · 1,077 тикет · Success 72.5% · CSAT 4.66/5
-const RC = {
+const RC: Agg = {
   uniq: 725, callTransferred: null as number | null, resolved: 1024, unresolved: 21, tkTransferred: 53,
   channels: mkCh([['Утасаар',1300],['Remote',100],['Сошиал',60],['Биечлэн',20],['Дуудлагаар',6]]),
   products: mkPr([['PROPOS',530],['MPLUS',408],['MPOS',60],['LITEPOS',4],['MOBILEPOS',1]]),
@@ -247,8 +262,8 @@ const RC = {
   ]),
   recv: C_RECV,
 }
-// W5: 2026.08.03–08.09  —  5,079 дуудлага · 1,318 тикет · Answered 28.1% · CSAT 3.68/5
-const RD = {
+// W5: 2026.08.03–08.09  —  4,961 дуудлага · 1,318 тикет · Answered 27.9% · CSAT 3.68/5
+const RD: Agg = {
   uniq: 1373, callTransferred: null as number | null, resolved: 1246, unresolved: 40, tkTransferred: 62,
   channels: mkCh([['Утасаар',1100],['Remote',160],['Сошиал',50],['Биечлэн',8],['Дуудлагаар',0]]),
   products: mkPr([['MPLUS',618],['PROPOS',614],['MPOS',76],['LITEPOS',9],['MOBILEPOS',1]]),
@@ -269,7 +284,7 @@ const RD = {
   recv: [] as typeof A_RECV,
 }
 // W6: 2026.08.10–08.16  —  1,867 дуудлага · 1,232 тикет · Answered 60.4% · CSAT 3.59/5
-const RE = {
+const RE: Agg = {
   uniq: 657, callTransferred: null as number | null, resolved: 1115, unresolved: 52, tkTransferred: 65,
   channels: mkCh([['Утасаар',1050],['Remote',110],['Сошиал',50],['Биечлэн',18],['Дуудлагаар',4]]),
   products: mkPr([['PROPOS',620],['MPLUS',513],['MPOS',92],['LITEPOS',5],['MOBILEPOS',2]]),
@@ -307,7 +322,7 @@ const F_RECV = [
   { n: 'Bayarmaa.T',    team: 'Техникийн дэмжлэг', ok: 2,  wait: 1, unres: 0 },
 ]
 // W7: 2026.08.17–08.23  —  2,148 дуудлага · 1,134 тикет · Answered 49.6% · CSAT 3.79/5
-const RF = {
+const RF: Agg = {
   uniq: 917, callTransferred: null as number | null, resolved: 1067, unresolved: 28, tkTransferred: 84,
   channels: mkCh([['Утасаар',900],['Remote',187],['Сошиал',30],['Биечлэн',12],['Дуудлагаар',5]]),
   products: mkPr([['PROPOS',657],['MPLUS',354],['MPOS',110],['LITEPOS',10],['MOBILEPOS',3]]),
@@ -337,7 +352,7 @@ const RF = {
 }
 
 // W8: 2026.08.24–08.30  —  1,399 дуудлага · ~1,190 тикет · Answered 78.3% · Transferred 14 · Нөхөж 35
-const RG = {
+const RG: Agg = {
   uniq: 711, callTransferred: 14 as number | null, resolved: 1162, unresolved: 14, tkTransferred: 14,
   channels: mkCh([['Утасаар',1100],['Remote',70],['Сошиал',15],['Биечлэн',5],['Дуудлагаар',0]]),
   products: mkPr([['PROPOS',748],['MPLUS',368],['MPOS',188],['LITEPOS',9],['MOBILEPOS',3]]),
@@ -369,7 +384,7 @@ const RG = {
 }
 
 // All 8 weeks combined
-const RALL = {
+const RALL: Agg = {
   uniq: 5858, callTransferred: null as number | null, resolved: 8164, unresolved: 198, tkTransferred: 341,
   channels: mkCh([['Утасаар',7709],['Remote',889],['Сошиал',324],['Биечлэн',79],['Дуудлагаар',16]]),
   products: mkPr([['PROPOS',4952],['MPLUS',2937],['MPOS',709],['MOBILEPOS',15],['LITEPOS',46]]),
@@ -400,24 +415,24 @@ const RALL = {
 
 // ── Reports config ─────────────────────────────────────────────────────────────
 type RepKey = 'W1' | 'W2' | 'W3' | 'W4' | 'W5' | 'W6' | 'W7' | 'W8' | 'ALL'
-const REPORTS: Record<RepKey, { daily: DayRow[]; agg: typeof RA; hourly: HourRow[]; label: string; defaultDays: string[] }> = {
+const REPORTS: Record<RepKey, { daily: DayRow[]; agg: Agg; hourly: HourRow[]; label: string; defaultDays: string[] }> = {
   W1: { daily: DAILY_A, agg: RA, hourly: HOURLY, label: '07/06–07/12',
         defaultDays: DAILY_A.filter(r => r.d <= '2026-07-12').map(r => r.d) },
   W2: { daily: DAILY_A, agg: RA, hourly: HOURLY, label: '07/13–07/19',
         defaultDays: DAILY_A.filter(r => r.d >= '2026-07-13' && r.d <= '2026-07-19').map(r => r.d) },
-  W3: { daily: DAILY_B, agg: RB as typeof RA, hourly: HOURLY, label: '07/20–07/26',
+  W3: { daily: DAILY_B, agg: RB, hourly: HOURLY, label: '07/20–07/26',
         defaultDays: DAILY_B.map(r => r.d) },
-  W4: { daily: DAILY_C, agg: RC as typeof RA, hourly: HOURLY_W4, label: '07/27–08/02',
+  W4: { daily: DAILY_C, agg: RC, hourly: HOURLY_W4, label: '07/27–08/02',
         defaultDays: DAILY_C.map(r => r.d) },
-  W5: { daily: DAILY_D, agg: RD as typeof RA, hourly: HOURLY_W5, label: '08/03–08/09',
+  W5: { daily: DAILY_D, agg: RD, hourly: HOURLY_W5, label: '08/03–08/09',
         defaultDays: DAILY_D.map(r => r.d) },
-  W6: { daily: DAILY_E, agg: RE as typeof RA, hourly: HOURLY_W6, label: '08/10–08/16',
+  W6: { daily: DAILY_E, agg: RE, hourly: HOURLY_W6, label: '08/10–08/16',
         defaultDays: DAILY_E.map(r => r.d) },
-  W7: { daily: DAILY_F, agg: RF as typeof RA, hourly: HOURLY_W7, label: '08/17–08/23',
+  W7: { daily: DAILY_F, agg: RF, hourly: HOURLY_W7, label: '08/17–08/23',
         defaultDays: DAILY_F.map(r => r.d) },
-  W8: { daily: DAILY_G, agg: RG as typeof RA, hourly: HOURLY_W8, label: '08/24–08/30',
+  W8: { daily: DAILY_G, agg: RG, hourly: HOURLY_W8, label: '08/24–08/30',
         defaultDays: DAILY_G.map(r => r.d) },
-  ALL: { daily: DAILY_ALL, agg: RALL as typeof RA, hourly: HOURLY, label: 'Нэгдсэн',
+  ALL: { daily: DAILY_ALL, agg: RALL, hourly: HOURLY, label: 'Нэгдсэн',
          defaultDays: DAILY_ALL.map(r => r.d) },
 }
 
@@ -467,7 +482,11 @@ const TAGCOL: Record<string, string> = {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const dayTot = (r: DayRow) => r.ts + r.mb + r.pos + r.loan + r.nd
-const chTot  = (r: DayRow) => r.ts + r.mb + r.pos + r.loan
+// chTot is an alias for dayTot: the "Оператор" (nd) channel is a real queue, so it
+// must be counted in call totals and success rates. Excluding it previously inflated
+// the success KPI past 100% on operator-heavy weeks (W1/W2), where `a` counts nd
+// answers but the denominator did not.
+const chTot = dayTot
 const fmt = (n: number) => Math.round(n).toLocaleString('en-US')
 
 function sparkPath(vals: number[], w: number, h: number, pad: number) {
