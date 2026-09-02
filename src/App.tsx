@@ -1,6 +1,5 @@
 import { useState, useMemo, useEffect, useRef, useLayoutEffect, Component } from 'react'
 import type { ReactNode } from 'react'
-import ontimeLogo from './imports/OnTime__________________.png'
 
 // ── Motion helpers ────────────────────────────────────────────────────────────
 function useReducedMotion() {
@@ -923,7 +922,12 @@ export default function App() {
       {/* Topbar */}
       <div className="topbar">
         <div className="brand">
-          <img className="logo-img" src={ontimeLogo} alt="OnTime" />
+          <div className="logo-mark" aria-label="OnTime">
+            <svg className="logo-cloud" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M7 18.5a4.5 4.5 0 0 1-.5-8.97A6 6 0 0 1 18 8.9a4 4 0 0 1-.5 9.6z" />
+            </svg>
+            <span className="logo-word">On<b>Time</b></span>
+          </div>
           <div>
             <h1>CRM дуудлагын тайлан</h1>
             <div className="sub">
