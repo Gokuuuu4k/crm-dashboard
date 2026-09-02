@@ -28,6 +28,7 @@ function useCountUp(target: number, dur = 650) {
     const from = curRef.current
     const start = performance.now()
     let raf = 0
+    const tick = (now: number) => {
       const p = Math.min(1, (now - start) / dur)
       const e = 1 - Math.pow(1 - p, 3)
       const v = from + (target - from) * e
