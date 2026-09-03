@@ -922,12 +922,16 @@ export default function App() {
       {/* Topbar */}
       <div className="topbar">
         <div className="brand">
-          <div className="logo-mark" aria-label="OnTime">
-            <svg className="logo-cloud" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M7 18.5a4.5 4.5 0 0 1-.5-8.97A6 6 0 0 1 18 8.9a4 4 0 0 1-.5 9.6z" />
-            </svg>
-            <span className="logo-word">On<b>Time</b></span>
-          </div>
+          <svg className="logo-cloud" viewBox="0 0 200 148" role="img" aria-label="Ontime">
+            <g fill="var(--teal)">
+              <rect x="20" y="76" width="160" height="54" rx="27" />
+              <circle cx="60" cy="72" r="31" />
+              <circle cx="104" cy="48" r="42" />
+              <circle cx="149" cy="74" r="31" />
+            </g>
+            <text x="100" y="103" textAnchor="middle" fontFamily="Inter, system-ui, sans-serif"
+              fontWeight="800" fontSize="42" letterSpacing="-1.5" fill="#fff">Ontime</text>
+          </svg>
           <div>
             <h1>CRM дуудлагын тайлан</h1>
             <div className="sub">
