@@ -25,10 +25,11 @@
   --border: #232c42;
   --hair: rgba(255, 255, 255, .05);
   --hover: rgba(255, 255, 255, .04);
-  --sel-1: #4183c9;
-  --sel-2: #356fb0;
-  --sel-soft: rgba(78, 168, 255, .14);
-  --sel-glow: rgba(65, 131, 201, .26);
+  --sel-1: #a9c8ec;
+  --sel-2: #93b7e2;
+  --sel-ink: #1b3a5c;
+  --sel-soft: rgba(169, 200, 236, .16);
+  --sel-glow: rgba(169, 200, 236, .3);
   --tip-bg: rgba(9, 13, 22, .96);
   --shadow-lg: rgba(0, 0, 0, .55);
   --shadow-pop: rgba(0, 0, 0, .7);
@@ -71,10 +72,11 @@
   --border: #dde0e7;
   --hair: rgba(20, 28, 45, .08);
   --hover: rgba(20, 28, 45, .045);
-  --sel-1: #5a95d8;
-  --sel-2: #4a84c8;
-  --sel-soft: rgba(47, 127, 214, .14);
-  --sel-glow: rgba(74, 132, 200, .3);
+  --sel-1: #bcd5f0;
+  --sel-2: #a9c8ea;
+  --sel-ink: #274a72;
+  --sel-soft: rgba(150, 183, 226, .22);
+  --sel-glow: rgba(150, 183, 226, .4);
   --tip-bg: rgba(255, 255, 255, .98);
   --shadow-lg: rgba(40, 50, 72, .16);
   --shadow-pop: rgba(40, 50, 72, .2);
@@ -288,9 +290,9 @@ img, svg, table { max-width: 100%; }
 }
 .daycell:hover { color: var(--text); background: var(--hover); }
 .daycell:active { transform: scale(.96); }
-.daycell.on { color: #fff; }
-.daycell.on .dc-wd { opacity: .9; }
-.daycell.on .dc-vol { background: rgba(255, 255, 255, .72); }
+.daycell.on { color: var(--sel-ink); }
+.daycell.on .dc-wd { opacity: .95; }
+.daycell.on .dc-vol { background: var(--sel-ink); opacity: .42; }
 .daycell.on.solo { background: linear-gradient(135deg, var(--sel-1), var(--sel-2)); }
 
 /* Weekend days — warm accent, visible whether or not they're selected */
@@ -301,8 +303,8 @@ img, svg, table { max-width: 100%; }
   content: ''; position: absolute; top: 4px; right: 5px;
   width: 4px; height: 4px; border-radius: 50%; background: var(--gold);
 }
-.daycell.wknd.on .dc-wd { color: #fff; opacity: .95; }
-.daycell.wknd.on::after { background: #fff; }
+.daycell.wknd.on .dc-wd { color: var(--sel-ink); opacity: 1; }
+.daycell.wknd.on::after { background: #c98b1e; }
 
 .daybtn-mini {
   background: var(--panel); border: 1px solid var(--line);
