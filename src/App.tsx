@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useRef, useLayoutEffect, Component } from 'react'
 import type { ReactNode } from 'react'
+import ontimeLogo from './ontime-logo.png'
 
 // ── Motion helpers ────────────────────────────────────────────────────────────
 function useReducedMotion() {
@@ -547,6 +548,10 @@ const TAGCOL: Record<string, string> = {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+const WD = ['Ня', 'Да', 'Мя', 'Лх', 'Пү', 'Ба', 'Бя']
+const dow = (isoDate: string) => new Date(isoDate + 'T00:00:00').getDay()
+const weekday = (isoDate: string) => WD[dow(isoDate)]
+const isWeekend = (isoDate: string) => { const d = dow(isoDate); return d === 0 || d === 6 }
 const dayTot = (r: DayRow) => r.ts + r.mb + r.pos + r.loan + r.nd
 // chTot is an alias for dayTot: the "Оператор" (nd) channel is a real queue, so it
 // must be counted in call totals and success rates. Excluding it previously inflated
@@ -554,6 +559,19 @@ const dayTot = (r: DayRow) => r.ts + r.mb + r.pos + r.loan + r.nd
 // answers but the denominator did not.
 const chTot = dayTot
 const fmt = (n: number) => Math.round(n).toLocaleString('en-US')
+
+// Week-tab config: month groups + per-week call volume (for the mini load bars)
+const MONTHS: { label: string; keys: RepKey[] }[] = [
+  { label: '7-р сар', keys: ['W1', 'W2', 'W3', 'W4'] },
+  { label: '8-р сар', keys: ['W5', 'W6', 'W7', 'W8'] },
+]
+const WEEK_VOL: Record<string, number> = Object.fromEntries(
+  MONTHS.flatMap(m => m.keys).map(k => {
+    const set = new Set(REPORTS[k].defaultDays)
+    return [k, REPORTS[k].daily.filter(r => set.has(r.d)).reduce((a, r) => a + dayTot(r), 0)]
+  }),
+)
+const WEEK_VOL_MAX = Math.max(...Object.values(WEEK_VOL), 1)
 
 function sparkPath(vals: number[], w: number, h: number, pad: number) {
   const min = Math.min(...vals), max = Math.max(...vals), rng = (max - min) || 1
@@ -613,8 +631,8 @@ function DailyChart({ rows, selDays, selChan, onToggle }: {
           const y = padT + plot * g / 4
           return (
             <g key={g}>
-              <line x1={padL} y1={y} x2={w - 4} y2={y} stroke="#1a2233" strokeWidth={1} />
-              <text x={0} y={y + 3} fill="#4a5468" fontSize={9}>{Math.round(max * (1 - g / 4))}</text>
+              <line x1={padL} y1={y} x2={w - 4} y2={y} stroke="var(--c-grid)" strokeWidth={1} />
+              <text x={0} y={y + 3} fill="var(--c-axis)" fontSize={9}>{Math.round(max * (1 - g / 4))}</text>
             </g>
           )
         })}
@@ -643,12 +661,12 @@ function DailyChart({ rows, selDays, selChan, onToggle }: {
                 <rect key={j} className="cz-bar" x={x} y={s.y} width={barW} height={s.bh} fill={s.ch.c} rx={1.5}
                   opacity={s.op} style={{ pointerEvents: 'none', transition: barTr }} />
               ))}
-              <text x={cx} y={stackTop - 4} fill={sel ? '#c9cfdc' : '#414b60'} fontSize={9} textAnchor="middle"
+              <text x={cx} y={stackTop - 4} fill={sel ? 'var(--c-lbl-hi)' : 'var(--c-lbl-dim)'} fontSize={9} textAnchor="middle"
                 fontWeight={600} style={{ pointerEvents: 'none', transition: 'y .45s var(--ease-out)' }}>{chanVal(r) || ''}</text>
-              <text x={cx} y={h - padB + 14} fill={sel ? '#cfd6e4' : '#586074'} fontSize={9} textAnchor="middle"
+              <text x={cx} y={h - padB + 14} fill={sel ? 'var(--c-lbl-hi)' : 'var(--c-lbl)'} fontSize={9} textAnchor="middle"
                 fontWeight={sel ? 700 : 400} style={{ pointerEvents: 'none' }}>{r.lab}</text>
-              {sel && <rect x={x} y={h - padB + 18} width={barW} height={2.5} rx={1.2} fill={C.blue} style={{ pointerEvents: 'none' }} />}
-              {hovd && <line x1={cx} y1={padT} x2={cx} y2={h - padB} stroke="#4ea8ff55" strokeWidth={1} strokeDasharray="3 3" style={{ pointerEvents: 'none' }} />}
+              {sel && <rect x={x} y={h - padB + 18} width={barW} height={2.5} rx={1.2} fill="var(--sel-1)" style={{ pointerEvents: 'none' }} />}
+              {hovd && <line x1={cx} y1={padT} x2={cx} y2={h - padB} stroke="var(--c-cross)" strokeWidth={1} strokeDasharray="3 3" style={{ pointerEvents: 'none' }} />}
             </g>
           )
         })}
@@ -694,8 +712,8 @@ function HourChart({ hourly, fac }: { hourly: HourRow[]; fac: number }) {
           const y = padT + plot * g / 4
           return (
             <g key={g}>
-              <line x1={padL} y1={y} x2={w - 4} y2={y} stroke="#1a2233" />
-              <text x={0} y={y + 3} fill="#4a5468" fontSize={9}>{Math.round(max * (1 - g / 4))}</text>
+              <line x1={padL} y1={y} x2={w - 4} y2={y} stroke="var(--c-grid)" />
+              <text x={0} y={y + 3} fill="var(--c-axis)" fontSize={9}>{Math.round(max * (1 - g / 4))}</text>
             </g>
           )
         })}
@@ -719,7 +737,7 @@ function HourChart({ hourly, fac }: { hourly: HourRow[]; fac: number }) {
               {ansBh > 0 && <rect className="hz-bar" x={x} y={ansY} width={barW} height={ansBh} fill={C.teal} rx={1.5}
                 opacity={hv ? 1 : 0.92} style={{ pointerEvents: 'none', transition: barTr }} />}
               {tot > 0 && (
-                <text x={cx} y={topY - 4} fill="#c9cfdc" fontSize={8.5} textAnchor="middle" fontWeight={600}
+                <text x={cx} y={topY - 4} fill="var(--c-lbl-hi)" fontSize={8.5} textAnchor="middle" fontWeight={600}
                   style={{ pointerEvents: 'none', fontFamily: 'Space Grotesk,Inter,sans-serif', transition: 'y .5s var(--ease-out)' }}>{Math.round(tot)}</text>
               )}
               {ansBh >= 13 && (
@@ -730,7 +748,7 @@ function HourChart({ hourly, fac }: { hourly: HourRow[]; fac: number }) {
                 <text x={cx} y={lossY + lossBh / 2 + 3} fill="#fff" fontSize={7.5} textAnchor="middle" fontWeight={700}
                   style={{ pointerEvents: 'none', fontFamily: 'Space Grotesk,Inter,sans-serif' }}>{100 - ansRate}%</text>
               )}
-              <text x={cx} y={h - padB + 14} fill="#8792a8" fontSize={9} textAnchor="middle" style={{ pointerEvents: 'none' }}>{r[0]}</text>
+              <text x={cx} y={h - padB + 14} fill="var(--c-lbl)" fontSize={9} textAnchor="middle" style={{ pointerEvents: 'none' }}>{r[0]}</text>
             </g>
           )
         })}
@@ -762,7 +780,7 @@ function mkDonutSvg(channels: typeof RA.channels) {
     arcs += `<circle class="dn-arc" cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${c.c}" stroke-width="${sw}" stroke-dasharray="${len} ${C2 - len}" stroke-dashoffset="${-off}" transform="rotate(-90 ${cx} ${cy})"/>`
     off += len
   })
-  return { svg: `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#1a2233" stroke-width="${sw}"/>${arcs}</svg>`, tot }
+  return { svg: `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--c-grid)" stroke-width="${sw}"/>${arcs}</svg>`, tot }
 }
 
 function mkSatGaugeSvg(dist: number[]) {
@@ -771,7 +789,7 @@ function mkSatGaugeSvg(dist: number[]) {
   const size = 132, r = 50, cx = 66, cy = 66, sw = 11
   const C2 = 2 * Math.PI * r; const len = C2 * (score / 5)
   return { svg: `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#1a2233" stroke-width="${sw}"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--c-grid)" stroke-width="${sw}"/>
     <circle class="gg-arc" cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${C.gold}" stroke-width="${sw}" stroke-dasharray="${len} ${C2 - len}" stroke-linecap="round" transform="rotate(-90 ${cx} ${cy})" style="filter:drop-shadow(0 0 6px ${C.gold}aa)"/>
   </svg>`, score, resp }
 }
@@ -784,8 +802,13 @@ export default function App() {
   const [selDays, setSelDays] = useState<Set<string>>(new Set(REPORTS.W1.defaultDays))
   const [selProd, setSelProd] = useState<string | null>(null)
   const reducedMotion = useReducedMotion()
-  const segRef = useRef<HTMLDivElement>(null)
-  const [thumb, setThumb] = useState<{ x: number; w: number } | null>(null)
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    try { return localStorage.getItem('crm-theme') === 'light' ? 'light' : 'dark' } catch { return 'dark' }
+  })
+  const [weekOpen, setWeekOpen] = useState(false)
+  const stripRef = useRef<HTMLDivElement>(null)
+  const [dayRange, setDayRange] = useState<{ x: number; w: number } | null>(null)
+  const anchorRef = useRef<string | null>(null)
 
   const { daily, agg: R, hourly } = REPORTS[rep]
 
@@ -839,7 +862,16 @@ export default function App() {
   }, [selProd, R.issues])
 
   const toggleDay = (d: string) => setSelDays(prev => { const n = new Set(prev); n.has(d) ? n.delete(d) : n.add(d); return n })
-  const applyRep = (key: RepKey) => { setRep(key); setSelDays(new Set(REPORTS[key].defaultDays)); setSelProd(null) }
+  const pickDay = (d: string, extend: boolean) => {
+    if (extend && anchorRef.current) {
+      const [a, b] = [anchorRef.current, d].sort()
+      setSelDays(new Set(daily.filter(r => r.d >= a && r.d <= b).map(r => r.d)))
+    } else {
+      toggleDay(d)
+      anchorRef.current = d
+    }
+  }
+  const applyRep = (key: RepKey) => { setRep(key); setSelDays(new Set(REPORTS[key].defaultDays)); setSelProd(null); anchorRef.current = null }
   const handleRepChange = (key: RepKey) => {
     if (key === rep) return
     const vt = (document as { startViewTransition?: (cb: () => void) => void }).startViewTransition
@@ -847,27 +879,78 @@ export default function App() {
     else applyRep(key)
   }
 
-  // Slide the segmented-control highlight to the active week button
-  useLayoutEffect(() => {
-    const seg = segRef.current
-    if (!seg) return
-    const measure = () => {
-      const btn = seg.querySelector<HTMLButtonElement>('button.on')
-      if (btn) setThumb({ x: btn.offsetLeft, w: btn.offsetWidth })
+  // Close the week dropdown on Escape
+  useEffect(() => {
+    if (!weekOpen) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setWeekOpen(false) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [weekOpen])
+
+  // Apply + persist theme
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    try { localStorage.setItem('crm-theme', theme) } catch { /* private mode */ }
+  }, [theme])
+
+  const toggleTheme = (e: React.MouseEvent) => {
+    const next = theme === 'dark' ? 'light' : 'dark'
+    const doc = document as Document & {
+      startViewTransition?: (cb: () => void) => { ready: Promise<void>; finished: Promise<void> }
     }
-    measure()
-    const ro = new ResizeObserver(measure)
-    ro.observe(seg)
-    return () => ro.disconnect()
-  }, [rep])
+    const x = e.clientX, y = e.clientY
+    // ripple ring from the button — the "wave"
+    if (!reducedMotion) {
+      const ring = document.createElement('span')
+      ring.className = 'theme-ripple'
+      ring.style.left = `${x}px`
+      ring.style.top = `${y}px`
+      document.body.appendChild(ring)
+      setTimeout(() => ring.remove(), 700)
+    }
+    if (!doc.startViewTransition || reducedMotion) { setTheme(next); return }
+    const root = document.documentElement
+    root.classList.add('theme-vt')
+    const r = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y))
+    const t = doc.startViewTransition(() => setTheme(next))
+    t.ready.then(() => {
+      root.animate(
+        { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${r}px at ${x}px ${y}px)`] },
+        { duration: 520, easing: 'cubic-bezier(.22,1,.36,1)', pseudoElement: '::view-transition-new(root)' },
+      )
+    })
+    t.finished.finally(() => root.classList.remove('theme-vt'))
+  }
+
+  const selContiguous = useMemo(() => {
+    const ds = [...selDays].sort()
+    if (ds.length < 2) return true
+    return ds.length === daily.filter(r => r.d >= ds[0] && r.d <= ds[ds.length - 1]).length
+  }, [selDays, daily])
+  const dayVolMax = useMemo(() => Math.max(...daily.map(dayTot), 1), [daily])
 
   const periodLabel = useMemo(() => {
     const ds = [...selDays].sort()
     if (!ds.length) return 'Өдөр сонгоогүй'
     const min = ds[0], max = ds[ds.length - 1]
-    const contiguous = ds.length === daily.filter(r => r.d >= min && r.d <= max).length
-    return contiguous ? `${min.replace(/-/g,'.')} – ${max.replace(/-/g,'.')}` : `${ds.length} өдөр сонгосон`
-  }, [selDays, daily])
+    return selContiguous ? `${min.replace(/-/g,'.')} – ${max.replace(/-/g,'.')}` : `${ds.length} өдөр сонгосон`
+  }, [selDays, selContiguous])
+
+  // Slide the connected highlight across the selected day span
+  useLayoutEffect(() => {
+    const strip = stripRef.current
+    if (!strip) return
+    const measure = () => {
+      const on = strip.querySelectorAll<HTMLElement>('.daycell.on')
+      if (!on.length || !selContiguous) { setDayRange(null); return }
+      const first = on[0], last = on[on.length - 1]
+      setDayRange({ x: first.offsetLeft, w: last.offsetLeft + last.offsetWidth - first.offsetLeft })
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(strip)
+    return () => ro.disconnect()
+  }, [selDays, daily, rep, selContiguous])
 
   const isAllSel = Math.abs(factor - 1) < 0.005
 
@@ -915,23 +998,13 @@ export default function App() {
   const rated = R.agents.filter(a => a.r != null)
   const avgR = rated.length ? rated.reduce((a, x) => a + x.r!, 0) / rated.length : null
   const showOutage = selDays.has('2026-07-07')
-  const repKeys: RepKey[] = ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8', 'ALL']
 
   return (
     <div className="wrap">
       {/* Topbar */}
       <div className="topbar">
         <div className="brand">
-          <svg className="logo-cloud" viewBox="0 0 200 148" role="img" aria-label="Ontime">
-            <g fill="var(--teal)">
-              <rect x="20" y="76" width="160" height="54" rx="27" />
-              <circle cx="60" cy="72" r="31" />
-              <circle cx="104" cy="48" r="42" />
-              <circle cx="149" cy="74" r="31" />
-            </g>
-            <text x="100" y="103" textAnchor="middle" fontFamily="Inter, system-ui, sans-serif"
-              fontWeight="800" fontSize="42" letterSpacing="-1.5" fill="#fff">Ontime</text>
-          </svg>
+          <img className="logo-img" src={ontimeLogo} alt="Ontime" width={120} height={83} />
           <div>
             <h1>CRM дуудлагын тайлан</h1>
             <div className="sub">
@@ -943,26 +1016,102 @@ export default function App() {
             </div>
           </div>
         </div>
-        <div className="ctrls">
-          <div className="seg" ref={segRef}>
-            <span className="seg-thumb" style={{ transform: `translateX(${thumb?.x ?? 0}px)`, width: thumb?.w ?? 0, opacity: thumb ? 1 : 0 }} />
-            {repKeys.map(k => (
-              <button key={k} className={rep === k ? 'on' : ''} onClick={() => handleRepChange(k)}>
-                {REPORTS[k].label}
+        <div className="topctrls">
+          <button
+            type="button"
+            className="theme-btn"
+            onClick={toggleTheme}
+            title={theme === 'dark' ? 'Цайвар загвар' : 'Бараан загвар'}
+            aria-label="Загвар солих"
+          >
+            {theme === 'dark' ? '☀' : '☾'}
+          </button>
+          <div className="weeksel">
+          <button
+            type="button"
+            className={`weeksel-trigger${weekOpen ? ' open' : ''}`}
+            aria-expanded={weekOpen}
+            aria-haspopup="listbox"
+            onClick={() => setWeekOpen(o => !o)}
+          >
+            <span className="wst-ic">📅</span>
+            <span className="wst-label">
+              <b>{rep === 'ALL' ? 'Нэгдсэн' : REPORTS[rep].label.replace(/\//g, '.')}</b>
+              <i>{rep === 'ALL' ? 'Бүх хугацаа · 8 долоо хоног' : 'Тайлант 7 хоног'}</i>
+            </span>
+            <span className="wst-caret">▾</span>
+          </button>
+          {weekOpen && (
+            <>
+              <div className="weeksel-backdrop" onClick={() => setWeekOpen(false)} />
+              <div className="weeksel-panel" role="listbox" aria-label="Долоо хоног сонгох">
+                {MONTHS.map(m => (
+                  <div className="wsp-month" key={m.label}>
+                    <div className="wsp-month-h">{m.label}</div>
+                    {m.keys.map(k => (
+                      <button
+                        key={k}
+                        type="button"
+                        role="option"
+                        aria-selected={rep === k}
+                        className={`wsp-row${rep === k ? ' on' : ''}`}
+                        onClick={() => { handleRepChange(k); setWeekOpen(false) }}
+                      >
+                        <span className="wsp-d">{REPORTS[k].label.replace(/\//g, '.')}</span>
+                        <span className="wsp-vol"><i style={{ ['--v' as string]: (WEEK_VOL[k] / WEEK_VOL_MAX).toFixed(3) }} /></span>
+                        <span className="wsp-check">{rep === k ? '✓' : ''}</span>
+                      </button>
+                    ))}
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={rep === 'ALL'}
+                  className={`wsp-row wsp-row--all${rep === 'ALL' ? ' on' : ''}`}
+                  onClick={() => { handleRepChange('ALL'); setWeekOpen(false) }}
+                >
+                  <span className="wsp-d">Нэгдсэн · 8 долоо хоног</span>
+                  <span className="wsp-check">{rep === 'ALL' ? '✓' : ''}</span>
+                </button>
+              </div>
+            </>
+          )}
+          </div>
+        </div>
+      </div>
+
+      {/* Day picker */}
+      <div className="daypick">
+        <div className="daypick-head">
+          <span className="daypick-hint">Өдрөөр шүүх · Shift+дарж хугацаа сонгох</span>
+          <span className="daypick-lg"><i />Амралтын өдөр</span>
+          <span className="daycount">{selDays.size}<i>/{daily.length}</i></span>
+          <button className="daybtn-mini" onClick={() => setSelDays(new Set(daily.map(r => r.d)))}>Бүгд</button>
+          <button className="daybtn-mini" onClick={() => setSelDays(new Set())}>Цэвэрлэх</button>
+        </div>
+        <div className="daystrip" ref={stripRef}>
+          {dayRange && (
+            <span className="daystrip-range" style={{ transform: `translateX(${dayRange.x}px)`, width: dayRange.w }} />
+          )}
+          {daily.map(r => {
+            const on = selDays.has(r.d)
+            const wknd = isWeekend(r.d)
+            return (
+              <button
+                key={r.d}
+                type="button"
+                title={`${r.lab}${wknd ? ' · амралт' : ''}`}
+                className={`daycell${on ? ' on' : ''}${on && !selContiguous ? ' solo' : ''}${wknd ? ' wknd' : ''}`}
+                style={{ ['--v' as string]: (dayTot(r) / dayVolMax).toFixed(3) }}
+                onClick={e => pickDay(r.d, e.shiftKey)}
+              >
+                <span className="dc-wd">{weekday(r.d)}</span>
+                <span className="dc-d num">{r.d.slice(-2)}</span>
+                <span className="dc-vol" />
               </button>
-            ))}
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 7, alignItems: 'stretch' }}>
-            <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-              <button className="daybtn-mini" onClick={() => setSelDays(new Set(daily.map(r => r.d)))}>Бүх өдөр</button>
-              <button className="daybtn-mini" onClick={() => setSelDays(new Set())}>Цэвэрлэх</button>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(58px, 1fr))', gap: 5 }}>
-              {daily.map(r => (
-                <button key={r.d} className={`daychip${selDays.has(r.d) ? ' on' : ''}`} onClick={() => toggleDay(r.d)}>{r.lab}</button>
-              ))}
-            </div>
-          </div>
+            )
+          })}
         </div>
       </div>
 
