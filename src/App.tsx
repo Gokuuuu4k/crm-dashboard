@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef, useLayoutEffect, Component } from 'react'
 import type { ReactNode } from 'react'
-import ontimeLogo from './ontime-logo.png'
+import ontimeLogo from './ontime-logo'
 
 // ── Motion helpers ────────────────────────────────────────────────────────────
 function useReducedMotion() {
