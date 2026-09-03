@@ -480,8 +480,67 @@ const RALL: Agg = {
   recv: [...A_RECV, ...C_RECV, ...E_RECV, ...F_RECV],
 }
 
+// Roll several weekly aggregates up into one (for the month / all views).
+// Sums counts, call-weights the per-agent minutes & rating, re-colours by rank.
+function mergeAgg(...list: Agg[]): Agg {
+  const mergeNamed = (arrs: { n: string; v: number }[][], cols: string[]) => {
+    const m = new Map<string, number>()
+    for (const arr of arrs) for (const it of arr) m.set(it.n, (m.get(it.n) ?? 0) + it.v)
+    return [...m.entries()].sort((a, b) => b[1] - a[1]).map(([n, v], i) => ({ n, v, c: cols[i % cols.length] }))
+  }
+  const issues = (() => {
+    const m = new Map<string, { v: number; t: string }>()
+    for (const arr of list.map(a => a.issues)) for (const it of arr) {
+      const e = m.get(it.n)
+      if (e) e.v += it.v
+      else m.set(it.n, { v: it.v, t: it.t })
+    }
+    return [...m.entries()].sort((a, b) => b[1].v - a[1].v).slice(0, 15).map(([n, e]) => ({ n, v: e.v, t: e.t }))
+  })()
+  const agents = (() => {
+    const m = new Map<string, { n: string; c: number; tk: number | null; tS: number; tW: number; rS: number; rW: number }>()
+    for (const ag of list) for (const a of ag.agents) {
+      const e = m.get(a.n) ?? { n: a.n, c: 0, tk: null, tS: 0, tW: 0, rS: 0, rW: 0 }
+      e.c += a.c
+      if (a.tk != null) e.tk = (e.tk ?? 0) + a.tk
+      e.tS += a.t * a.c; e.tW += a.c
+      if (a.r != null) { e.rS += a.r * a.c; e.rW += a.c }
+      m.set(a.n, e)
+    }
+    return [...m.values()]
+      .map(e => ({ n: e.n, c: e.c, tk: e.tk, t: e.tW ? e.tS / e.tW : 0, r: e.rW ? e.rS / e.rW : null }))
+      .sort((a, b) => b.c - a.c)
+  })()
+  const recv = (() => {
+    const m = new Map<string, typeof A_RECV[number]>()
+    for (const a of list) for (const r of a.recv) {
+      const e = m.get(r.n) as ({ n: string; team: string; ok: number; wait: number; unres: number }) | undefined
+      const u = (r as { unres?: number }).unres ?? 0
+      if (e) { e.ok += r.ok; e.wait += r.wait; e.unres += u }
+      else m.set(r.n, { n: r.n, team: r.team, ok: r.ok, wait: r.wait, unres: u })
+    }
+    return [...m.values()].sort((a, b) => b.ok + b.wait - (a.ok + a.wait))
+  })()
+  return {
+    uniq: list.reduce((s, a) => s + a.uniq, 0),
+    callTransferred: null,
+    resolved: list.reduce((s, a) => s + a.resolved, 0),
+    unresolved: list.reduce((s, a) => s + a.unresolved, 0),
+    tkTransferred: list.reduce((s, a) => s + a.tkTransferred, 0),
+    channels: mergeNamed(list.map(a => a.channels), CHCOL),
+    products: mergeNamed(list.map(a => a.products), PRCOL),
+    issues,
+    agents,
+    recv,
+  }
+}
+const RM7 = mergeAgg(RA, RB, RC)
+const RM8 = mergeAgg(RD, RE, RF, RG)
+const JUL_DAYS = DAILY_ALL.filter(r => r.d < '2026-08-01').map(r => r.d)
+const AUG_DAYS = DAILY_ALL.filter(r => r.d >= '2026-08-01').map(r => r.d)
+
 // ── Reports config ─────────────────────────────────────────────────────────────
-type RepKey = 'W1' | 'W2' | 'W3' | 'W4' | 'W5' | 'W6' | 'W7' | 'W8' | 'ALL'
+type RepKey = 'W1' | 'W2' | 'W3' | 'W4' | 'W5' | 'W6' | 'W7' | 'W8' | 'M7' | 'M8' | 'ALL'
 const REPORTS: Record<RepKey, { daily: DayRow[]; agg: Agg; hourly: HourRow[]; label: string; defaultDays: string[] }> = {
   W1: { daily: DAILY_A, agg: RA, hourly: HOURLY, label: '07/06–07/12',
         defaultDays: DAILY_A.filter(r => r.d <= '2026-07-12').map(r => r.d) },
@@ -499,6 +558,10 @@ const REPORTS: Record<RepKey, { daily: DayRow[]; agg: Agg; hourly: HourRow[]; la
         defaultDays: DAILY_F.map(r => r.d) },
   W8: { daily: DAILY_G, agg: RG, hourly: HOURLY_W8, label: '08/24–08/30',
         defaultDays: DAILY_G.map(r => r.d) },
+  M7: { daily: DAILY_ALL.filter(r => r.d < '2026-08-01'), agg: RM7, hourly: HOURLY, label: '7-р сар',
+        defaultDays: JUL_DAYS },
+  M8: { daily: DAILY_ALL.filter(r => r.d >= '2026-08-01'), agg: RM8, hourly: HOURLY, label: '8-р сар',
+        defaultDays: AUG_DAYS },
   ALL: { daily: DAILY_ALL, agg: RALL, hourly: HOURLY, label: 'Нэгдсэн',
          defaultDays: DAILY_ALL.map(r => r.d) },
 }
@@ -525,6 +588,8 @@ const CHAN_RATES: Record<RepKey, Record<string, number>> = {
   W6:  { ts: 0.576, mb: 0.672, pos: 0.644, loan: 0.548, nd: 0.50 },
   W7:  { ts: 0.470, mb: 0.446, pos: 0.602, loan: 0.865, nd: 0.50 },
   W8:  { ts: 0.767, mb: 0.829, pos: 0.750, loan: 0.807, nd: 0.80 },
+  M7:  { ts: 0.76,  mb: 0.71,  pos: 0.71,  loan: 0.81,  nd: 0.90 },
+  M8:  { ts: 0.54,  mb: 0.54,  pos: 0.57,  loan: 0.74,  nd: 0.70 },
   ALL: { ts: 0.55,  mb: 0.50,  pos: 0.52,  loan: 0.78,  nd: 0.90 },
 }
 
@@ -561,9 +626,14 @@ const chTot = dayTot
 const fmt = (n: number) => Math.round(n).toLocaleString('en-US')
 
 // Week-tab config: month groups + per-week call volume (for the mini load bars)
-const MONTHS: { label: string; keys: RepKey[] }[] = [
-  { label: '7-р сар', keys: ['W1', 'W2', 'W3', 'W4'] },
-  { label: '8-р сар', keys: ['W5', 'W6', 'W7', 'W8'] },
+const MONTHS: { label: string; rep: RepKey; keys: RepKey[] }[] = [
+  { label: '7-р сар', rep: 'M7', keys: ['W1', 'W2', 'W3', 'W4'] },
+  { label: '8-р сар', rep: 'M8', keys: ['W5', 'W6', 'W7', 'W8'] },
+]
+const OVERVIEW: { rep: RepKey; label: string; sub: string; ic: string }[] = [
+  { rep: 'ALL', label: 'Бүх хугацаа', sub: '8 долоо хоног', ic: '📊' },
+  { rep: 'M7', label: '7-р сар', sub: '4 долоо хоног', ic: '📅' },
+  { rep: 'M8', label: '8-р сар', sub: '4 долоо хоног', ic: '📅' },
 ]
 const WEEK_VOL: Record<string, number> = Object.fromEntries(
   MONTHS.flatMap(m => m.keys).map(k => {
@@ -1034,20 +1104,38 @@ export default function App() {
             aria-haspopup="listbox"
             onClick={() => setWeekOpen(o => !o)}
           >
-            <span className="wst-ic">📅</span>
+            <span className="wst-ic">{rep === 'ALL' ? '📊' : rep[0] === 'M' ? '📅' : '🗓'}</span>
             <span className="wst-label">
               <b>{rep === 'ALL' ? 'Нэгдсэн' : REPORTS[rep].label.replace(/\//g, '.')}</b>
-              <i>{rep === 'ALL' ? 'Бүх хугацаа · 8 долоо хоног' : 'Тайлант 7 хоног'}</i>
+              <i>{rep === 'ALL' ? 'Бүх хугацаа · 8 долоо хоног' : rep[0] === 'M' ? 'Бүтэн сар' : 'Тайлант 7 хоног'}</i>
             </span>
             <span className="wst-caret">▾</span>
           </button>
           {weekOpen && (
             <>
               <div className="weeksel-backdrop" onClick={() => setWeekOpen(false)} />
-              <div className="weeksel-panel" role="listbox" aria-label="Долоо хоног сонгох">
+              <div className="weeksel-panel" role="listbox" aria-label="Хугацаа сонгох">
+                <div className="wsp-month">
+                  <div className="wsp-month-h">Ерөнхий</div>
+                  {OVERVIEW.map(o => (
+                    <button
+                      key={o.rep}
+                      type="button"
+                      role="option"
+                      aria-selected={rep === o.rep}
+                      className={`wsp-row wsp-row--agg${rep === o.rep ? ' on' : ''}`}
+                      onClick={() => { handleRepChange(o.rep); setWeekOpen(false) }}
+                    >
+                      <span className="wsp-ic">{o.ic}</span>
+                      <span className="wsp-d">{o.label}</span>
+                      <span className="wsp-sub2">{o.sub}</span>
+                      <span className="wsp-check">{rep === o.rep ? '✓' : ''}</span>
+                    </button>
+                  ))}
+                </div>
                 {MONTHS.map(m => (
                   <div className="wsp-month" key={m.label}>
-                    <div className="wsp-month-h">{m.label}</div>
+                    <div className="wsp-month-h">{m.label} · долоо хоногоор</div>
                     {m.keys.map(k => (
                       <button
                         key={k}
@@ -1064,16 +1152,6 @@ export default function App() {
                     ))}
                   </div>
                 ))}
-                <button
-                  type="button"
-                  role="option"
-                  aria-selected={rep === 'ALL'}
-                  className={`wsp-row wsp-row--all${rep === 'ALL' ? ' on' : ''}`}
-                  onClick={() => { handleRepChange('ALL'); setWeekOpen(false) }}
-                >
-                  <span className="wsp-d">Нэгдсэн · 8 долоо хоног</span>
-                  <span className="wsp-check">{rep === 'ALL' ? '✓' : ''}</span>
-                </button>
               </div>
             </>
           )}
@@ -1090,7 +1168,7 @@ export default function App() {
           <button className="daybtn-mini" onClick={() => setSelDays(new Set(daily.map(r => r.d)))}>Бүгд</button>
           <button className="daybtn-mini" onClick={() => setSelDays(new Set())}>Цэвэрлэх</button>
         </div>
-        <div className="daystrip" ref={stripRef}>
+        <div className={`daystrip${daily.length > 16 ? ' dense' : ''}`} ref={stripRef}>
           {dayRange && (
             <span className="daystrip-range" style={{ transform: `translateX(${dayRange.x}px)`, width: dayRange.w }} />
           )}

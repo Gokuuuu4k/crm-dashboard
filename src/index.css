@@ -221,7 +221,13 @@ img, svg, table { max-width: 100%; }
 .wsp-vol { flex: 1; height: 4px; min-width: 30px; background: var(--track); border-radius: 2px; overflow: hidden; }
 .wsp-vol i { display: block; height: 100%; background: var(--blue); border-radius: 2px; transform: scaleX(var(--v, 0)); transform-origin: left; }
 .wsp-check { flex: none; width: 14px; text-align: center; color: var(--blue); font-weight: 700; }
-.wsp-row--all { margin-top: 4px; border-top: 1px solid var(--line); border-radius: 0 0 9px 9px; }
+
+/* Overview rows (Бүх хугацаа / сар сараар) */
+.wsp-row--agg { gap: 9px; }
+.wsp-ic { flex: none; width: 18px; font-size: 13px; text-align: center; opacity: .9; }
+.wsp-row--agg .wsp-d { color: var(--text); }
+.wsp-sub2 { flex: 1; font-size: 10px; color: var(--muted2); }
+.wsp-row--agg.on .wsp-sub2 { color: var(--muted); }
 
 .ctrl-row { display: flex; gap: 8px; align-items: center; }
 
@@ -251,6 +257,8 @@ img, svg, table { max-width: 100%; }
   overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
 }
 .daystrip::-webkit-scrollbar { display: none; }
+.daystrip.dense .daycell { flex: 0 0 46px; min-width: 40px; padding: 5px 1px; }
+.daystrip.dense .daycell .dc-wd { font-size: 7px; }
 
 .daystrip-range {
   position: absolute; top: 4px; bottom: 4px; left: 0; z-index: 0;
