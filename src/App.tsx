@@ -1031,8 +1031,16 @@ export default function App() {
       : chSelSum
     return `${selDays.size} өдөр · ${fmt(ct)} дуудлага${prodChanKey ? ` (${CH.find(c => c.k === prodChanKey)?.n})` : ''}`
   }, [selRows, prodChanKey, chSelSum, selDays])
+  // Selected product's share of tickets — reused to shape the CSAT + channel cards
+  const prodShare = useMemo(() => {
+    if (!selProd) return 1
+    const p = R.products.find(p => p.n === selProd)
+    return p ? p.v / ptot : 1
+  }, [selProd, R.products, ptot])
+  const satDist = useMemo(() => selProd ? selSat.map(v => v * prodShare) : selSat, [selSat, selProd, prodShare])
+  const satSentAdj = selSent * prodShare
   const { svg: donutSvg, tot: chanTot } = useMemo(() => mkDonutSvg(R.channels), [R.channels])
-  const { svg: satSvg, score: satScore, resp: satResp } = useMemo(() => mkSatGaugeSvg(selSat), [selSat])
+  const { svg: satSvg, score: satScore, resp: satResp } = useMemo(() => mkSatGaugeSvg(satDist), [satDist])
 
   // Callback / reconnect stats from ticket issues
   const nokhjIssue = useMemo(() => R.issues.find(i => i.n.toLowerCase().includes('нөхөж')), [R.issues])
@@ -1062,7 +1070,7 @@ export default function App() {
 
   const tkTot = R.resolved + R.unresolved + R.tkTransferred || 1
   const satCols = [C.coral, C.amber, C.gold, C.blue, C.teal]
-  const satMax = Math.max(...selSat, 1)
+  const satMax = Math.max(...satDist, 1)
   const issueMax = filteredIssues[0]?.v || 1
   const agentMax = Math.max(...R.agents.map(a => a.c))
   const rated = R.agents.filter(a => a.r != null)
@@ -1305,7 +1313,9 @@ export default function App() {
         </div>
 
         <div className="card">
-          <div className="card-h"><div className="card-title"><span className="tdot" style={{ background: C.gold }} />Сэтгэл ханамж</div></div>
+          <div className="card-h"><div className="card-title"><span className="tdot" style={{ background: C.gold }} />Сэтгэл ханамж
+            {selProd && <span style={{ fontSize: 10, color: C.gold, fontWeight: 600, marginLeft: 10, letterSpacing: .5 }}>· {selProd}</span>}
+          </div></div>
           <div className="sat-wrap">
             <div style={{ position: 'relative', width: 132, height: 132 }}>
               <div dangerouslySetInnerHTML={{ __html: satSvg }} />
@@ -1319,16 +1329,18 @@ export default function App() {
             {[5,4,3,2,1].map(s => (
               <div key={s} className="sd-row">
                 <span className="st">{s}★</span>
-                <div className="sd-bar"><span style={{ width: `${selSat[s-1] / satMax * 100}%`, background: satCols[s-1] }} /></div>
-                <span className="sd-n">{selSat[s-1]}</span>
+                <div className="sd-bar"><span style={{ width: `${satDist[s-1] / satMax * 100}%`, background: satCols[s-1] }} /></div>
+                <span className="sd-n">{Math.round(satDist[s-1])}</span>
               </div>
             ))}
           </div>
-          <div className="sat-rate">Хариу өгсөн: <b>{selSent ? (satResp / selSent * 100).toFixed(1) : '—'}%</b> ({satResp}/{selSent})</div>
+          <div className="sat-rate">Хариу өгсөн: <b>{satSentAdj ? (satResp / satSentAdj * 100).toFixed(1) : '—'}%</b> ({Math.round(satResp)}/{Math.round(satSentAdj)})</div>
         </div>
 
         <div className="card">
-          <div className="card-h"><div className="card-title"><span className="tdot" style={{ background: C.blue }} />Харилцсан суваг</div></div>
+          <div className="card-h"><div className="card-title"><span className="tdot" style={{ background: C.blue }} />Харилцсан суваг
+            {selProd && <span style={{ fontSize: 10, color: C.gold, fontWeight: 600, marginLeft: 10, letterSpacing: .5 }}>· {selProd}</span>}
+          </div></div>
           <div className="donut-wrap">
             <div style={{ position: 'relative', width: 140, height: 140 }}>
               <div dangerouslySetInnerHTML={{ __html: donutSvg }} />
@@ -1341,7 +1353,7 @@ export default function App() {
               {R.channels.filter(c => c.n !== 'Remote').map((c, i) => (
                 <div key={i} className="lg">
                   <div className="lg-l"><span className="lg-mk" style={{ background: c.c }} />{c.n}</div>
-                  <div><span className="lg-v">{(c.v / chanTot * 100).toFixed(1)}%</span><span className="lg-c">{fmt(c.v * factor)}</span></div>
+                  <div><span className="lg-v">{(c.v / chanTot * 100).toFixed(1)}%</span><span className="lg-c">{fmt(c.v * prodFactor)}</span></div>
                 </div>
               ))}
             </div>
@@ -1358,7 +1370,7 @@ export default function App() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <span style={{ fontSize: 15, fontWeight: 700, color: remote.c }}>{pct}%</span>
-                  <span style={{ fontSize: 11, color: 'var(--muted)' }}>{fmt(remote.v * factor)}</span>
+                  <span style={{ fontSize: 11, color: 'var(--muted)' }}>{fmt(remote.v * prodFactor)}</span>
                 </div>
               </div>
             )
