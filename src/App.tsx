@@ -98,7 +98,7 @@ const mkIs = (a: [string, number, string][]) => a.map(x => ({ n: x[0], v: x[1], 
 const mkAg = (a: [string, number, number | null, number, number | null][]) =>
   a.map(x => ({ n: x[0], c: x[1], tk: x[2], t: x[3], r: x[4] }))
 
-type DayRow = { d: string; lab: string; ts: number; mb: number; pos: number; loan: number; nd: number; a: number; sat: number[]; sent: number; cb?: number; cbNeed?: number }
+type DayRow = { d: string; lab: string; ts: number; mb: number; pos: number; loan: number; nd: number; a: number; sat: number[]; sent: number; cb?: number; cbNeed?: number; uniq?: number }
 type HourRow = [string, number, number, number]
 
 // ── Daily data ────────────────────────────────────────────────────────────────
@@ -191,7 +191,24 @@ const DAILY_G: DayRow[] = [
   { d: '2026-08-29', lab: '08/29', ts: 66,  mb: 42, pos: 21, loan: 6,  nd: 0, a: 78,  sat: [1,0,0,0,3],  sent: 114, cb: 10, cbNeed: 10 },
   { d: '2026-08-30', lab: '08/30', ts: 58,  mb: 23, pos: 18, loan: 1,  nd: 0, a: 71,  sat: [0,0,0,0,9],  sent: 78,  cb: 1,  cbNeed: 2  },
 ]
-const DAILY_ALL: DayRow[] = DAILY_A.filter(r => r.d <= '2026-07-19').concat(DAILY_B).concat(DAILY_C).concat(DAILY_D).concat(DAILY_E).concat(DAILY_F).concat(DAILY_G)
+// W9: 2026.08.31–09.06 — Inbound нийт: 1,420  Авсан: 983 (69.2%)  Unique: 664  Тикет: 1,149  CSAT: 4.70/5 (105 resp)
+// Scope = "Inbound" call-log export (2026-...__2026-... PDF), хэрэглэгчийн тайлангийн хүснэгттэй тохирсон.
+//   POS Operator (30) ба Operator (62) дараалал Inbound-д ОРООГҮЙ (тусдаа баг).
+// Channels (offered): ts=Technical support 791 (67.1%), mb=MBusiness Plus 420 (70.5%),
+//   pos=MBank pos guide 155 (74.8%), loan=Business loan 52 (76.9%), nd=Оператор 2
+// a = ANSWERED (шилжүүлсэн 24-ийг оруулаагүй)  ·  uniq = тухайн өдрийн давхцаагүй утасны дугаар
+//   (өдрийн нийлбэр 815, долоо хоногийн давхцаагүй нийт 664 — хэрэглэгч өөр өдөр дахин залгадаг)
+// sat = SMS дуудлагын үнэлгээ (SmsRateExport PDF), [1★..5★] өдрөөр
+const DAILY_H: DayRow[] = [
+  { d: '2026-08-31', lab: '08/31', ts: 163, mb: 93, pos: 17, loan: 12, nd: 0, a: 176, sat: [0,0,0,1,12],  sent: 209, cb: 12, uniq: 155 },
+  { d: '2026-09-01', lab: '09/01', ts: 130, mb: 87, pos: 29, loan: 15, nd: 0, a: 159, sat: [0,1,0,2,13],  sent: 188, cb: 13, uniq: 141 },
+  { d: '2026-09-02', lab: '09/02', ts: 117, mb: 54, pos: 26, loan: 8,  nd: 0, a: 158, sat: [3,0,0,1,14],  sent: 183, cb: 5,  uniq: 124 },
+  { d: '2026-09-03', lab: '09/03', ts: 158, mb: 76, pos: 34, loan: 4,  nd: 1, a: 186, sat: [1,0,0,1,19],  sent: 204, cb: 8,  uniq: 139 },
+  { d: '2026-09-04', lab: '09/04', ts: 115, mb: 61, pos: 32, loan: 13, nd: 1, a: 179, sat: [0,1,0,0,15],  sent: 195, cb: 1,  uniq: 138 },
+  { d: '2026-09-05', lab: '09/05', ts: 61,  mb: 36, pos: 11, loan: 0,  nd: 0, a: 78,  sat: [1,0,0,1,10],  sent: 101, cb: 2,  uniq: 74  },
+  { d: '2026-09-06', lab: '09/06', ts: 47,  mb: 13, pos: 6,  loan: 0,  nd: 0, a: 47,  sat: [0,0,0,0,9],   sent: 69,  cb: 1,  uniq: 44  },
+]
+const DAILY_ALL: DayRow[] = DAILY_A.filter(r => r.d <= '2026-07-19').concat(DAILY_B).concat(DAILY_C).concat(DAILY_D).concat(DAILY_E).concat(DAILY_F).concat(DAILY_G).concat(DAILY_H)
 
 // ── Hourly load data ──────────────────────────────────────────────────────────
 // Format: [hour, answered, missed, timeout]
@@ -226,6 +243,13 @@ const HOURLY_W8: HourRow[] = [
   ['08',23,6,0],['09',91,25,0],['10',118,33,0],['11',121,33,0],
   ['12',121,33,0],['13',109,30,0],['14',120,33,0],['15',112,31,0],
   ['16',105,29,0],['17',85,23,0],['18',67,18,0],['19',26,7,0],
+]
+
+// W9 hourly — Inbound call-log цагийн ачаалал. answered=ANSWERED 983, missed=1420-983 (20:00-ийн 2 дуудлага 19:00 дээр)
+const HOURLY_W9: HourRow[] = [
+  ['08',35,14,0],['09',98,39,0],['10',104,37,0],['11',112,26,0],
+  ['12',100,41,0],['13',104,34,0],['14',106,57,0],['15',92,60,0],
+  ['16',86,34,0],['17',58,18,0],['18',50,50,0],['19',38,27,0],
 ]
 
 // ── Channel config for daily stacked chart ────────────────────────────────────
@@ -292,6 +316,9 @@ type Agg = {
   issues: ReturnType<typeof mkIs>
   agents: ReturnType<typeof mkAg>
   recv: typeof A_RECV
+  missedUniq?: number       // алдсан дуудлагын давхцаагүй хэрэглэгчийн тоо (эргэн холбогдол)
+  tkTransfResolved?: number // "Шилжүүлсэн-Шийдсэн" тикет (tkTransferred-ийн дэд хэсэг)
+  unresList?: { d: string; agent: string; issue: string }[]  // Шийдэгдээгүй тикетийн задаргаа
 }
 const RA: Agg = {
   uniq: 845, callTransferred: 20 as number | null, resolved: 1328, unresolved: 20, tkTransferred: 52,
@@ -388,6 +415,29 @@ const F_RECV = [
   { n: 'Zolbayr',       team: 'Техникийн баг',     ok: 3,  wait: 1, unres: 0 },
   { n: 'Bayarmaa.T',    team: 'Техникийн дэмжлэг', ok: 2,  wait: 1, unres: 0 },
 ]
+// W9 асуудалтай тикет ажилтнаар (pivot): unres=Шийдэгдээгүй 24 · wait=Шилжүүлсэн хэвээр 25 · ok=Шилжүүлсэн-Шийдсэн 31 · нийт 80
+const H_RECV = [
+  { n: 'Unubold.T',      team: '', unres: 9, wait: 0, ok: 0 },
+  { n: 'tsogoo',         team: '', unres: 1, wait: 2, ok: 6 },
+  { n: 'dashmunkh',      team: '', unres: 0, wait: 2, ok: 6 },
+  { n: 'Octa.Tuguldur',  team: '', unres: 0, wait: 6, ok: 2 },
+  { n: 'Baaska.U',       team: '', unres: 0, wait: 1, ok: 6 },
+  { n: 'Tugssaikhan.G',  team: '', unres: 5, wait: 2, ok: 0 },
+  { n: 'Tsenguun',       team: '', unres: 0, wait: 3, ok: 3 },
+  { n: 'Khaliunaa.P',    team: '', unres: 0, wait: 0, ok: 6 },
+  { n: 'Turmandakh.O',   team: '', unres: 5, wait: 0, ok: 0 },
+  { n: 'Zolbayr',        team: '', unres: 3, wait: 0, ok: 0 },
+  { n: 'Bymbatogtokh.T', team: '', unres: 0, wait: 2, ok: 0 },
+  { n: 'Tumen-Ulzii',    team: '', unres: 0, wait: 2, ok: 0 },
+  { n: 'Bayarsaikhan.E', team: '', unres: 0, wait: 0, ok: 1 },
+  { n: 'Dolgor.P',       team: '', unres: 0, wait: 1, ok: 0 },
+  { n: 'Otgonbayar.L',   team: '', unres: 1, wait: 0, ok: 0 },
+  { n: 'Soyolzul.Ts',    team: '', unres: 0, wait: 1, ok: 0 },
+  { n: 'Sumiya.D',       team: '', unres: 0, wait: 0, ok: 1 },
+  { n: 'Uugankhuu',      team: '', unres: 0, wait: 1, ok: 0 },
+  { n: 'Yumjirdulam',    team: '', unres: 0, wait: 1, ok: 0 },
+]
+
 // W7: 2026.08.17–08.23  —  2,148 дуудлага · 1,134 тикет · Answered 49.6% · CSAT 3.79/5
 const RF: Agg = {
   uniq: 917, callTransferred: null as number | null, resolved: 1067, unresolved: 28, tkTransferred: 84,
@@ -448,6 +498,78 @@ const RG: Agg = {
     ['Tsenguun',       5,   8,   3.7, null],
   ]),
   recv: [] as typeof A_RECV,
+}
+
+// W9: 2026.08.31–09.06  —  Inbound 1,420 · Авсан 983 (69.2%) · Unique 664 · 1,149 тикет · CSAT 4.70/5 (105 SMS)
+// Scope = "Inbound" call-log (хэрэглэгчийн тайлангийн хүснэгттэй тааруулав). POS Operator/Operator дараалал ороогүй.
+// Per-agent: c = авсан inbound дуудлага (ANSWERED), tk = бүртгэсэн тикет, t = дуудлагын дундаж (мин),
+//   r = SMS дуудлагын үнэлгээний дундаж (SmsRateExport PDF, судалгаа ≥5 хариулттай үед)
+const RH: Agg = {
+  // Тикетийн статус: Шийдэгдсэн 1069 + Шийдэгдээгүй 24 + Шилжүүлсэн 25 + Шилжүүлсэн-Шийдсэн 31 = 1,149
+  // Харилцсан суваг: Утасаар 1081 + Сошиал 63 + Дуудлагаар 4 + Биечлэн 1 = 1,149.
+  // Remote 197 = AnyDesk хандалт — сувгийн задаргаанд ОРОХГҮЙ, доор нь тусад нь харуулна.
+  uniq: 664, callTransferred: 24 as number | null, resolved: 1069, unresolved: 24, tkTransferred: 56, tkTransfResolved: 31, missedUniq: 249,
+  channels: mkCh([['Утасаар',1081],['Remote',197],['Сошиал',63],['Биечлэн',1],['Дуудлагаар',4]]),
+  products: mkPr([['PROPOS',649],['MPLUS',416],['MPOS',77],['LITEPOS',4],['MOBILEPOS',3]]),
+  issues: mkIs([
+    ['MBusiness Plus мэдээлэл',124,'Мэдээлэл'],['Бусад мэдээлэл',94,'Мэдээлэл'],
+    ['Программын тохиргоо',67,'Тохиргоо'],['Төлбөрийн мэдээлэл',65,'Санхүү'],
+    ['MBusiness Plus засвар',53,'Засвар'],['MBusiness Plus сургалт',44,'Сургалт'],
+    ['Нөхөж залгасан',42,'Мэдээлэл'],['Мбанк пос мэдээлэл',39,'Мэдээлэл'],
+    ['MBusiness Plus бүтээгдэхүүн',38,'Бүтээгдэхүүн'],['РД солих',32,'Засвар'],
+  ]),
+  agents: mkAg([
+    ['Otgonbayar.L',   165, 169, 4.1, 4.69],
+    ['Bayarsaikhan.E', 103, 111, 6.3, 4.93],
+    ['Zolbayar.U',     87,  103, 4.6, 5.00],
+    ['Bujinlkham.T',   83,  84,  4.0, 5.00],
+    ['Tugssaikhan.G',  76,  88,  4.8, 4.20],
+    ['Byambatogtokh.T',67,  72,  4.7, 4.43],
+    ['Soyolzul.Ts',    45,  90,  2.1, 5.00],
+    ['Unubold.T',      44,  57,  2.6, 4.86],
+    ['Zolbayar.G',     40,  32,  5.5, null],
+    ['Yumjirdulam',    39,  43,  3.1, 4.17],
+    ['Saranchimeg',    36,  49,  4.3, 4.20],
+    ['Bayartsogt',     36,  47,  4.4, 4.83],
+    ['Sumiya.D',       33,  29,  4.5, null],
+    ['Turmandakh.O',   32,  66,  4.7, null],
+    ['Tsenguun',       30,  40,  4.2, 4.40],
+    ['Bayarmaa.N',     16,  null,5.4, null],
+    ['Bayarmaa.T',     14,  1,   2.5, null],
+    ['Tsevelmaa',      10,  null,1.3, null],
+    ['Nayanjin',       8,   4,   5.8, null],
+    ['Khaliunaa.P',    8,   14,  3.0, null],
+    ['Ganchimeg.A',    5,   5,   2.0, null],
+    ['Khadaan',        6,   3,   1.6, null],
+  ]),
+  recv: H_RECV,
+  // Шийдэгдээгүй 24 тикет — бүртгэсэн ажилтан + асуудлын төрөл
+  unresList: [
+    { d: '09/06', agent: 'Turmandakh.O',  issue: 'Тохиргоо - Мбанк пос ECR' },
+    { d: '09/06', agent: 'Turmandakh.O',  issue: 'Мэдээлэл - Мбанк бусад' },
+    { d: '09/04', agent: 'Zolbayr',       issue: 'Мэдээлэл - Мбанк цаас захиалга' },
+    { d: '09/04', agent: 'Unubold.T',     issue: 'Мэдээлэл - Мбанк пос нэвтрэх нэр, нууц үг' },
+    { d: '09/04', agent: 'Unubold.T',     issue: 'Тохиргоо - Мбанк пос алдаа' },
+    { d: '09/04', agent: 'Unubold.T',     issue: 'Бүтээгдэхүүн - MBusiness Plus' },
+    { d: '09/04', agent: 'Otgonbayar.L',  issue: 'Сервер - 540 суулгалт' },
+    { d: '09/03', agent: 'Unubold.T',     issue: 'Мэдээлэл - Мбанк цаас захиалга' },
+    { d: '09/03', agent: 'tsogoo',        issue: 'Интеграци - Голомт банк' },
+    { d: '09/03', agent: 'Tugssaikhan.G', issue: 'Засвар - РД солих' },
+    { d: '09/03', agent: 'Zolbayr',       issue: 'Засвар - Гэрээний мэдээлэл шинэчлэх' },
+    { d: '09/03', agent: 'Unubold.T',     issue: 'Засвар - Мбанк пос гэмтэл' },
+    { d: '09/03', agent: 'Tugssaikhan.G', issue: 'Сервер - 540 суулгалт' },
+    { d: '09/03', agent: 'Unubold.T',     issue: 'Алдаа - MBusiness Plus' },
+    { d: '09/03', agent: 'Tugssaikhan.G', issue: 'Санхүү - MBusiness Plus' },
+    { d: '09/02', agent: 'Tugssaikhan.G', issue: 'Санхүү - MBusiness Plus' },
+    { d: '09/02', agent: 'Unubold.T',     issue: 'Бүтээгдэхүүн - МБанкPos' },
+    { d: '09/02', agent: 'Turmandakh.O',  issue: 'Мэдээлэл - Мбанк цаас захиалга' },
+    { d: '09/02', agent: 'Unubold.T',     issue: 'Бүтээгдэхүүн - МБанкPos' },
+    { d: '09/01', agent: 'Unubold.T',     issue: 'Бүтээгдэхүүн - MBusiness Plus' },
+    { d: '08/31', agent: 'Turmandakh.O',  issue: 'Мэдээлэл - Мбанк цаас захиалга' },
+    { d: '08/31', agent: 'Tugssaikhan.G', issue: 'Засвар - MBusiness Plus' },
+    { d: '08/31', agent: 'Zolbayr',       issue: 'Мэдээлэл - Нөхөж залгасан' },
+    { d: '08/31', agent: 'Turmandakh.O',  issue: 'Мэдээлэл - Мбанк пос мэдээлэл' },
+  ],
 }
 
 // All 8 weeks combined
@@ -537,10 +659,11 @@ function mergeAgg(...list: Agg[]): Agg {
 const RM7 = mergeAgg(RA, RB, RC)
 const RM8 = mergeAgg(RD, RE, RF, RG)
 const JUL_DAYS = DAILY_ALL.filter(r => r.d < '2026-08-01').map(r => r.d)
-const AUG_DAYS = DAILY_ALL.filter(r => r.d >= '2026-08-01').map(r => r.d)
+const AUG_DAYS = DAILY_ALL.filter(r => r.d >= '2026-08-01' && r.d < '2026-09-01').map(r => r.d)
+const SEP_DAYS = DAILY_ALL.filter(r => r.d >= '2026-09-01').map(r => r.d)
 
 // ── Reports config ─────────────────────────────────────────────────────────────
-type RepKey = 'W1' | 'W2' | 'W3' | 'W4' | 'W5' | 'W6' | 'W7' | 'W8' | 'M7' | 'M8' | 'ALL'
+type RepKey = 'W1' | 'W2' | 'W3' | 'W4' | 'W5' | 'W6' | 'W7' | 'W8' | 'W9' | 'M7' | 'M8' | 'M9' | 'ALL'
 const REPORTS: Record<RepKey, { daily: DayRow[]; agg: Agg; hourly: HourRow[]; label: string; defaultDays: string[] }> = {
   W1: { daily: DAILY_A, agg: RA, hourly: HOURLY, label: '07/06–07/12',
         defaultDays: DAILY_A.filter(r => r.d <= '2026-07-12').map(r => r.d) },
@@ -558,10 +681,14 @@ const REPORTS: Record<RepKey, { daily: DayRow[]; agg: Agg; hourly: HourRow[]; la
         defaultDays: DAILY_F.map(r => r.d) },
   W8: { daily: DAILY_G, agg: RG, hourly: HOURLY_W8, label: '08/24–08/30',
         defaultDays: DAILY_G.map(r => r.d) },
+  W9: { daily: DAILY_H, agg: RH, hourly: HOURLY_W9, label: '08/31–09/06',
+        defaultDays: DAILY_H.map(r => r.d) },
   M7: { daily: DAILY_ALL.filter(r => r.d < '2026-08-01'), agg: RM7, hourly: HOURLY, label: '7-р сар',
         defaultDays: JUL_DAYS },
-  M8: { daily: DAILY_ALL.filter(r => r.d >= '2026-08-01'), agg: RM8, hourly: HOURLY, label: '8-р сар',
+  M8: { daily: DAILY_ALL.filter(r => r.d >= '2026-08-01' && r.d < '2026-09-01'), agg: RM8, hourly: HOURLY, label: '8-р сар',
         defaultDays: AUG_DAYS },
+  M9: { daily: DAILY_ALL.filter(r => r.d >= '2026-09-01'), agg: RH, hourly: HOURLY_W9, label: '9-р сар',
+        defaultDays: SEP_DAYS },
   ALL: { daily: DAILY_ALL, agg: RALL, hourly: HOURLY, label: 'Нэгдсэн',
          defaultDays: DAILY_ALL.map(r => r.d) },
 }
@@ -588,8 +715,10 @@ const CHAN_RATES: Record<RepKey, Record<string, number>> = {
   W6:  { ts: 0.576, mb: 0.672, pos: 0.644, loan: 0.548, nd: 0.50 },
   W7:  { ts: 0.470, mb: 0.446, pos: 0.602, loan: 0.865, nd: 0.50 },
   W8:  { ts: 0.767, mb: 0.829, pos: 0.750, loan: 0.807, nd: 0.80 },
+  W9:  { ts: 0.671, mb: 0.705, pos: 0.748, loan: 0.769, nd: 0.50 },
   M7:  { ts: 0.76,  mb: 0.71,  pos: 0.71,  loan: 0.81,  nd: 0.90 },
   M8:  { ts: 0.54,  mb: 0.54,  pos: 0.57,  loan: 0.74,  nd: 0.70 },
+  M9:  { ts: 0.671, mb: 0.705, pos: 0.748, loan: 0.769, nd: 0.50 },
   ALL: { ts: 0.55,  mb: 0.50,  pos: 0.52,  loan: 0.78,  nd: 0.90 },
 }
 
@@ -629,11 +758,13 @@ const fmt = (n: number) => Math.round(n).toLocaleString('en-US')
 const MONTHS: { label: string; rep: RepKey; keys: RepKey[] }[] = [
   { label: '7-р сар', rep: 'M7', keys: ['W1', 'W2', 'W3', 'W4'] },
   { label: '8-р сар', rep: 'M8', keys: ['W5', 'W6', 'W7', 'W8'] },
+  { label: '9-р сар', rep: 'M9', keys: ['W9'] },
 ]
 const OVERVIEW: { rep: RepKey; label: string; sub: string; ic: string }[] = [
-  { rep: 'ALL', label: 'Бүх хугацаа', sub: '8 долоо хоног', ic: '📊' },
+  { rep: 'ALL', label: 'Бүх хугацаа', sub: '9 долоо хоног', ic: '📊' },
   { rep: 'M7', label: '7-р сар', sub: '4 долоо хоног', ic: '📅' },
   { rep: 'M8', label: '8-р сар', sub: '4 долоо хоног', ic: '📅' },
+  { rep: 'M9', label: '9-р сар', sub: '1 долоо хоног', ic: '📅' },
 ]
 const WEEK_VOL: Record<string, number> = Object.fromEntries(
   MONTHS.flatMap(m => m.keys).map(k => {
@@ -868,14 +999,15 @@ export { ErrorBoundary }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function App() {
-  const [rep, setRep] = useState<RepKey>('W1')
-  const [selDays, setSelDays] = useState<Set<string>>(new Set(REPORTS.W1.defaultDays))
+  const [rep, setRep] = useState<RepKey>('W9')
+  const [selDays, setSelDays] = useState<Set<string>>(new Set(REPORTS.W9.defaultDays))
   const [selProd, setSelProd] = useState<string | null>(null)
   const reducedMotion = useReducedMotion()
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     try { return localStorage.getItem('crm-theme') === 'light' ? 'light' : 'dark' } catch { return 'dark' }
   })
   const [weekOpen, setWeekOpen] = useState(false)
+  const [unresAgent, setUnresAgent] = useState<string | null>(null)
   const stripRef = useRef<HTMLDivElement>(null)
   const [dayRange, setDayRange] = useState<{ x: number; w: number } | null>(null)
   const anchorRef = useRef<string | null>(null)
@@ -1039,7 +1171,8 @@ export default function App() {
   }, [selProd, R.products, ptot])
   const satDist = useMemo(() => selProd ? selSat.map(v => v * prodShare) : selSat, [selSat, selProd, prodShare])
   const satSentAdj = selSent * prodShare
-  const { svg: donutSvg, tot: chanTot } = useMemo(() => mkDonutSvg(R.channels), [R.channels])
+  // Remote нь харилцсан сувгийн задаргаанд ордоггүй (AnyDesk хандалт — тусдаа ойлголт), доор нь тусад нь
+  const { svg: donutSvg, tot: chanTot } = useMemo(() => mkDonutSvg(R.channels.filter(c => c.n !== 'Remote')), [R.channels])
   const { svg: satSvg, score: satScore, resp: satResp } = useMemo(() => mkSatGaugeSvg(satDist), [satDist])
 
   // Callback / reconnect stats from ticket issues
@@ -1049,7 +1182,9 @@ export default function App() {
   const nokhjCount  = cbFromRows > 0 ? Math.round(cbFromRows * prodFactor) : Math.round((nokhjIssue?.v ?? 0) * prodFactor)
   const missedCalls = Math.max((prodChanKey ? prodTotalCalls - prodAnswered : chSelSum - selAnswered), 0)
   const cbDenom     = cbNeedTotal > 0 ? Math.round(cbNeedTotal * prodFactor) : missedCalls
-  const callbackRate = cbDenom > 0 ? nokhjCount / cbDenom * 100 : 0
+  const missedUniq  = R.missedUniq != null ? Math.round(R.missedUniq * prodFactor) : null
+  const cbBase      = missedUniq ?? cbDenom   // эргэн холбогдлын хувийг давхцаагүй алдсанаар бодох
+  const callbackRate = cbBase > 0 ? nokhjCount / cbBase * 100 : 0
 
   // Sparklines computed as SVG strings (avoids useEffect deps-size mismatch on HMR)
   const sparkSvgs = useMemo(() => {
@@ -1058,7 +1193,7 @@ export default function App() {
     const rate = CHAN_RATES[rep]?.[prodChanKey ?? ''] ?? (refSum ? selAnswered / refSum : 0)
     const av = prodChanKey ? sv.map(v => Math.round(v * rate)) : selRows.map(r => r.a)
     const sc = sv.map((v, i) => v ? av[i] / v * 100 : 0)
-    const uv = sv.map(v => v * R.uniq / (refSum || 1))
+    const uv = selRows.every(r => r.uniq != null) ? selRows.map(r => r.uniq!) : sv.map(v => v * R.uniq / (refSum || 1))
     const pad = (v: number[]) => v.length > 1 ? v : [0, 0]
     return {
       sp1: mkSparkSvg('sp1', pad(sv), C.blue),
@@ -1268,8 +1403,8 @@ export default function App() {
           <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--muted)', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 2 }}>Эргэн холбогдол</div>
           <div style={{ display: 'flex', gap: 10 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <span style={{ fontSize: 9, color: 'var(--muted)' }}>{cbNeedTotal > 0 ? 'Шаардлагатай' : 'Алдсан'}</span>
-              <span className="num" style={{ fontSize: 14, fontWeight: 700, color: C.coral, lineHeight: 1 }}>{fmt(cbDenom)}</span>
+              <span style={{ fontSize: 9, color: 'var(--muted)' }}>{missedUniq != null ? 'Давхцаагүй алдсан' : (cbNeedTotal > 0 ? 'Шаардлагатай' : 'Алдсан')}</span>
+              <span className="num" style={{ fontSize: 14, fontWeight: 700, color: C.coral, lineHeight: 1 }}>{fmt(cbBase)}</span>
             </div>
             <div style={{ width: 1, background: 'var(--border)', alignSelf: 'stretch' }} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -1279,7 +1414,7 @@ export default function App() {
             <div style={{ width: 1, background: 'var(--border)', alignSelf: 'stretch' }} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               <span style={{ fontSize: 9, color: 'var(--muted)' }}>Эргэн %</span>
-              <span className="num" style={{ fontSize: 14, fontWeight: 700, color: C.gold, lineHeight: 1 }}>{cbDenom > 0 ? callbackRate.toFixed(1) + '%' : '—'}</span>
+              <span className="num" style={{ fontSize: 14, fontWeight: 700, color: C.gold, lineHeight: 1 }}>{cbBase > 0 ? callbackRate.toFixed(1) + '%' : '—'}</span>
             </div>
           </div>
         </div>
@@ -1297,7 +1432,10 @@ export default function App() {
       <div className="grid mid" style={{ marginBottom: 14 }}>
         <div className="card">
           <div className="card-h"><div className="card-title"><span className="tdot" style={{ background: C.teal }} />Тикетийн статус</div></div>
-          {[['Шийдэгдсэн', C.teal, R.resolved], ['Шийдэгдээгүй', C.amber, R.unresolved], ['Шилжүүлсэн', C.violet, R.tkTransferred]].map(([label, color, val]) => (
+          {(R.tkTransfResolved != null
+            ? [['Шийдэгдсэн', C.teal, R.resolved], ['Шийдэгдээгүй', C.amber, R.unresolved], ['Шилжүүлсэн', C.violet, R.tkTransferred - R.tkTransfResolved], ['Шилжүүлсэн-Шийдсэн', C.blue, R.tkTransfResolved]]
+            : [['Шийдэгдсэн', C.teal, R.resolved], ['Шийдэгдээгүй', C.amber, R.unresolved], ['Шилжүүлсэн', C.violet, R.tkTransferred]]
+          ).map(([label, color, val]) => (
             <div key={label as string} className="tk-row">
               <div className="tk-l"><span className="tk-mk" style={{ background: color as string }} />{label as string}</div>
               <div><span className="tk-v num">{fmt((val as number) * prodFactor)}</span><span className="tk-pct">{((val as number) / tkTot * 100).toFixed(1)}%</span></div>
@@ -1305,7 +1443,10 @@ export default function App() {
           ))}
           <div style={{ marginTop: 13 }}>
             <div style={{ display: 'flex', height: 10, borderRadius: 5, overflow: 'hidden', background: 'var(--track)' }}>
-              {[[R.resolved, C.teal],[R.unresolved, C.amber],[R.tkTransferred, C.violet]].map(([v,c], i) => (
+              {(R.tkTransfResolved != null
+                ? [[R.resolved, C.teal],[R.unresolved, C.amber],[R.tkTransferred - R.tkTransfResolved, C.violet],[R.tkTransfResolved, C.blue]]
+                : [[R.resolved, C.teal],[R.unresolved, C.amber],[R.tkTransferred, C.violet]]
+              ).map(([v,c], i) => (
                 <div key={i} style={{ width: `${(v as number) / tkTot * 100}%`, background: c as string }} />
               ))}
             </div>
@@ -1502,73 +1643,62 @@ export default function App() {
           </div>
         </div>
         <div className="card">
-          <div className="card-h"><div className="card-title"><span className="tdot" style={{ background: C.coral }} />Шилжүүлсэн тикет — хүлээн авагчид</div></div>
+          <div className="card-h"><div className="card-title"><span className="tdot" style={{ background: C.coral }} />Асуудалтай тикет — хариуцсан ажилтнаар</div></div>
           {R.recv.length === 0 ? (
-            <div style={{ fontSize: 12, color: 'var(--muted)', padding: '8px 0' }}>Энэ хугацаанд шилжүүлсэн тикетийн задаргаа алга.</div>
+            <div style={{ fontSize: 12, color: 'var(--muted)', padding: '8px 0' }}>Энэ хугацаанд задаргаа алга.</div>
           ) : (() => {
+            const RED = C.coral, MAROON = '#9e3b2e', GREEN = C.green
             const totalOk   = R.recv.reduce((s, r) => s + r.ok, 0)
             const totalWait = R.recv.reduce((s, r) => s + r.wait, 0)
             const totalUnres= R.recv.reduce((s, r) => s + ((r as {unres?:number}).unres ?? 0), 0)
             const grand = totalOk + totalWait + totalUnres
+            const box = (label: string, val: number, col: string) => (
+              <div style={{ background: `${col}12`, border: `1px solid ${col}30`, borderRadius: 8, padding: '7px 10px' }}>
+                <div style={{ fontSize: 9, color: col, fontWeight: 600, letterSpacing: '0.05em', marginBottom: 3 }}>{label}</div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                  <span className="num" style={{ fontSize: 20, fontWeight: 700, color: col }}>{val}</span>
+                  <span style={{ fontSize: 10, color: 'var(--muted)' }}>{grand > 0 ? Math.round(val/grand*100) : 0}%</span>
+                </div>
+              </div>
+            )
             return (
               <div>
                 {/* Status summary strip */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 6, marginBottom: 10 }}>
-                  <div style={{ background: `${C.green}14`, border: `1px solid ${C.green}30`, borderRadius: 8, padding: '7px 10px' }}>
-                    <div style={{ fontSize: 9, color: C.green, fontWeight: 600, letterSpacing: '0.05em', marginBottom: 3 }}>ШИЙДСЭН</div>
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-                      <span className="num" style={{ fontSize: 20, fontWeight: 700, color: C.green }}>{totalOk}</span>
-                      <span style={{ fontSize: 10, color: 'var(--muted)' }}>{grand > 0 ? Math.round(totalOk/grand*100) : 0}%</span>
-                    </div>
-                  </div>
-                  <div style={{ background: `${C.gold}12`, border: `1px solid ${C.gold}30`, borderRadius: 8, padding: '7px 10px' }}>
-                    <div style={{ fontSize: 9, color: C.gold, fontWeight: 600, letterSpacing: '0.05em', marginBottom: 3 }}>ХЭВЭЭРЭЭ</div>
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-                      <span className="num" style={{ fontSize: 20, fontWeight: 700, color: C.gold }}>{totalWait}</span>
-                      <span style={{ fontSize: 10, color: 'var(--muted)' }}>{grand > 0 ? Math.round(totalWait/grand*100) : 0}%</span>
-                    </div>
-                  </div>
-                  <div style={{ background: `${C.coral}12`, border: `1px solid ${C.coral}30`, borderRadius: 8, padding: '7px 10px' }}>
-                    <div style={{ fontSize: 9, color: C.coral, fontWeight: 600, letterSpacing: '0.05em', marginBottom: 3 }}>ШИЙДЭГДЭЭГҮЙ</div>
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-                      <span className="num" style={{ fontSize: 20, fontWeight: 700, color: C.coral }}>{totalUnres}</span>
-                      <span style={{ fontSize: 10, color: 'var(--muted)' }}>{grand > 0 ? Math.round(totalUnres/grand*100) : 0}%</span>
-                    </div>
-                  </div>
+                  {box('ШИЙДЭГДЭЭГҮЙ', totalUnres, RED)}
+                  {box('ШИЛЖҮҮЛСЭН (ХЭВЭЭР)', totalWait, MAROON)}
+                  {box('ШИЛЖҮҮЛЭЭД ШИЙДСЭН', totalOk, GREEN)}
                 </div>
                 {/* Progress bar */}
                 {grand > 0 && (
                   <div style={{ display: 'flex', height: 4, borderRadius: 4, overflow: 'hidden', marginBottom: 10, gap: 1 }}>
-                    {totalOk   > 0 && <div style={{ flex: totalOk,   background: C.green }} />}
-                    {totalWait > 0 && <div style={{ flex: totalWait, background: C.gold  }} />}
-                    {totalUnres> 0 && <div style={{ flex: totalUnres,background: C.coral }} />}
+                    {totalUnres> 0 && <div style={{ flex: totalUnres, background: RED }} />}
+                    {totalWait > 0 && <div style={{ flex: totalWait,  background: MAROON }} />}
+                    {totalOk   > 0 && <div style={{ flex: totalOk,    background: GREEN }} />}
                   </div>
                 )}
                 {/* Header row */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 4px 4px', borderBottom: '1px solid var(--border)', marginBottom: 4 }}>
-                  <span style={{ fontSize: 9, color: 'var(--muted)', fontWeight: 600, letterSpacing: '0.04em' }}>ХҮЛЭЭН АВАГЧ</span>
+                  <span style={{ fontSize: 9, color: 'var(--muted)', fontWeight: 600, letterSpacing: '0.04em' }}>АЖИЛТАН</span>
                   <div style={{ display: 'flex', gap: 16, fontSize: 9, color: 'var(--muted)', fontWeight: 600 }}>
-                    <span style={{ color: C.green, minWidth: 28, textAlign: 'center' }}>✓</span>
-                    <span style={{ color: C.gold,  minWidth: 28, textAlign: 'center' }}>↗</span>
-                    <span style={{ color: C.coral, minWidth: 28, textAlign: 'center' }}>✗</span>
-                    <span style={{ minWidth: 22, textAlign: 'right' }}>Нийт</span>
+                    <span style={{ color: RED,    minWidth: 28, textAlign: 'center' }}>✗</span>
+                    <span style={{ color: MAROON, minWidth: 28, textAlign: 'center' }}>↗</span>
+                    <span style={{ color: GREEN,  minWidth: 28, textAlign: 'center' }}>✓</span>
+                    <span style={{ color: C.gold, minWidth: 22, textAlign: 'right' }}>Нийт</span>
                   </div>
                 </div>
-                {/* Per-receiver rows */}
+                {/* Per-agent rows */}
                 {R.recv.map((r, i) => {
                   const unres = (r as { unres?: number }).unres ?? 0
-                  const rowBg = unres > 0 ? `${C.coral}10` : r.wait > 0 ? `${C.gold}0c` : `${C.green}08`
+                  const rowBg = unres > 0 ? `${RED}12` : r.wait > 0 ? `${MAROON}12` : `${GREEN}08`
                   return (
                     <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 6px', background: rowBg, borderRadius: 6, marginBottom: 2 }}>
-                      <div>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg)' }}>{r.n}</div>
-                        <div style={{ fontSize: 10, color: 'var(--muted)' }}>{r.team}</div>
-                      </div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg)' }}>{r.n}</div>
                       <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-                        <span className="num" style={{ minWidth: 28, textAlign: 'center', fontSize: 13, fontWeight: 700, color: r.ok > 0 ? C.green : 'var(--muted)', opacity: r.ok > 0 ? 1 : 0.3 }}>{r.ok}</span>
-                        <span className="num" style={{ minWidth: 28, textAlign: 'center', fontSize: 13, fontWeight: 700, color: r.wait > 0 ? C.gold : 'var(--muted)', opacity: r.wait > 0 ? 1 : 0.3 }}>{r.wait}</span>
-                        <span className="num" style={{ minWidth: 28, textAlign: 'center', fontSize: 13, fontWeight: 700, color: unres > 0 ? C.coral : 'var(--muted)', opacity: unres > 0 ? 1 : 0.3 }}>{unres}</span>
-                        <b className="num" style={{ minWidth: 22, textAlign: 'right', fontSize: 12, color: 'var(--fg)' }}>{r.ok + r.wait + unres}</b>
+                        <span className="num" style={{ minWidth: 28, textAlign: 'center', fontSize: 13, fontWeight: 700, color: unres > 0 ? RED : 'var(--muted)', opacity: unres > 0 ? 1 : 0.3 }}>{unres}</span>
+                        <span className="num" style={{ minWidth: 28, textAlign: 'center', fontSize: 13, fontWeight: 700, color: r.wait > 0 ? MAROON : 'var(--muted)', opacity: r.wait > 0 ? 1 : 0.3 }}>{r.wait}</span>
+                        <span className="num" style={{ minWidth: 28, textAlign: 'center', fontSize: 13, fontWeight: 700, color: r.ok > 0 ? GREEN : 'var(--muted)', opacity: r.ok > 0 ? 1 : 0.3 }}>{r.ok}</span>
+                        <b className="num" style={{ minWidth: 22, textAlign: 'right', fontSize: 12, color: C.gold }}>{r.ok + r.wait + unres}</b>
                       </div>
                     </div>
                   )
@@ -1577,6 +1707,69 @@ export default function App() {
             )
           })()}
         </div>
+
+        {R.unresList && R.unresList.length > 0 && (() => {
+          const list = R.unresList
+          const agentCounts = Object.entries(list.reduce((o: Record<string, number>, t) => (o[t.agent] = (o[t.agent] || 0) + 1, o), {})).sort((a, b) => b[1] - a[1])
+          const active = unresAgent && agentCounts.some(([a]) => a === unresAgent) ? unresAgent : null
+          const shown = active ? list.filter(t => t.agent === active) : list
+          const issueCounts = Object.entries(shown.reduce((o: Record<string, number>, t) => (o[t.issue] = (o[t.issue] || 0) + 1, o), {})).sort((a, b) => b[1] - a[1])
+          const issueMaxN = issueCounts[0]?.[1] || 1
+          return (
+          <div className="card" style={{ gridColumn: '1 / -1' }}>
+            <div className="card-h"><div className="card-title"><span className="tdot" style={{ background: C.amber }} />Шийдэгдээгүй тикет — хариуцсан ажилтан ба асуудлын төрөл</div>
+              <span style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600 }}>{active ? `${shown.length} / ${list.length}` : list.length}</span>
+            </div>
+            {/* by agent — clickable filter */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+              {agentCounts.map(([agent, n]) => {
+                const on = active === agent
+                return (
+                  <button key={agent} type="button" onClick={() => setUnresAgent(on ? null : agent)}
+                    style={{ fontSize: 11, padding: '3px 9px', borderRadius: 6, cursor: 'pointer',
+                      background: on ? C.amber : `${C.amber}14`, border: `1px solid ${on ? C.amber : `${C.amber}30`}`,
+                      color: on ? '#1a1200' : 'var(--fg)', fontWeight: on ? 700 : 400 }}>
+                    {agent} <b style={{ color: on ? '#1a1200' : C.amber }}>{n}</b>
+                  </button>
+                )
+              })}
+              {active && <button type="button" onClick={() => setUnresAgent(null)} style={{ fontSize: 11, padding: '3px 9px', borderRadius: 6, cursor: 'pointer', background: 'transparent', border: '1px solid var(--border)', color: 'var(--muted)' }}>✕ Цэвэрлэх</button>}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              {/* detail list */}
+              <div>
+                <div style={{ fontSize: 9, color: 'var(--muted)', fontWeight: 600, letterSpacing: '0.04em', marginBottom: 5 }}>{active ? `${active.toUpperCase()} · ${shown.length}` : 'ЖАГСААЛТ'}</div>
+                <div style={{ display: 'grid', gap: 2 }}>
+                  {shown.map((t, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '5px 8px', background: i % 2 ? 'transparent' : 'var(--track)', borderRadius: 6, fontSize: 12 }}>
+                      <span style={{ color: 'var(--muted)', minWidth: 40, fontVariantNumeric: 'tabular-nums' }}>{t.d}</span>
+                      {!active && <span style={{ fontWeight: 600, minWidth: 110 }}>{t.agent}</span>}
+                      <span style={{ color: 'var(--fg)' }}>{t.issue}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* by issue type — frequency with % */}
+              <div>
+                <div style={{ fontSize: 9, color: 'var(--muted)', fontWeight: 600, letterSpacing: '0.04em', marginBottom: 5 }}>АСУУДЛЫН ТӨРӨЛ · ДАВТАМЖ</div>
+                <div style={{ display: 'grid', gap: 4 }}>
+                  {issueCounts.map(([issue, n]) => (
+                    <div key={issue} style={{ fontSize: 12 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
+                        <span style={{ color: 'var(--fg)' }}>{issue}</span>
+                        <span style={{ color: 'var(--muted)', whiteSpace: 'nowrap', marginLeft: 8 }}><b style={{ color: C.amber }}>{n}</b> · {(n / shown.length * 100).toFixed(0)}%</span>
+                      </div>
+                      <div style={{ height: 4, borderRadius: 3, background: 'var(--track)', overflow: 'hidden' }}>
+                        <div style={{ width: `${n / issueMaxN * 100}%`, height: '100%', background: C.amber }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+          )
+        })()}
       </Reveal>
 
       <div className="hint">
