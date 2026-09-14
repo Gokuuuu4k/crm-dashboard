@@ -167,6 +167,26 @@ img, svg, table { max-width: 100%; }
 }
 @keyframes themeRipple { to { transform: scale(48); opacity: 0; } }
 
+/* ── Sub navigation (Зах зээл / График / PLAN / Call Care) ────────────────────── */
+.subnav-row { display: block; max-width: 100%; }
+.subnav {
+  display: inline-flex; gap: 4px; padding: 4px; margin-bottom: 16px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+  max-width: 100%; overflow-x: auto; scrollbar-width: none;
+}
+.subnav::-webkit-scrollbar { display: none; }
+.subnav button {
+  padding: 8px 18px; border-radius: 9px; border: none; background: transparent;
+  color: var(--muted); font-weight: 600; font-size: 13px; font-family: inherit;
+  cursor: pointer; white-space: nowrap;
+  transition: background .18s ease, color .18s ease;
+}
+.subnav button:not(.on):hover { color: var(--text); }
+.subnav button.on {
+  background: linear-gradient(135deg, var(--teal), #25b98d);
+  color: #06251b; box-shadow: 0 4px 14px rgba(47, 211, 165, .3);
+}
+
 /* ── Week selector (calendar-style dropdown, top-right in the topbar) ─────────── */
 .weeksel { position: relative; max-width: 100%; flex: 0 1 auto; min-width: 0; }
 .weeksel-trigger {
