@@ -69,6 +69,13 @@ function Reveal({ children, className, style }: { children: ReactNode; className
   )
 }
 
+// ── Top-level sections ─────────────────────────────────────────────────────────
+type SubTab = 'call' | 'care'
+const SUBTABS: { key: SubTab; label: string }[] = [
+  { key: 'call', label: 'Call' },
+  { key: 'care', label: 'Care' },
+]
+
 class ErrorBoundary extends Component<{ children: ReactNode }, { err: string | null }> {
   constructor(props: { children: ReactNode }) {
     super(props)
@@ -882,6 +889,55 @@ const WEEK_VOL: Record<string, number> = Object.fromEntries(
 )
 const WEEK_VOL_MAX = Math.max(...Object.values(WEEK_VOL), 1)
 
+// ── Care tab data ─────────────────────────────────────────────────────────────
+// Гурван эх сурвалж: Ashiglalt_Tailan.pdf (ерөнхий ашиглалт), MBPlus_Care_Tailan.pdf
+// (MBusiness Plus гэрээ + Care), POS_ашиглалтын_тайлан.pdf (POS ашиглалт).
+type CareCol = { key: string; label: string; icon: string; color: string; acq: number; acqLabel: string; inactive: number | null; ret: number | null }
+const CARE_COLS: CareCol[] = [
+  { key: 'ontime', label: 'OnTime', icon: '🏢', color: C.blue, acq: 1254, acqLabel: 'Нийт харилцагч', inactive: null, ret: null },
+  { key: 'mbplus', label: 'MBusiness Plus', icon: '💳', color: C.teal, acq: 35, acqLabel: 'Гэрээ (ACQ)', inactive: 170, ret: 29 },
+  { key: 'mpos', label: 'Mpos', icon: '🧾', color: C.violet, acq: 415, acqLabel: 'Ашиглаж байгаа (ACQ)', inactive: 369, ret: null },
+]
+
+// MBusiness Plus — Care хийгдсэн эсэх (35 гэрээ)
+const MBP_CARE = { done: 32, notDone: 3, total: 35 }
+// MBusiness Plus — бүтээгдэхүүний задаргаа (гэрээний тоогоор)
+const MBP_PRODUCTS = mkPr([
+  ['P3 Mini', 13], ['T3 Duo', 7], ['T3 Duo /Pro-с шилжсэн/', 6],
+  ['Pro программ', 5], ['P3 Mini /Pro-с шилжсэн/', 2], ['P3 Mini + T3 Duo', 2],
+])
+// Ashiglalt_Tailan — "Ашиглалтгүй байна" 170-оос холбогдсон харилцагчийн төлөв
+const MBP_INACTIVE_CONNECTED = mkIs([
+  ['Амжилттай', 118, 'Холбогдсон'], ['Утсаа аваагүй', 38, 'Холбогдоогүй'], ['Холбогдох боломжгүй', 14, 'Холбогдоогүй'],
+])
+// Ashiglalt_Tailan — хандалт тэмдэглэлийн шалтгаанууд (давтагдлаар, буурах эрэмбээр)
+const MBP_INACTIVE_REASONS = mkIs([
+  ['Ашиглаж эхэлсэн (хэвийн ажиллаж байгаа)', 33, 'Эргэсэн'],
+  ['Буцаасан / буцаах хүсэлт өгсөн', 29, 'Return'],
+  ['Бусад', 13, 'Бусад'],
+  ['Бараа бүртгэл/таталт дуусаагүй', 9, 'Хүлээгдэж буй'],
+  ['Ашиглаж эхлээгүй байна (тодорхойгүй)', 8, 'Тодорхойгүй'],
+  ['Тодорхой хугацаанаас ашиглаж эхэлнэ (товлосон)', 8, 'Товлосон'],
+  ['Харилцагчтай холбогдож чадаагүй/эзэн байхгүй', 4, 'Холбогдоогүй'],
+])
+// POS_ашиглалтын_тайлан — 1254 харилцагчийн холбогдсон байдал
+const POS_CONNECTED = mkIs([
+  ['Амжилттай холбогдсон', 914, 'Холбогдсон'], ['Холбогдож чадаагүй', 330, 'Холбогдоогүй'], ['Эргэн холбогдох', 10, 'Хүлээгдэж буй'],
+])
+// POS_ашиглалтын_тайлан — Амжилттай холбогдсон 914 харилцагчийн POS-ын төлөв
+const POS_STATUS = mkIs([
+  ['Ашиглаж байгаа болон ашиглах', 415, 'ACQ'],
+  ['Хураалгах', 218, 'Inactive'],
+  ['Хураалгасан', 151, 'Inactive'],
+  ['Тусламж/ажиглалт шаардлагатай', 65, 'Анхаарах'],
+  ['Пос байхгүй / MBPlus-с авсан / солиулах', 66, 'Бусад'],
+])
+const CARE_TAGCOL: Record<string, string> = {
+  'Холбогдсон': C.teal, 'Холбогдоогүй': C.coral, 'Хүлээгдэж буй': C.gold, 'Return': C.coral,
+  'Эргэсэн': C.teal, 'Бусад': C.violet, 'Тодорхойгүй': C.violet, 'Товлосон': C.blue,
+  'ACQ': C.teal, 'Inactive': C.coral, 'Анхаарах': C.gold,
+}
+
 function sparkPath(vals: number[], w: number, h: number, pad: number) {
   const min = Math.min(...vals), max = Math.max(...vals), rng = (max - min) || 1
   const pts = vals.map((v, i) => [pad + i * (w - 2 * pad) / (vals.length - 1 || 1), h - pad - ((v - min) / rng) * (h - 2 * pad)])
@@ -1103,6 +1159,237 @@ function mkSatGaugeSvg(dist: number[]) {
   </svg>`, score, resp }
 }
 
+type CareTab = 'ontime' | 'mbplus' | 'mpos'
+const CARE_TABS: { key: CareTab; label: string; icon: string }[] = [
+  { key: 'ontime', label: 'OnTime', icon: '🏢' },
+  { key: 'mbplus', label: 'MBusiness Plus', icon: '💳' },
+  { key: 'mpos', label: 'Mpos', icon: '🧾' },
+]
+
+function CareOverviewCard({ col }: { col: CareCol }) {
+  const sub = [
+    col.inactive != null ? { label: 'Inactive', v: col.inactive, c: C.coral } : null,
+    col.ret != null ? { label: 'Return', v: col.ret, c: C.gold } : null,
+  ].filter(Boolean) as { label: string; v: number; c: string }[]
+  const barTot = col.acq + sub.reduce((a, s) => a + s.v, 0)
+  return (
+    <div className="card">
+      <div className="card-h">
+        <div className="card-title"><span className="tdot" style={{ background: col.color }} />{col.icon} {col.label} · Тойм</div>
+      </div>
+      <div className="top" style={{ marginBottom: sub.length ? 12 : 0 }}>
+        <div className="ic" style={{ background: `${col.color}22`, color: col.color }}>✅</div>
+        <div>
+          <div className="clabel">{col.acqLabel}</div>
+          <div className="cbig num"><CountUp value={col.acq} /></div>
+        </div>
+      </div>
+      {sub.length > 0 && (
+        <>
+          {sub.map(s => (
+            <div key={s.label} className="tk-row">
+              <div className="tk-l"><span className="tk-mk" style={{ background: s.c }} />{s.label}</div>
+              <div><span className="tk-v num">{fmt(s.v)}</span><span className="tk-pct">{(s.v / barTot * 100).toFixed(1)}%</span></div>
+            </div>
+          ))}
+          <div style={{ marginTop: 13, display: 'flex', height: 10, borderRadius: 5, overflow: 'hidden', background: 'var(--track)' }}>
+            <div style={{ width: `${col.acq / barTot * 100}%`, background: col.color }} />
+            {sub.map(s => <div key={s.label} style={{ width: `${s.v / barTot * 100}%`, background: s.c }} />)}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+function CareSection() {
+  const [careTab, setCareTab] = useState<CareTab>('ontime')
+  const mbpCareDonut = useMemo(() => mkDonutSvg([
+    { n: 'Care хийгдсэн', v: MBP_CARE.done, c: C.teal },
+    { n: 'Care хийгдээгүй', v: MBP_CARE.notDone, c: C.coral },
+  ]), [])
+  const mbpConnDonut = useMemo(() => mkDonutSvg(MBP_INACTIVE_CONNECTED.map(it => ({ n: it.n, v: it.v, c: CARE_TAGCOL[it.t] || C.blue }))), [])
+  const posConnDonut = useMemo(() => mkDonutSvg(POS_CONNECTED.map(it => ({ n: it.n, v: it.v, c: CARE_TAGCOL[it.t] || C.blue }))), [])
+  const reasonMax = MBP_INACTIVE_REASONS[0]?.v || 1
+  const posStatusMax = POS_STATUS[0]?.v || 1
+  const ontimeCol = CARE_COLS.find(c => c.key === 'ontime')!
+  const mbplusCol = CARE_COLS.find(c => c.key === 'mbplus')!
+  const mposCol = CARE_COLS.find(c => c.key === 'mpos')!
+
+  return (
+    <>
+      {/* Care дэд цэс */}
+      <div className="subnav-row">
+        <div className="subnav">
+          {CARE_TABS.map(t => (
+            <button key={t.key} className={careTab === t.key ? 'on' : ''} onClick={() => setCareTab(t.key)}>
+              {t.icon} {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {careTab === 'ontime' && (
+        <Reveal className="grid mid" style={{ marginBottom: 14 }}>
+          <CareOverviewCard col={ontimeCol} />
+          <div className="card" style={{ gridColumn: 'span 2' }}>
+            <div className="card-h"><div className="card-title"><span className="tdot" style={{ background: ontimeCol.color }} />OnTime · Бүтээгдэхүүнээр задаргаа</div></div>
+            <div style={{ marginTop: 4 }} className="issue-list">
+              {CARE_COLS.filter(c => c.key !== 'ontime').map((c, i) => (
+                <div key={c.key} className="hbar">
+                  <div className="hbar-top">
+                    <span className="n"><b style={{ color: 'var(--muted)', marginRight: 6 }}>{i + 1}</b>{c.icon} {c.label}</span>
+                    <span className="v" style={{ color: c.color }}>{fmt(c.acq)}</span>
+                  </div>
+                  <div className="hbar-track">
+                    <div className="hbar-fill" style={{ width: `${c.acq / ontimeCol.acq * 100}%`, background: `linear-gradient(90deg,${c.color}88,${c.color})` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="hint" style={{ marginTop: 12 }}>
+              💡 Эх сурвалж: POS_ашиглалтын_тайлан.pdf-ийн <b>Нийт харилцагчийн тоо</b> (1254) — OnTime-ийн нийт хамрах хүрээ.
+            </div>
+          </div>
+        </Reveal>
+      )}
+
+      {careTab === 'mbplus' && (
+        <>
+          <Reveal className="grid mid" style={{ marginBottom: 14 }}>
+            <CareOverviewCard col={mbplusCol} />
+            <div className="card">
+              <div className="card-h"><div className="card-title"><span className="tdot" style={{ background: C.teal }} />Care хийгдсэн эсэх</div></div>
+              <div className="donut-wrap">
+                <div style={{ position: 'relative', width: 140, height: 140 }}>
+                  <div dangerouslySetInnerHTML={{ __html: mbpCareDonut.svg }} />
+                  <div className="donut-center">
+                    <div className="dc-val num">{(MBP_CARE.done / MBP_CARE.total * 100).toFixed(0)}%</div>
+                    <div className="dc-lab">хийгдсэн</div>
+                  </div>
+                </div>
+                <div className="legend">
+                  <div className="lg"><div className="lg-l"><span className="lg-mk" style={{ background: C.teal }} />Care хийгдсэн</div><div><span className="lg-v">{(MBP_CARE.done / MBP_CARE.total * 100).toFixed(1)}%</span><span className="lg-c">{MBP_CARE.done}</span></div></div>
+                  <div className="lg"><div className="lg-l"><span className="lg-mk" style={{ background: C.coral }} />Care хийгдээгүй</div><div><span className="lg-v">{(MBP_CARE.notDone / MBP_CARE.total * 100).toFixed(1)}%</span><span className="lg-c">{MBP_CARE.notDone}</span></div></div>
+                </div>
+              </div>
+            </div>
+            <div className="card">
+              <div className="card-h"><div className="card-title"><span className="tdot" style={{ background: C.gold }} />Inactive 170-ийн холбогдсон төлөв</div></div>
+              <div className="donut-wrap">
+                <div style={{ position: 'relative', width: 140, height: 140 }}>
+                  <div dangerouslySetInnerHTML={{ __html: mbpConnDonut.svg }} />
+                  <div className="donut-center">
+                    <div className="dc-val num">{(MBP_INACTIVE_CONNECTED[0].v / mbpConnDonut.tot * 100).toFixed(0)}%</div>
+                    <div className="dc-lab">Амжилттай</div>
+                  </div>
+                </div>
+                <div className="legend">
+                  {MBP_INACTIVE_CONNECTED.map(it => (
+                    <div key={it.n} className="lg">
+                      <div className="lg-l"><span className="lg-mk" style={{ background: CARE_TAGCOL[it.t] || C.blue }} />{it.n}</div>
+                      <div><span className="lg-v">{(it.v / mbpConnDonut.tot * 100).toFixed(1)}%</span><span className="lg-c">{it.v}</span></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </Reveal>
+
+          <Reveal className="grid" style={{ gridTemplateColumns: '1fr 1fr', marginBottom: 14 }}>
+            <div className="card">
+              <div className="card-h"><div className="card-title"><span className="tdot" style={{ background: C.violet }} />Бүтээгдэхүүн (гэрээ)</div></div>
+              {MBP_PRODUCTS.map(p => (
+                <div key={p.n} className="tk-row">
+                  <div className="tk-l"><span className="tk-mk" style={{ background: p.c }} />{p.n}</div>
+                  <div><span className="tk-v num">{p.v}</span><span className="tk-pct">{(p.v / MBP_CARE.total * 100).toFixed(0)}%</span></div>
+                </div>
+              ))}
+            </div>
+            <div className="card">
+              <div className="card-h"><div className="card-title"><span className="tdot" style={{ background: C.coral }} />Хандалт тэмдэглэлийн шалтгаанууд (170 Inactive)</div></div>
+              <div style={{ marginTop: 4 }} className="issue-list">
+                {MBP_INACTIVE_REASONS.map((it, i) => {
+                  const col = CARE_TAGCOL[it.t] || C.blue
+                  return (
+                    <div key={i} className="hbar">
+                      <div className="hbar-top">
+                        <span className="n"><b style={{ color: 'var(--muted)', marginRight: 6 }}>{i + 1}</b>{it.n} <span className="tag" style={{ background: `${col}22`, color: col }}>{it.t}</span></span>
+                        <span className="v" style={{ color: col }}>{it.v}</span>
+                      </div>
+                      <div className="hbar-track">
+                        <div className="hbar-fill" style={{ width: `${it.v / reasonMax * 100}%`, background: `linear-gradient(90deg,${col}88,${col})` }} />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </Reveal>
+
+          <div className="hint">
+            💡 Эх сурвалж: <b>MBPlus_Care_Tailan.pdf</b> (гэрээ + Care), <b>Ashiglalt_Tailan.pdf</b> (ашиглалтгүй харилцагчийн задаргаа).
+          </div>
+        </>
+      )}
+
+      {careTab === 'mpos' && (
+        <>
+          <Reveal className="grid mid" style={{ marginBottom: 14 }}>
+            <CareOverviewCard col={mposCol} />
+            <div className="card">
+              <div className="card-h"><div className="card-title"><span className="tdot" style={{ background: C.blue }} />Холбогдсон байдал (1254)</div></div>
+              <div className="donut-wrap">
+                <div style={{ position: 'relative', width: 140, height: 140 }}>
+                  <div dangerouslySetInnerHTML={{ __html: posConnDonut.svg }} />
+                  <div className="donut-center">
+                    <div className="dc-val num">{(POS_CONNECTED[0].v / posConnDonut.tot * 100).toFixed(0)}%</div>
+                    <div className="dc-lab">Амжилттай</div>
+                  </div>
+                </div>
+                <div className="legend">
+                  {POS_CONNECTED.map(it => (
+                    <div key={it.n} className="lg">
+                      <div className="lg-l"><span className="lg-mk" style={{ background: CARE_TAGCOL[it.t] || C.blue }} />{it.n}</div>
+                      <div><span className="lg-v">{(it.v / posConnDonut.tot * 100).toFixed(1)}%</span><span className="lg-c">{it.v}</span></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </Reveal>
+
+          <Reveal className="grid" style={{ gridTemplateColumns: '1fr', marginBottom: 14 }}>
+            <div className="card">
+              <div className="card-h"><div className="card-title"><span className="tdot" style={{ background: C.violet }} />Амжилттай холбогдсон 914 харилцагчийн POS төлөв</div></div>
+              <div style={{ marginTop: 4 }} className="issue-list">
+                {POS_STATUS.map((it, i) => {
+                  const col = CARE_TAGCOL[it.t] || C.blue
+                  return (
+                    <div key={i} className="hbar">
+                      <div className="hbar-top">
+                        <span className="n"><b style={{ color: 'var(--muted)', marginRight: 6 }}>{i + 1}</b>{it.n} <span className="tag" style={{ background: `${col}22`, color: col }}>{it.t}</span></span>
+                        <span className="v" style={{ color: col }}>{it.v}</span>
+                      </div>
+                      <div className="hbar-track">
+                        <div className="hbar-fill" style={{ width: `${it.v / posStatusMax * 100}%`, background: `linear-gradient(90deg,${col}88,${col})` }} />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </Reveal>
+
+          <div className="hint">
+            💡 Эх сурвалж: <b>POS_ашиглалтын_тайлан.pdf</b> (2026.07.06) — 1254 харилцагчийн холбогдсон байдал ба POS төлөв.
+          </div>
+        </>
+      )}
+    </>
+  )
+}
+
 export { ErrorBoundary }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -1110,6 +1397,7 @@ export default function App() {
   const [rep, setRep] = useState<RepKey>('W10')
   const [selDays, setSelDays] = useState<Set<string>>(new Set(REPORTS.W10.defaultDays))
   const [selProd, setSelProd] = useState<string | null>(null)
+  const [subTab, setSubTab] = useState<SubTab>('call')
   const reducedMotion = useReducedMotion()
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     try { return localStorage.getItem('crm-theme') === 'light' ? 'light' : 'dark' } catch { return 'dark' }
@@ -1327,7 +1615,7 @@ export default function App() {
         <div className="brand">
           <img className="logo-img" src={ontimeLogo} alt="Ontime" width={120} height={83} />
           <div>
-            <h1>CRM дуудлагын тайлан</h1>
+            <h1>CRM Dashboard</h1>
             <div className="sub">
               <span>OnTime Support</span> ·
               <span>{periodLabel}</span>
@@ -1410,6 +1698,21 @@ export default function App() {
         </div>
       </div>
 
+      {/* Sub navigation */}
+      <div className="subnav-row">
+        <div className="subnav">
+          {SUBTABS.map(t => (
+            <button key={t.key} className={subTab === t.key ? 'on' : ''} onClick={() => setSubTab(t.key)}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {subTab === 'care' && <CareSection />}
+
+      {subTab === 'call' && (
+        <>
       {/* Day picker */}
       <div className="daypick">
         <div className="daypick-head">
@@ -1884,6 +2187,8 @@ export default function App() {
         💡 Дээд талд <b>«W1–W8 · Нэгдсэн»</b>-ээс долоо хоногоо сонгоно.
         Доор нь өдрийн чипээр эсвэл <b>графикийн багана дээр дарж</b> хүссэн өдрүүдээ шүүнэ.
       </div>
+        </>
+      )}
     </div>
   )
 }
