@@ -208,7 +208,23 @@ const DAILY_H: DayRow[] = [
   { d: '2026-09-05', lab: '09/05', ts: 61,  mb: 36, pos: 11, loan: 0,  nd: 0, a: 78,  sat: [1,0,0,1,10],  sent: 101, cb: 2,  uniq: 74  },
   { d: '2026-09-06', lab: '09/06', ts: 47,  mb: 13, pos: 6,  loan: 0,  nd: 0, a: 47,  sat: [0,0,0,0,9],   sent: 69,  cb: 1,  uniq: 44  },
 ]
-const DAILY_ALL: DayRow[] = DAILY_A.filter(r => r.d <= '2026-07-19').concat(DAILY_B).concat(DAILY_C).concat(DAILY_D).concat(DAILY_E).concat(DAILY_F).concat(DAILY_G).concat(DAILY_H)
+
+// W10: 2026.09.07–09.13 — эх сурвалж: 2026-09-07_00-00-00__2026-09-13_23-59-59.xlsx (Sheet1) + тусдаа "POS Operator" дараалал (39 мөр).
+// Хэрэглэгчийн шийдвэрээр pos = MBank pos guide (166) + POS Operator (39) нэгтгэсэн НЭГ суваг — нийт дуудлага
+// хэрэглэгчийн Excel хүснэгтээс (292/272/330/219/169/116/73, нийт 1,471) 39-өөр өссөн (нийт 1,510).
+// a = ANSWERED + TRANSFERRED, MBank pos guide хэсэг нь хэрэглэгчийн хүснэгттэй 7/7 өдөр таарсан, +POS Operator-ийн 31 success нэмсэн.
+// uniq = хэрэглэгчийн "Unique user" хүснэгт + POS Operator-ийн өдөр тутмын давхцаагүй дугаар (main лог-той давхцлыг тооцоогүй, өртэй тооцоо)
+// sat = [1★,2★,3★,4★,5★] — SMS үнэлгээний экспортоос (SmsRateExport, 101 хариулт / 1186 илгээснээс, дундаж 4.85)
+const DAILY_I: DayRow[] = [
+  { d: '2026-09-07', lab: '09/07', ts: 170, mb: 69, pos: 35, loan: 22, nd: 0, a: 204, sat: [0,0,0,1,14], sent: 237, uniq: 152 },
+  { d: '2026-09-08', lab: '09/08', ts: 140, mb: 84, pos: 37, loan: 15, nd: 0, a: 179, sat: [1,0,0,0,19], sent: 216, uniq: 143 },
+  { d: '2026-09-09', lab: '09/09', ts: 198, mb: 84, pos: 29, loan: 20, nd: 0, a: 196, sat: [0,1,1,0,10], sent: 214, uniq: 168 },
+  { d: '2026-09-10', lab: '09/10', ts: 118, mb: 65, pos: 39, loan: 4,  nd: 0, a: 166, sat: [0,0,0,0,20], sent: 192, uniq: 136 },
+  { d: '2026-09-11', lab: '09/11', ts: 73,  mb: 50, pos: 32, loan: 22, nd: 0, a: 129, sat: [1,0,0,0,12], sent: 142, uniq: 108 },
+  { d: '2026-09-12', lab: '09/12', ts: 67,  mb: 43, pos: 15, loan: 0,  nd: 0, a: 104, sat: [0,0,0,1,10], sent: 114, uniq: 72  },
+  { d: '2026-09-13', lab: '09/13', ts: 39,  mb: 22, pos: 18, loan: 0,  nd: 0, a: 70,  sat: [0,0,0,0,10], sent: 71,  uniq: 60  },
+]
+const DAILY_ALL: DayRow[] = DAILY_A.filter(r => r.d <= '2026-07-19').concat(DAILY_B).concat(DAILY_C).concat(DAILY_D).concat(DAILY_E).concat(DAILY_F).concat(DAILY_G).concat(DAILY_H).concat(DAILY_I)
 
 // ── Hourly load data ──────────────────────────────────────────────────────────
 // Format: [hour, answered, missed, timeout]
@@ -250,6 +266,13 @@ const HOURLY_W9: HourRow[] = [
   ['08',35,14,0],['09',98,39,0],['10',104,37,0],['11',112,26,0],
   ['12',100,41,0],['13',104,34,0],['14',106,57,0],['15',92,60,0],
   ['16',86,34,0],['17',58,18,0],['18',50,50,0],['19',38,27,0],
+]
+
+// W10 hourly — Inbound (үндсэн 5 queue) + POS Operator (39 мөр) нэгтгэсэн цагийн ачаалал. Нийт ~1,510, авсан+шилжүүлсэн ~1,047
+const HOURLY_W10: HourRow[] = [
+  ['08',34,40,0],['09',96,38,0],['10',117,65,0],['11',135,32,0],
+  ['12',110,24,0],['13',106,21,0],['14',101,58,0],['15',102,53,0],
+  ['16',82,37,0],['17',76,63,0],['18',52,25,0],['19',36,8,0],
 ]
 
 // ── Channel config for daily stacked chart ────────────────────────────────────
@@ -415,6 +438,30 @@ const F_RECV = [
   { n: 'Zolbayr',       team: 'Техникийн баг',     ok: 3,  wait: 1, unres: 0 },
   { n: 'Bayarmaa.T',    team: 'Техникийн дэмжлэг', ok: 2,  wait: 1, unres: 0 },
 ]
+// W10 асуудалтай тикет ажилтнаар (pivot): unres=Шийдэгдээгүй 10 · wait=Шилжүүлсэн хэвээр 44 · ok=Шилжүүлсэн-Шийдсэн 45 · нийт 99
+const I_RECV = [
+  { n: 'Baaska.U',        team: '', unres: 0, wait: 3,  ok: 15 },
+  { n: 'Bayartsogt',      team: '', unres: 1, wait: 10, ok: 0  },
+  { n: 'tsogoo',          team: '', unres: 0, wait: 1,  ok: 10 },
+  { n: 'Tsenguun',        team: '', unres: 0, wait: 2,  ok: 9  },
+  { n: 'Tugssaikhan.G',   team: '', unres: 2, wait: 4,  ok: 1  },
+  { n: 'Turmandakh.O',    team: '', unres: 4, wait: 3,  ok: 0  },
+  { n: 'Ganchimeg.A',     team: '', unres: 0, wait: 5,  ok: 0  },
+  { n: 'Khadaan',         team: '', unres: 0, wait: 4,  ok: 0  },
+  { n: 'Sumiya.D',        team: '', unres: 0, wait: 2,  ok: 1  },
+  { n: 'Bujinlkham.T',    team: '', unres: 1, wait: 0,  ok: 2  },
+  { n: 'Zolbayr',         team: '', unres: 1, wait: 2,  ok: 0  },
+  { n: 'Tseregbayar.ts',  team: '', unres: 0, wait: 0,  ok: 2  },
+  { n: 'Odbayar.Ts',      team: '', unres: 0, wait: 1,  ok: 1  },
+  { n: 'Bayarsaikhan.E',  team: '', unres: 0, wait: 2,  ok: 0  },
+  { n: 'dashmunkh',       team: '', unres: 0, wait: 0,  ok: 2  },
+  { n: 'Tumen-Ulzii',     team: '', unres: 0, wait: 2,  ok: 0  },
+  { n: 'Otgonbayar.L',    team: '', unres: 1, wait: 1,  ok: 0  },
+  { n: 'Saranchimeg',     team: '', unres: 0, wait: 1,  ok: 0  },
+  { n: 'Bymbatogtokh.T',  team: '', unres: 0, wait: 1,  ok: 0  },
+  { n: 'Soyolzul.Ts',     team: '', unres: 0, wait: 0,  ok: 1  },
+  { n: 'Yumjirdulam',     team: '', unres: 0, wait: 0,  ok: 1  },
+]
 // W9 асуудалтай тикет ажилтнаар (pivot): unres=Шийдэгдээгүй 24 · wait=Шилжүүлсэн хэвээр 25 · ok=Шилжүүлсэн-Шийдсэн 31 · нийт 80
 const H_RECV = [
   { n: 'Unubold.T',      team: '', unres: 9, wait: 0, ok: 0 },
@@ -572,6 +619,64 @@ const RH: Agg = {
   ],
 }
 
+// W10: 2026.09.07–09.13 — эх сурвалж xlsx (Call log 1,471 мөр + Repairs 1,186 мөр, бүх багана нэг мөрөнд аль хэдийн нийлсэн)
+// Тикетийн статус: Шийдэгдсэн 1087 + Шийдэгдээгүй 10 + Шилжүүлсэн 44 + Шилжүүлсэн-Шийдсэн 45 = 1,186
+// Харилцсан суваг: Утасаар 1054 + Сошиал 116 + Дуудлагаар 15 + Биечлэн 1 = 1,186
+// callTransferred = дуудлагын TRANSFERRED disposition, MBank pos guide хэсэг (13) + POS Operator (13) = 26 —
+//   эдгээр нь DAILY_I.a дотор "Авсан"-д орсон (хэрэглэгчийн хүснэгттэй нийцүүлэв)
+// uniq = үндсэн 627 + POS Operator-ийн долоо хоногийн давхцаагүй дугаар (29, main лог-той давхцлыг тооцоогүй)
+// SMS үнэлгээ (SmsRateExport) ирсэн: 101 хариулт (1186 илгээснээс), дундаж 4.85★ — DAILY_I.sat-д тусгав.
+// Ажилтан тус бүрийн CSAT (r) хараахан extension→агент харгалзуулаагүй тул null хэвээр.
+const RI: Agg = {
+  uniq: 656, callTransferred: 26 as number | null, resolved: 1087, unresolved: 10, tkTransferred: 89, tkTransfResolved: 45,
+  channels: mkCh([['Утасаар',1054],['Remote',0],['Сошиал',116],['Биечлэн',1],['Дуудлагаар',15]]),
+  products: mkPr([['PROPOS',753],['MPLUS',362],['MPOS',64],['MOBILEPOS',5],['LITEPOS',2]]),
+  issues: mkIs([
+    ['MBusiness Plus мэдээлэл',116,'Мэдээлэл'],['Бусад мэдээлэл',78,'Мэдээлэл'],
+    ['Төлбөрийн мэдээлэл',69,'Санхүү'],['MBusiness Plus бүтээгдэхүүн',54,'Бүтээгдэхүүн'],
+    ['Нөхөж залгасан',52,'Мэдээлэл'],['Тооллогын сургалт',44,'Сургалт'],
+    ['MBusiness Plus сургалт',42,'Сургалт'],['Мбанк пос мэдээлэл',37,'Мэдээлэл'],
+    ['Мбанк цаас захиалга',34,'Мэдээлэл'],['Программын тохиргоо',29,'Тохиргоо'],
+  ]),
+  agents: mkAg([
+    ['Otgonbayar.L',   146, 159, 5.8,  null],
+    ['Zolbayar.U',     136, 146, 3.6,  null],
+    ['Tugssaikhan.G',  132, 136, 4.1,  null],
+    ['Sumiya.D',       118, 94,  6.1,  null],
+    ['Ganchimeg.A',    105, 108, 5.3,  null],
+    ['Saranchimeg',    69,  71,  4.5,  null],
+    ['Turmandakh.O',   64,  88,  3.5,  null],
+    ['Soyolzul.Ts',    47,  91,  2.8,  null],
+    ['Bayartsogt',     38,  58,  5.2,  null],
+    ['Byambatogtokh.T',38,  41,  6.1,  null],
+    ['Bayarmaa.N',     36,  null,2.5,  null],
+    ['Tsevelmaa',      28,  null,2.2,  null],
+    ['tsogoo',         9,   26,  7.3,  null],
+    ['Bayarmaa.T',     9,   2,   4.0,  null],
+    ['Yumjirdulam',    6,   5,   2.9,  null],
+    ['Baaska.U',       5,   26,  7.0,  null],
+    ['Bayarsaikhan.E', 4,   5,   8.0,  null],
+    ['Khadaan',        4,   4,   3.8,  null],
+    ['Nayanjin',       3,   58,  14.3, null],
+    ['Bujinlkham.T',   3,   8,   11.6, null],
+    ['Khaliunaa.P',    2,   15,  3.0,  null],
+  ]),
+  recv: I_RECV,
+  // Шийдэгдээгүй 10 тикет — бүртгэсэн ажилтан + асуудлын төрөл
+  unresList: [
+    { d: '09/13', agent: 'Bayartsogt',     issue: 'Мэдээлэл - Мбанк гүйлгээ мэдээлэл' },
+    { d: '09/12', agent: 'Tugssaikhan.G',  issue: 'Санхүү - MBusiness Plus' },
+    { d: '09/11', agent: 'Bujinlkham.T',   issue: 'Засвар - MBusiness Plus' },
+    { d: '09/11', agent: 'Otgonbayar.L',   issue: 'Мэдээлэл - MBusiness Plus' },
+    { d: '09/10', agent: 'Turmandakh.O',   issue: 'Мэдээлэл - MBusiness Plus' },
+    { d: '09/09', agent: 'Zolbayr',        issue: 'Алдаа - MBusiness Plus' },
+    { d: '09/09', agent: 'Tugssaikhan.G',  issue: 'Бүтээгдэхүүн - MBusiness Plus' },
+    { d: '09/07', agent: 'Turmandakh.O',   issue: 'Бүтээгдэхүүн - МБанкPos' },
+    { d: '09/07', agent: 'Turmandakh.O',   issue: 'Мэдээлэл - Мбанк пос нэвтрэх нэр, нууц үг' },
+    { d: '09/07', agent: 'Turmandakh.O',   issue: 'Мэдээлэл - Мбанк пос нэвтрэх нэр, нууц үг' },
+  ],
+}
+
 // All 8 weeks combined
 const RALL: Agg = {
   uniq: 5858, callTransferred: null as number | null, resolved: 8164, unresolved: 198, tkTransferred: 341,
@@ -663,7 +768,7 @@ const AUG_DAYS = DAILY_ALL.filter(r => r.d >= '2026-08-01' && r.d < '2026-09-01'
 const SEP_DAYS = DAILY_ALL.filter(r => r.d >= '2026-09-01').map(r => r.d)
 
 // ── Reports config ─────────────────────────────────────────────────────────────
-type RepKey = 'W1' | 'W2' | 'W3' | 'W4' | 'W5' | 'W6' | 'W7' | 'W8' | 'W9' | 'M7' | 'M8' | 'M9' | 'ALL'
+type RepKey = 'W1' | 'W2' | 'W3' | 'W4' | 'W5' | 'W6' | 'W7' | 'W8' | 'W9' | 'W10' | 'M7' | 'M8' | 'M9' | 'ALL'
 const REPORTS: Record<RepKey, { daily: DayRow[]; agg: Agg; hourly: HourRow[]; label: string; defaultDays: string[] }> = {
   W1: { daily: DAILY_A, agg: RA, hourly: HOURLY, label: '07/06–07/12',
         defaultDays: DAILY_A.filter(r => r.d <= '2026-07-12').map(r => r.d) },
@@ -683,11 +788,13 @@ const REPORTS: Record<RepKey, { daily: DayRow[]; agg: Agg; hourly: HourRow[]; la
         defaultDays: DAILY_G.map(r => r.d) },
   W9: { daily: DAILY_H, agg: RH, hourly: HOURLY_W9, label: '08/31–09/06',
         defaultDays: DAILY_H.map(r => r.d) },
+  W10:{ daily: DAILY_I, agg: RI, hourly: HOURLY_W10, label: '09/07–09/13',
+        defaultDays: DAILY_I.map(r => r.d) },
   M7: { daily: DAILY_ALL.filter(r => r.d < '2026-08-01'), agg: RM7, hourly: HOURLY, label: '7-р сар',
         defaultDays: JUL_DAYS },
   M8: { daily: DAILY_ALL.filter(r => r.d >= '2026-08-01' && r.d < '2026-09-01'), agg: RM8, hourly: HOURLY, label: '8-р сар',
         defaultDays: AUG_DAYS },
-  M9: { daily: DAILY_ALL.filter(r => r.d >= '2026-09-01'), agg: RH, hourly: HOURLY_W9, label: '9-р сар',
+  M9: { daily: DAILY_ALL.filter(r => r.d >= '2026-09-01'), agg: mergeAgg(RH, RI), hourly: HOURLY_W9, label: '9-р сар',
         defaultDays: SEP_DAYS },
   ALL: { daily: DAILY_ALL, agg: RALL, hourly: HOURLY, label: 'Нэгдсэн',
          defaultDays: DAILY_ALL.map(r => r.d) },
@@ -716,9 +823,10 @@ const CHAN_RATES: Record<RepKey, Record<string, number>> = {
   W7:  { ts: 0.470, mb: 0.446, pos: 0.602, loan: 0.865, nd: 0.50 },
   W8:  { ts: 0.767, mb: 0.829, pos: 0.750, loan: 0.807, nd: 0.80 },
   W9:  { ts: 0.671, mb: 0.705, pos: 0.748, loan: 0.769, nd: 0.50 },
+  W10: { ts: 0.701, mb: 0.638, pos: 0.693, loan: 0.892, nd: 0.50 },
   M7:  { ts: 0.76,  mb: 0.71,  pos: 0.71,  loan: 0.81,  nd: 0.90 },
   M8:  { ts: 0.54,  mb: 0.54,  pos: 0.57,  loan: 0.74,  nd: 0.70 },
-  M9:  { ts: 0.671, mb: 0.705, pos: 0.748, loan: 0.769, nd: 0.50 },
+  M9:  { ts: 0.686, mb: 0.672, pos: 0.717, loan: 0.844, nd: 0.50 },
   ALL: { ts: 0.55,  mb: 0.50,  pos: 0.52,  loan: 0.78,  nd: 0.90 },
 }
 
@@ -758,13 +866,13 @@ const fmt = (n: number) => Math.round(n).toLocaleString('en-US')
 const MONTHS: { label: string; rep: RepKey; keys: RepKey[] }[] = [
   { label: '7-р сар', rep: 'M7', keys: ['W1', 'W2', 'W3', 'W4'] },
   { label: '8-р сар', rep: 'M8', keys: ['W5', 'W6', 'W7', 'W8'] },
-  { label: '9-р сар', rep: 'M9', keys: ['W9'] },
+  { label: '9-р сар', rep: 'M9', keys: ['W9', 'W10'] },
 ]
 const OVERVIEW: { rep: RepKey; label: string; sub: string; ic: string }[] = [
-  { rep: 'ALL', label: 'Бүх хугацаа', sub: '9 долоо хоног', ic: '📊' },
+  { rep: 'ALL', label: 'Бүх хугацаа', sub: '10 долоо хоног', ic: '📊' },
   { rep: 'M7', label: '7-р сар', sub: '4 долоо хоног', ic: '📅' },
   { rep: 'M8', label: '8-р сар', sub: '4 долоо хоног', ic: '📅' },
-  { rep: 'M9', label: '9-р сар', sub: '1 долоо хоног', ic: '📅' },
+  { rep: 'M9', label: '9-р сар', sub: '2 долоо хоног', ic: '📅' },
 ]
 const WEEK_VOL: Record<string, number> = Object.fromEntries(
   MONTHS.flatMap(m => m.keys).map(k => {
@@ -999,8 +1107,8 @@ export { ErrorBoundary }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function App() {
-  const [rep, setRep] = useState<RepKey>('W9')
-  const [selDays, setSelDays] = useState<Set<string>>(new Set(REPORTS.W9.defaultDays))
+  const [rep, setRep] = useState<RepKey>('W10')
+  const [selDays, setSelDays] = useState<Set<string>>(new Set(REPORTS.W10.defaultDays))
   const [selProd, setSelProd] = useState<string | null>(null)
   const reducedMotion = useReducedMotion()
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
