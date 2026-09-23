@@ -1231,11 +1231,12 @@ function mkSatGaugeSvg(dist: number[]) {
 }
 
 // ── Care — MBusiness Plus гүйлгээний тайлан ────────────────────────────────────
-type CareNavKey = 'acq' | 'inactive' | 'return'
+type CareNavKey = 'acq' | 'inactive' | 'return' | 'retention'
 const CARE_NAV: { key: CareNavKey; label: string }[] = [
   { key: 'acq', label: 'ACQ' },
   { key: 'inactive', label: 'INACTIVE' },
   { key: 'return', label: 'RETURN' },
+  { key: 'retention', label: 'RETENTION' },
 ]
 // Theme-aware палет — CSS var()-ууд ашигладаг тул [data-theme] солигдоход автоматаар өөрчлөгдөнө
 const careCol = {
@@ -1245,8 +1246,875 @@ const careCol = {
 }
 const tint = (color: string, pct = 16) => `color-mix(in srgb, ${color} ${pct}%, ${careCol.card})`
 
+// Care — тайлант долоо хоногууд (огнооны цэс)
+type CarePeriodKey = 'p2026-09-15'
+const CARE_PERIODS: { key: CarePeriodKey; label: string }[] = [
+  { key: 'p2026-09-15', label: '2026.09.15 – 2026.09.21' },
+]
+
+// ACQ дэд бүлгүүд
+type AcqSubKey = 'ontime' | 'mbp' | 'mpos'
+const ACQ_SUB: { key: AcqSubKey; label: string }[] = [
+  { key: 'ontime', label: 'Ontime' },
+  { key: 'mbp', label: 'M Business Plus' },
+  { key: 'mpos', label: 'Mpos' },
+]
+
+type OntimeAcqData = {
+  proCount: number
+  careAccess: { total: number; reached: number }
+  reasons: string[]
+  qpayNew: number
+  renewal: { total: number; renewed: number; block: number; mbusinessPlus: number; otherProgram: number; stopped: number }
+}
+type MbpAcqData = {
+  products: { n: string; v: number }[]
+  devCust: { exact2: number; twoPlus: number }
+  threeDevCustomer: { name: string; items: { n: string; q: number }[] }
+  care: { total: number; reached: number }
+  reasons: { n: string; pct: number; d: string }[]
+}
+
+const CARE_ACQ_DATA: Partial<Record<CarePeriodKey, { ontime: OntimeAcqData; mbp: MbpAcqData }>> = {
+  'p2026-09-15': {
+    ontime: {
+      proCount: 18,
+      careAccess: { total: 112, reached: 6 },
+      reasons: [
+        'Тооллого тайлан мэдээлэл өгсөн',
+        'Асуух зүйл гарвал өөрөө холбогдоно',
+        'Одоогоор асуух зүйл байхгүй байна',
+      ],
+      qpayNew: 23,
+      renewal: { total: 317, renewed: 129, block: 7, mbusinessPlus: 41, otherProgram: 7, stopped: 30 },
+    },
+    mbp: {
+      products: [
+        { n: 'MBusiness Plus - P3 Mini', v: 170 },
+        { n: 'MBusiness Plus - T3 Duo', v: 159 },
+      ],
+      devCust: { exact2: 16, twoPlus: 17 },
+      threeDevCustomer: { name: 'Дэлгэрхангай плаза', items: [{ n: 'T3 Duo', q: 2 }, { n: 'P3 Mini', q: 1 }] },
+      care: { total: 1297, reached: 256 },
+      reasons: [
+        { n: 'Сургалт, зөвлөгөө хамгийн өндөр давтамжтай байна', pct: 40.5, d: 'Харилцагчдын тайлбарын хамгийн том хэсэг нь сургалтад урих, сургалтын мэдээлэл өгөх, бараа бүртгэл, тайлан, менежер веб, лояалти зэрэг функцийн талаар зөвлөгөө өгөхтэй холбоотой байна.' },
+        { n: 'Холбогдох боломжгүй харилцагч', pct: 10.0, d: 'Утсаа авахгүй байх, дугаар холбогдохгүй байх, утсаа таслах зэрэг шалтгаан нэлээд давтагдсан. Энэ нь дараагийн follow-up шаардлагатай.' },
+        { n: 'Бараа бүртгэл, үнэ, тооллогын асуудал', pct: 7.9, d: 'Бараа бүртгэл хийх, хуучин/буруу үнэ татагдах, нийлүүлэгч бүртгэх, бараа нэгтгэл, үлдэгдэл харах зэрэг үйлдэл дээр асуулт.' },
+        { n: 'Төхөөрөмжийн асуудал', pct: 6.5, d: 'Карт уншилт, цаас, батарей, SIM сүлжээ, barcode reader зэрэг төхөөрөмжийн ажиллагаатай холбоотой асуудлууд бүртгэгдсэн. Зарим тохиолдолд инженер/суурилуулагч руу шилжүүлсэн байна.' },
+        { n: 'Ашиглаж эхлээгүй / буцаах эрсдэлтэй', pct: 6.5, d: 'Төхөөрөмжөө хараахан аваагүй, дэлгүүрээ нээгээгүй, бараа бүртгэлээ дуусгаагүй, ашиглаж эхлэх хугацаа тодорхойгүй зэрэг нөхцөлүүд байна. Мөн буцаах магадлалтай харилцагч бүртгэгдсэн.' },
+      ],
+    },
+  },
+}
+
+function AcqStat({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
+  return (
+    <div style={{
+      background: careCol.cardAlt, border: `1px solid ${careCol.line}`, borderRadius: 14,
+      padding: '14px 16px', flex: '1 1 140px', minWidth: 140,
+    }}>
+      <div className="clabel">{label}</div>
+      <div className="cbig" style={{ fontSize: 24 }}>{value}</div>
+      {sub && <div style={{ fontSize: 11, color: careCol.muted, marginTop: 3 }}>{sub}</div>}
+    </div>
+  )
+}
+
+function AcqOntime({ data }: { data: OntimeAcqData }) {
+  const { careAccess, reasons } = data
+
+  return (
+    <div className="grid" style={{ gap: 15 }}>
+      <div className="substrip">
+        <AcqStat label="PRO программ" value={data.proCount} />
+        <AcqStat label="Care · Хандах тоо" value={careAccess.total} sub={`Хандсан тоо: ${careAccess.reached}`} />
+        <AcqStat label="QPAY ШИНЭ ХОЛБОЛТ" value={data.qpayNew} sub="газар холбуулсан" />
+      </div>
+
+      <div className="card">
+        <div className="card-h">
+          <div className="card-title"><span className="tdot" style={{ background: careCol.teal }} />Хандалтын мэдээлэл</div>
+        </div>
+        {reasons.map((r, i) => (
+          <div key={i} className="tk-row">
+            <div className="tk-l"><span className="tk-mk" style={{ background: careCol.teal }} />{r}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function AcqMbp({ data }: { data: MbpAcqData }) {
+  const { products, devCust, care, reasons, threeDevCustomer } = data
+  const successRate = Math.round(care.reached / care.total * 100)
+  const prodMax = Math.max(...products.map(p => p.v))
+
+  return (
+    <div className="grid" style={{ gap: 15 }}>
+      <div className="substrip">
+        {products.map(p => <AcqStat key={p.n} label={p.n.replace('MBusiness Plus - ', '')} value={p.v} />)}
+        <AcqStat label="Care · Нийт хандсан" value={`${care.reached}/${care.total}`} sub={`${successRate}% хандалт`} />
+        <AcqStat label="2+ төхөөрөмжтэй харилцагч" value={devCust.twoPlus} sub={`Яг 2 ширхэг: ${devCust.exact2}`} />
+      </div>
+
+      <div className="card">
+        <div className="card-h">
+          <div className="card-title"><span className="tdot" style={{ background: careCol.blue }} />Бүтээгдэхүүний тоо ширхэг</div>
+        </div>
+        {products.map(p => (
+          <div key={p.n} className="hbar">
+            <div className="hbar-top"><span className="n">{p.n}</span><span className="v">{p.v}</span></div>
+            <div className="hbar-track"><div className="hbar-fill" style={{ width: `${p.v / prodMax * 100}%`, background: careCol.blue }} /></div>
+          </div>
+        ))}
+        <div style={{ fontSize: 11, color: careCol.muted, marginTop: 8 }}>
+          /Pro-с шилжсэн/ гэж тэмдэглэгдсэн T3 Duo, P3 Mini-үүдийг тухайн төхөөрөмжийн тоонд нь оруулж тооцсон.
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-h">
+          <div className="card-title"><span className="tdot" style={{ background: careCol.violet }} />2 төхөөрөмжтэй харилцагч</div>
+        </div>
+        <div className="tk-row">
+          <div className="tk-l"><span className="tk-mk" style={{ background: careCol.teal2 }} />Яг 2 төхөөрөмж авсан харилцагч</div>
+          <div className="tk-v">{devCust.exact2}</div>
+        </div>
+        <div className="tk-row">
+          <div className="tk-l"><span className="tk-mk" style={{ background: careCol.blue }} />2 ба түүнээс дээш төхөөрөмжтэй харилцагч</div>
+          <div className="tk-v">{devCust.twoPlus}</div>
+        </div>
+        <div style={{ fontSize: 12, color: careCol.muted, marginTop: 8 }}>
+          Үүнээс 1 харилцагч 3 төхөөрөмжтэй байна: <b style={{ color: 'var(--text)' }}>{threeDevCustomer.name}</b> — {threeDevCustomer.items.map(it => `${it.n} × ${it.q}`).join(', ')}
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-h">
+          <div className="card-title"><span className="tdot" style={{ background: careCol.teal }} />Амжилттай хандалтын шалтгаанууд</div>
+        </div>
+        {reasons.map((r, i) => (
+          <div key={i} className="hbar">
+            <div className="hbar-top"><span className="n">{i + 1}. {r.n}</span><span className="v">{r.pct}%</span></div>
+            <div className="hbar-track"><div className="hbar-fill" style={{ width: `${r.pct / reasons[0].pct * 100}%`, background: careCol.teal }} /></div>
+            <div style={{ fontSize: 11.5, color: careCol.muted, marginTop: 5 }}>{r.d}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function SubDataPending({ label }: { label: string }) {
+  return (
+    <div style={{ background: careCol.card, border: `1px solid ${careCol.line}`, borderRadius: 16, padding: 48, textAlign: 'center', color: careCol.muted, fontSize: 13.5 }}>
+      «{label}» дата удахгүй нэмэгдэнэ.
+    </div>
+  )
+}
+
+function AcqSection({ period }: { period: CarePeriodKey }) {
+  const [sub, setSub] = useState<AcqSubKey>('ontime')
+  const data = CARE_ACQ_DATA[period]
+  return (
+    <div>
+      <div className="subnav-row">
+        <div className="subnav" style={{ marginBottom: 15 }}>
+          {ACQ_SUB.map(s => (
+            <button key={s.key} type="button" className={sub === s.key ? 'on' : ''} onClick={() => setSub(s.key)}>
+              {s.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      {sub === 'mpos' ? (
+        <SubDataPending label="Mpos" />
+      ) : data ? (
+        <>
+          {sub === 'ontime' && <AcqOntime data={data.ontime} />}
+          {sub === 'mbp' && <AcqMbp data={data.mbp} />}
+        </>
+      ) : (
+        <div style={{ background: careCol.card, border: `1px solid ${careCol.line}`, borderRadius: 16, padding: 48, textAlign: 'center', color: careCol.muted, fontSize: 13.5 }}>
+          Энэ хугацаанд ACQ дата алга байна.
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Care — INACTIVE (active/inactive задаргаа, холбогдсон/амжилттай тойрог, асуудал-шийдэл хүснэгт) ──
+type InactiveSlice = { n: string; v: number; c: string }
+type InactiveCell = { problems: string[]; solutions: string[] }
+type InactiveCatData = {
+  total: number
+  active: number
+  inactive: number
+  reached: InactiveSlice[]
+  success: InactiveSlice[]
+  cells: { successful: InactiveCell; unsuccessful: InactiveCell; support: InactiveCell }
+}
+
+function mkCareDonut(slices: InactiveSlice[]) {
+  const size = 118, r = 46, cx = 59, cy = 59, sw = 13
+  const C2 = 2 * Math.PI * r
+  const tot = slices.reduce((a, s) => a + s.v, 0) || 1
+  let off = 0, arcs = ''
+  slices.forEach(s => {
+    const len = C2 * (s.v / tot)
+    arcs += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.c}" stroke-width="${sw}" stroke-dasharray="${len} ${C2 - len}" stroke-dashoffset="${-off}" transform="rotate(-90 ${cx} ${cy})"/>`
+    off += len
+  })
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${careCol.track}" stroke-width="${sw}"/>${arcs}</svg>`
+}
+
+const INACTIVE_COL = { successful: careCol.teal, unsuccessful: 'var(--coral, #e5484d)', support: careCol.blue }
+const INACTIVE_COL_LABEL: Record<'successful' | 'unsuccessful' | 'support', string> = {
+  successful: 'Амжилттай', unsuccessful: 'Амжилтгүй', support: 'Туслалцаа',
+}
+
+function InactiveDonut({ title, slices }: { title: string; slices: InactiveSlice[] }) {
+  const tot = slices.reduce((a, s) => a + s.v, 0)
+  return (
+    <div className="card">
+      <div className="card-h">
+        <div className="card-title"><span className="tdot" style={{ background: slices[0]?.c ?? careCol.teal }} />{title}</div>
+      </div>
+      <div className="donut-wrap">
+        <div style={{ position: 'relative' }} dangerouslySetInnerHTML={{ __html: mkCareDonut(slices) }} />
+        <div className="legend">
+          {slices.map(s => (
+            <div key={s.n} className="lg">
+              <div className="lg-l"><span className="lg-mk" style={{ background: s.c }} />{s.n}</div>
+              <div><span className="lg-v">{s.v}</span><span className="lg-c">{tot ? Math.round(s.v / tot * 100) : 0}%</span></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function InactiveCatView({ data }: { data: InactiveCatData }) {
+  const activePct = data.total ? Math.round(data.active / data.total * 100) : 0
+  const cols: ('successful' | 'unsuccessful' | 'support')[] = ['successful', 'unsuccessful', 'support']
+  return (
+    <div className="grid" style={{ gap: 15 }}>
+      <div className="card">
+        <div className="card-h">
+          <div className="card-title"><span className="tdot" style={{ background: careCol.teal }} />Нийт харилцагч</div>
+          <div className="cbig" style={{ fontSize: 18 }}>{data.total}</div>
+        </div>
+        <div style={{ display: 'flex', height: 22, borderRadius: 8, overflow: 'hidden', background: careCol.track }}>
+          <div style={{ width: `${activePct}%`, background: careCol.teal }} />
+          <div style={{ width: `${100 - activePct}%`, background: careCol.muted2 }} />
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 12 }}>
+          <span style={{ color: careCol.ink }}><span className="lg-mk" style={{ background: careCol.teal, display: 'inline-block', marginRight: 6 }} />Active — <b>{data.active}</b></span>
+          <span style={{ color: careCol.muted }}><span className="lg-mk" style={{ background: careCol.muted2, display: 'inline-block', marginRight: 6 }} />Inactive — <b>{data.inactive}</b></span>
+        </div>
+      </div>
+
+      <div className="two grid" style={{ gap: 15 }}>
+        <InactiveDonut title="Холбогдсон тоо" slices={data.reached} />
+        <InactiveDonut title="Амжилттай тоо" slices={data.success} />
+      </div>
+
+      <div className="card" style={{ overflowX: 'auto' }}>
+        <div className="card-h">
+          <div className="card-title"><span className="tdot" style={{ background: careCol.violet }} />Асуудал / Шийдэл</div>
+        </div>
+        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 560 }}>
+          <thead>
+            <tr>
+              <th style={{ textAlign: 'left', padding: '6px 10px', fontSize: 11, color: careCol.muted, textTransform: 'uppercase', letterSpacing: 1 }} />
+              {cols.map(c => (
+                <th key={c} style={{ textAlign: 'left', padding: '6px 10px', fontSize: 11, color: INACTIVE_COL[c], textTransform: 'uppercase', letterSpacing: 1 }}>
+                  {INACTIVE_COL_LABEL[c]}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {(['problems', 'solutions'] as const).map(row => (
+              <tr key={row} style={{ borderTop: `1px dashed ${careCol.line}` }}>
+                <td style={{ padding: '10px', fontSize: 12.5, fontWeight: 700, color: careCol.ink, whiteSpace: 'nowrap' }}>
+                  {row === 'problems' ? 'Асуудал' : 'Шийдэл'}
+                </td>
+                {cols.map(c => (
+                  <td key={c} style={{ padding: '10px', fontSize: 12, color: careCol.muted, verticalAlign: 'top' }}>
+                    {data.cells[c][row].length ? (
+                      <ul style={{ margin: 0, paddingLeft: 16 }}>
+                        {data.cells[c][row].map((t, i) => <li key={i}>{t}</li>)}
+                      </ul>
+                    ) : '—'}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+// Гурван дэд бүлэгт (Ontime, M Business Plus, Mpos) адилхан загвар — бодит тоо ирэх хүртэл жишээ утгууд
+const INACTIVE_TEMPLATE: InactiveCatData = {
+  total: 100, active: 68, inactive: 32,
+  reached: [
+    { n: 'Ангилал 1', v: 34, c: C.blue },
+    { n: 'Ангилал 2', v: 33, c: C.teal },
+    { n: 'Ангилал 3', v: 33, c: C.violet },
+  ],
+  success: [
+    { n: 'Ангилал 1', v: 34, c: C.gold },
+    { n: 'Ангилал 2', v: 33, c: C.teal },
+    { n: 'Ангилал 3', v: 33, c: C.coral },
+  ],
+  cells: {
+    successful: { problems: [], solutions: [] },
+    unsuccessful: { problems: [], solutions: [] },
+    support: { problems: [], solutions: [] },
+  },
+}
+
+// ── INACTIVE › M Business Plus — бодит дата (ашиглалт эхлүүлэх дуудлага + cashback мэдээллийн дуудлага) ──
+type InactiveMbpData = {
+  ashiglalt: {
+    attempt1: { success: number; noAnswer: number; unreachable: number }
+    attempt2: { success: number; noAnswer: number; unreachable: number }
+    totalSuccess: number
+    totalUnreachable: number
+    totalNoAnswer: number
+    totalCalls: number
+    topReasons: { n: string; count: number }[]
+  }
+  cashback: {
+    totalCalls: number
+    success: number
+    successBreakdown: { n: string; count: number }[]
+    noAnswer: number
+    unableToTalk: number
+    note: string
+  }
+}
+
+const INACTIVE_MBP_DATA: InactiveMbpData = {
+  ashiglalt: {
+    attempt1: { success: 173, noAnswer: 55, unreachable: 17 },
+    attempt2: { success: 18, noAnswer: 30, unreachable: 4 },
+    totalSuccess: 191,
+    totalUnreachable: 21,
+    totalNoAnswer: 85,
+    totalCalls: 297,
+    topReasons: [
+      { n: 'Ашиглалт хэвийн байгаа. Асуух зүйл гарвал холбогдоно.', count: 21 },
+      { n: 'Буцааж өгсөн.', count: 16 },
+      { n: 'Ашиглаад эхэлсэн байгаа. Асуух зүйл байхгүй.', count: 7 },
+      { n: 'Ашиглалт хэвийн байгаа. Сургалтанд сууна.', count: 4 },
+      { n: 'Буцаах хүсэлт өгсөн.', count: 4 },
+      { n: 'Ашиглалт хэвийн байгаа. Асуух зүйл байхгүй.', count: 3 },
+      { n: 'Ашиглалт хэвийн байгаа. Асуух зүйл гарвал холбогдоно. Сургалтанд сууна.', count: 3 },
+      { n: 'Ашиглаад эхэлсэн байгаа. Төхөөрөмж нь хэвийн байгаа. Асуух зүйл гарвал холбогдож байгаа.', count: 2 },
+      { n: 'Гэрээ байхгүй', count: 2 },
+      { n: 'Ашиглаад эхэлсэн асуух зүйл байхгүй. Сургалтанд сууна.', count: 2 },
+    ],
+  },
+  cashback: {
+    totalCalls: 64,
+    success: 38,
+    successBreakdown: [
+      { n: 'Газар апп дээрээ дарсан', count: 18 },
+      { n: 'Одоо боломжгүй тул заавар мсж илгээж авахыг хүссэн', count: 15 },
+      { n: 'Заавар өгсөн бөгөөд одоо үзнэ гэсэн', count: 3 },
+      { n: 'Газар өөр дугаарт мэдээлэл өгөх хэлсэн', count: 2 },
+    ],
+    noAnswer: 24,
+    unableToTalk: 2,
+    note: 'Одоогоор харилцагчид өмнөх авсан дүнгүүдээ харахад таатай байгаа бөгөөд боломжгүй байгаа хүмүүс оролдож үзнэ гэсэн.',
+  },
+}
+
+function InactiveMbpView({ data }: { data: InactiveMbpData }) {
+  const { ashiglalt: a, cashback: cb } = data
+  const reasonMax = a.topReasons[0]?.count || 1
+  const cbMax = Math.max(...cb.successBreakdown.map(x => x.count), 1)
+  const cbOutcomeSlices: InactiveSlice[] = [
+    { n: 'Амжилттай', v: cb.success, c: careCol.teal2 },
+    { n: 'Утсаа аваагүй', v: cb.noAnswer, c: careCol.muted2 },
+    { n: 'Ярих боломжгүй', v: cb.unableToTalk, c: 'var(--coral, #e5484d)' },
+  ]
+
+  return (
+    <div className="grid" style={{ gap: 15 }}>
+      <div className="substrip">
+        <AcqStat label="Ашиглалт · Нийт дуудлага" value={a.totalCalls} />
+        <AcqStat label="Амжилттай холбогдсон" value={a.totalSuccess} sub={`${Math.round(a.totalSuccess / a.totalCalls * 100)}%`} />
+        <AcqStat label="Утсаа аваагүй" value={a.totalNoAnswer} />
+        <AcqStat label="Холбогдох боломжгүй" value={a.totalUnreachable} />
+      </div>
+
+      <div className="card" style={{ overflowX: 'auto' }}>
+        <div className="card-h">
+          <div className="card-title"><span className="tdot" style={{ background: careCol.teal }} />Ашиглалт — 1-р / 2-р оролдлого</div>
+        </div>
+        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 420 }}>
+          <thead>
+            <tr>
+              {['Төлөв', '1-р оролдлого', '2-р оролдлого', 'Нийт'].map(h => (
+                <th key={h} style={{ textAlign: h === 'Төлөв' ? 'left' : 'right', padding: '6px 10px', fontSize: 11, color: careCol.muted, textTransform: 'uppercase', letterSpacing: 1 }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {([
+              ['Амжилттай', a.attempt1.success, a.attempt2.success],
+              ['Утсаа аваагүй', a.attempt1.noAnswer, a.attempt2.noAnswer],
+              ['Холбогдох боломжгүй', a.attempt1.unreachable, a.attempt2.unreachable],
+            ] as [string, number, number][]).map(([label, v1, v2]) => (
+              <tr key={label} style={{ borderTop: `1px dashed ${careCol.line}` }}>
+                <td style={{ padding: '9px 10px', fontSize: 13, color: careCol.ink, fontWeight: 600 }}>{label}</td>
+                <td style={{ padding: '9px 10px', fontSize: 12.5, color: careCol.muted, textAlign: 'right' }}>{v1}</td>
+                <td style={{ padding: '9px 10px', fontSize: 12.5, color: careCol.muted, textAlign: 'right' }}>{v2}</td>
+                <td style={{ padding: '9px 10px', fontSize: 13, color: careCol.ink, fontWeight: 700, textAlign: 'right' }}>{v1 + v2}</td>
+              </tr>
+            ))}
+            <tr style={{ borderTop: `1px solid ${careCol.line}` }}>
+              <td style={{ padding: '9px 10px', fontSize: 13, color: careCol.ink, fontWeight: 700 }}>НИЙТ ДУУДЛАГА</td>
+              <td style={{ padding: '9px 10px', fontSize: 13, color: careCol.ink, fontWeight: 700, textAlign: 'right' }}>245</td>
+              <td style={{ padding: '9px 10px', fontSize: 13, color: careCol.ink, fontWeight: 700, textAlign: 'right' }}>52</td>
+              <td style={{ padding: '9px 10px', fontSize: 13, color: careCol.ink, fontWeight: 700, textAlign: 'right' }}>{a.totalCalls}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 15, alignItems: 'flex-start' }}>
+        <div className="card" style={{ flex: '1 1 300px', fontSize: 11.5 }}>
+          <div className="card-h">
+            <div className="card-title" style={{ fontSize: 10 }}><span className="tdot" style={{ background: careCol.violet }} />Хандалтын тэмдэглэлээс гарсан Топ 10 шалтгаан</div>
+          </div>
+          {a.topReasons.map((r, i) => (
+            <div key={i} className="hbar" style={{ marginBottom: 8 }}>
+              <div className="hbar-top" style={{ fontSize: 11 }}><span className="n">{i + 1}. {r.n}</span><span className="v">{r.count}</span></div>
+              <div className="hbar-track" style={{ height: 6 }}><div className="hbar-fill" style={{ width: `${r.count / reasonMax * 100}%`, background: careCol.violet }} /></div>
+            </div>
+          ))}
+        </div>
+
+        <div className="card" style={{ flex: '1.3 1 340px' }}>
+          <div className="card-h">
+            <div className="card-title"><span className="tdot" style={{ background: careCol.blue }} />Cashback мэдээллийн дуудлага</div>
+            <div className="cbig" style={{ fontSize: 18 }}>{cb.totalCalls}</div>
+          </div>
+          <div className="donut-wrap">
+            <div style={{ position: 'relative' }} dangerouslySetInnerHTML={{ __html: mkCareDonut(cbOutcomeSlices) }} />
+            <div className="legend">
+              {cbOutcomeSlices.map(s => (
+                <div key={s.n} className="lg">
+                  <div className="lg-l"><span className="lg-mk" style={{ background: s.c }} />{s.n}</div>
+                  <div><span className="lg-v">{s.v}</span><span className="lg-c">{Math.round(s.v / cb.totalCalls * 100)}%</span></div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{ marginTop: 15 }}>
+            <div className="card-title" style={{ marginBottom: 10 }}>Амжилттай ({cb.success}) — дэлгэрэнгүй</div>
+            {cb.successBreakdown.map(it => (
+              <div key={it.n} className="hbar">
+                <div className="hbar-top"><span className="n">{it.n}</span><span className="v">{it.count}</span></div>
+                <div className="hbar-track"><div className="hbar-fill" style={{ width: `${it.count / cbMax * 100}%`, background: careCol.teal2 }} /></div>
+              </div>
+            ))}
+          </div>
+          <div style={{ fontSize: 11.5, color: careCol.muted, marginTop: 8 }}>{cb.note}</div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function InactiveSection() {
+  const [sub, setSub] = useState<AcqSubKey>('ontime')
+  return (
+    <div>
+      <div className="subnav-row">
+        <div className="subnav" style={{ marginBottom: 15 }}>
+          {ACQ_SUB.map(s => (
+            <button key={s.key} type="button" className={sub === s.key ? 'on' : ''} onClick={() => setSub(s.key)}>
+              {s.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      {sub === 'mbp' ? (
+        <InactiveMbpView data={INACTIVE_MBP_DATA} />
+      ) : (
+        <>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, padding: '6px 12px',
+            background: `${C.gold}12`, border: `1px solid ${C.gold}33`, borderRadius: 8, fontSize: 12,
+          }}>
+            <span style={{ width: 8, height: 8, borderRadius: 2, background: C.gold, display: 'inline-block', flexShrink: 0 }} />
+            <span style={{ color: careCol.muted }}>Жишээ бүтэц — {ACQ_SUB.find(s => s.key === sub)?.label} дэд бүлгийн бодит тоо удахгүй орно</span>
+          </div>
+          <InactiveCatView data={INACTIVE_TEMPLATE} />
+        </>
+      )}
+    </div>
+  )
+}
+
+// ── Care — RETURN (Улаанбаатар/Орон нутаг сонголт → target vs гүйцэтгэл) ──────
+type ReturnRow = { n: string; target: number; collected: number }
+type ReturnAreaData = { ub: ReturnRow[]; region: ReturnRow[] }
+
+const UB_DISTRICTS = ['Баянгол', 'Баянзүрх', 'Чингэлтэй', 'Сүхбаатар', 'Сонгинохайрхан', 'Хан-Уул', 'Налайх', 'Багануур', 'Багахангай']
+const AIMAGS = [
+  'Архангай', 'Баян-Өлгий', 'Баянхонгор', 'Булган', 'Говь-Алтай', 'Говьсүмбэр', 'Дархан-Уул', 'Дорноговь', 'Дорнод',
+  'Дундговь', 'Завхан', 'Орхон', 'Өвөрхангай', 'Өмнөговь', 'Сүхбаатар', 'Сэлэнгэ', 'Төв', 'Увс', 'Ховд', 'Хөвсгөл', 'Хэнтий',
+]
+const RETURN_TEMPLATE: ReturnAreaData = {
+  ub: UB_DISTRICTS.map(n => ({ n, target: 0, collected: 0 })),
+  region: AIMAGS.map(n => ({ n, target: 0, collected: 0 })),
+}
+
+function ReturnTable({ rows }: { rows: ReturnRow[] }) {
+  const totalTarget = rows.reduce((a, r) => a + r.target, 0)
+  const totalCollected = rows.reduce((a, r) => a + r.collected, 0)
+  const totalPct = totalTarget ? Math.round(totalCollected / totalTarget * 100) : 0
+  const sorted = [...rows].sort((a, b) => (b.target ? b.collected / b.target : 0) - (a.target ? a.collected / a.target : 0))
+
+  return (
+    <div className="grid" style={{ gap: 15 }}>
+      <div className="card">
+        <div className="card-h">
+          <div className="card-title"><span className="tdot" style={{ background: careCol.teal }} />Нийт гүйцэтгэл</div>
+          <div className="cbig" style={{ fontSize: 20 }}>{totalPct}%</div>
+        </div>
+        <div className="hbar-track"><div className="hbar-fill" style={{ width: `${totalPct}%`, background: careCol.teal }} /></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 12, color: careCol.muted }}>
+          <span>Target: <b style={{ color: careCol.ink }}>{totalTarget}</b></span>
+          <span>Хураасан: <b style={{ color: careCol.ink }}>{totalCollected}</b></span>
+        </div>
+      </div>
+
+      <div className="card" style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 420 }}>
+          <thead>
+            <tr>
+              {['#', 'Нэр', 'Target', 'Хураасан', 'Гүйцэтгэл'].map(h => (
+                <th key={h} style={{ textAlign: h === 'Нэр' ? 'left' : 'right', padding: '6px 10px', fontSize: 11, color: careCol.muted, textTransform: 'uppercase', letterSpacing: 1 }}>
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.map((r, i) => {
+              const pct = r.target ? Math.round(r.collected / r.target * 100) : 0
+              return (
+                <tr key={r.n} style={{ borderTop: `1px dashed ${careCol.line}` }}>
+                  <td style={{ padding: '9px 10px', fontSize: 12, color: careCol.muted }}>{i + 1}</td>
+                  <td style={{ padding: '9px 10px', fontSize: 13, color: careCol.ink, fontWeight: 600 }}>{r.n}</td>
+                  <td style={{ padding: '9px 10px', fontSize: 12.5, color: careCol.muted, textAlign: 'right' }}>{r.target}</td>
+                  <td style={{ padding: '9px 10px', fontSize: 12.5, color: careCol.muted, textAlign: 'right' }}>{r.collected}</td>
+                  <td style={{ padding: '9px 10px', width: 140 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
+                      <div className="hbar-track" style={{ width: 60 }}><div className="hbar-fill" style={{ width: `${pct}%`, background: careCol.teal }} /></div>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: careCol.ink, minWidth: 32, textAlign: 'right' }}>{pct}%</span>
+                    </div>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+function ReturnCatView({ data }: { data: ReturnAreaData }) {
+  const [area, setArea] = useState<'ub' | 'region'>('ub')
+  return (
+    <div>
+      <div className="subnav-row">
+        <div className="subnav" style={{ marginBottom: 15 }}>
+          <button type="button" className={area === 'ub' ? 'on' : ''} onClick={() => setArea('ub')}>Улаанбаатар</button>
+          <button type="button" className={area === 'region' ? 'on' : ''} onClick={() => setArea('region')}>Орон нутаг</button>
+        </div>
+      </div>
+      <ReturnTable rows={area === 'ub' ? data.ub : data.region} />
+    </div>
+  )
+}
+
+// Mpos — "Хураалгах" / "Хураалгасан" төлөвтэй харилцагчдын ашиглахгүй болсон шалтгаанууд
+type MposReasonItem = { n: string; count: number; pct: number }
+type MposReasonGroup = { label: string; total: number; items: MposReasonItem[] }
+
+const MPOS_RETURN_REASONS: MposReasonGroup[] = [
+  {
+    label: '"Хураалгах" төлөвтэй харилцагчид',
+    total: 184,
+    items: [
+      { n: 'Үйл ажиллагаа зогссон', count: 45, pct: 24.5 },
+      { n: 'Олон постой', count: 45, pct: 24.5 },
+      { n: 'M Business Plus руу шилжсэн', count: 28, pct: 15.2 },
+      { n: 'Зээл', count: 13, pct: 7.1 },
+      { n: 'Алдаа', count: 9, pct: 4.9 },
+      { n: 'Түр ажиллахгүй', count: 8, pct: 4.3 },
+      { n: 'Хэвийн ашиглаж байгаа', count: 5, pct: 2.7 },
+      { n: 'Түр ажиллахгүй байгаа, байсан', count: 5, pct: 2.7 },
+      { n: 'Сүлжээ муу', count: 4, pct: 2.2 },
+      { n: 'Карт уншихгүй', count: 4, pct: 2.2 },
+      { n: 'Мбиз, Мбанк нууц үг мэдэхгүй', count: 3, pct: 1.6 },
+      { n: 'Борлуулалт муу', count: 3, pct: 1.6 },
+      { n: 'Ашиглаж мэдэхгүй', count: 3, pct: 1.6 },
+      { n: 'Цэнэг дуусах', count: 2, pct: 1.1 },
+      { n: 'Нэр шилжүүлэх хүсэлтэй', count: 2, pct: 1.1 },
+      { n: 'Улирлын чанартай', count: 1, pct: 0.5 },
+      { n: '(Тодорхойгүй)', count: 1, pct: 0.5 },
+      { n: 'Санал хүсэлт', count: 1, pct: 0.5 },
+      { n: 'Амралттай байсан, байгаа', count: 1, pct: 0.5 },
+      { n: '1 хувь руу шилжүүлж бга тул', count: 1, pct: 0.5 },
+    ],
+  },
+  {
+    label: '"Хураалгасан" харилцагчид',
+    total: 64,
+    items: [
+      { n: 'M Business Plus руу шилжсэн', count: 16, pct: 25.0 },
+      { n: 'Үйл ажиллагаа зогссон', count: 15, pct: 23.4 },
+      { n: 'Алдаа', count: 7, pct: 10.9 },
+      { n: 'Олон постой', count: 7, pct: 10.9 },
+      { n: 'Зээл', count: 6, pct: 9.4 },
+      { n: 'Удахгүй нээнэ', count: 3, pct: 4.7 },
+      { n: 'Тест', count: 2, pct: 3.1 },
+      { n: 'Хэвийн ашиглаж байгаа', count: 2, pct: 3.1 },
+      { n: 'Мбиз, Мбанк нууц үг мэдэхгүй', count: 1, pct: 1.6 },
+      { n: 'Ашиглаж мэдэхгүй', count: 1, pct: 1.6 },
+      { n: 'Түр ажиллахгүй', count: 1, pct: 1.6 },
+      { n: 'Цэнэг дуусах', count: 1, pct: 1.6 },
+      { n: 'Пос ирээгүй', count: 1, pct: 1.6 },
+      { n: 'Борлуулалт муу', count: 1, pct: 1.6 },
+    ],
+  },
+]
+
+function MposReasonCard({ group, color }: { group: MposReasonGroup; color: string }) {
+  const max = group.items[0]?.count || 1
+  return (
+    <div className="card">
+      <div className="card-h">
+        <div className="card-title"><span className="tdot" style={{ background: color }} />{group.label}</div>
+        <div className="cbig" style={{ fontSize: 18 }}>{group.total}</div>
+      </div>
+      {group.items.map(it => (
+        <div key={it.n} className="hbar">
+          <div className="hbar-top"><span className="n">{it.n}</span><span className="v">{it.count} · {it.pct}%</span></div>
+          <div className="hbar-track"><div className="hbar-fill" style={{ width: `${it.count / max * 100}%`, background: color }} /></div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// M Business Plus — Буцаалтын шалтгаанууд (2026.09.22 байдлаар)
+type ReturnReasonItem = { n: string; count: number; pct: number; detail?: string }
+type ReturnReasonGroup = { label: string; asOf: string; total: number; requested: number; collected: number; items: ReturnReasonItem[] }
+
+const MBP_RETURN_REASONS: ReturnReasonGroup = {
+  label: 'Буцаалтын шалтгаан',
+  asOf: '2026.09.22 байдлаар',
+  total: 153,
+  requested: 55,
+  collected: 98,
+  items: [
+    { n: 'Хувийн шалтгаан', count: 37, pct: 23.7, detail: 'Дэлгүүрээ ажиллуулахгүй байгаа, дэлгүүрээ зарж байгаа, гэр бүлийн хүн зөвшөөрөөгүй зэрэг.' },
+    { n: 'Хөгжүүлэлт муу', count: 26, pct: 16.8, detail: 'Тооллого, тайлан дутуу, ХЭБ борлуулалт хийгдэхгүй байгаа зэрэг.' },
+    { n: 'Төхөөрөмж', count: 23, pct: 14.9, detail: 'Цэнэгээ барихгүй, нэмэлт программ суулгах боломжгүй, камер холбох боломжгүй, YouTube/Google ашиглах боломжгүй зэрэг.' },
+    { n: 'Бизнесийн үйл ажиллагаа', count: 16, pct: 10.6, detail: 'Дэлгүүрийн үйл ажиллагаа зогссон, үйл ажиллагаа жигдрээгүй, орлого бага зэрэг.' },
+    { n: 'Зээл', count: 14, pct: 9.3, detail: 'Зээл хүссэн боловч гараагүй, зээлийн шийдвэрт дэлгүүрийн байршил болон орлого нөлөөлсөн, нэмэлт орлого харагдаагүй зэрэг.' },
+    { n: 'Төлбөр', count: 14, pct: 9.3, detail: 'Бэлэн төлөлтөөр авах боломжгүй, 36 сарын төлбөр өндөр зэрэг.' },
+    { n: 'Хураалгах / буцаалт', count: 10, pct: 6.8, detail: 'Тестээр авч ашиглахгүй буцаасан, гэрээ хийгээгүй зэрэг.' },
+    { n: 'Ашиглалт', count: 5, pct: 3.7, detail: 'Ахмад хүн ашигладаг, өмнө нь программ болон төхөөрөмж ашиглаж байгаагүй, ашиглахад хүндрэлтэй зэрэг.' },
+    { n: 'Гомдол', count: 4, pct: 2.5, detail: 'POS гацах, гацалт ихтэй, асуудлыг шалгуулсан боловч шийдэгдээгүй зэрэг.' },
+    { n: 'Доголдол', count: 2, pct: 1.2, detail: '8 дугаар сарын доголдолтой холбоотойгоор буцаасан.' },
+    { n: 'Андуурсан', count: 2, pct: 1.2, detail: 'Жижиг POS төхөөрөмж гэж ойлгосон зэрэг.' },
+  ],
+}
+
+function ReturnReasonCard({ group, color }: { group: ReturnReasonGroup; color: string }) {
+  const max = group.items[0]?.count || 1
+  return (
+    <div className="card">
+      <div className="card-h">
+        <div className="card-title"><span className="tdot" style={{ background: color }} />{group.label}</div>
+        <div style={{ textAlign: 'right' }}>
+          <div className="cbig" style={{ fontSize: 18 }}>{group.total}</div>
+          <div style={{ fontSize: 10.5, color: careCol.muted }}>{group.asOf}</div>
+        </div>
+      </div>
+      <div className="substrip" style={{ marginBottom: 15 }}>
+        <AcqStat label="Хураалгах хүсэлтэй" value={group.requested} />
+        <AcqStat label="Хураасан" value={group.collected} />
+      </div>
+      {group.items.map((it, i) => (
+        <div key={it.n} className="hbar">
+          <div className="hbar-top"><span className="n">{i + 1}. {it.n}</span><span className="v">{it.count} · {it.pct}%</span></div>
+          <div className="hbar-track"><div className="hbar-fill" style={{ width: `${it.count / max * 100}%`, background: color }} /></div>
+          {it.detail && <div style={{ fontSize: 11.5, color: careCol.muted, marginTop: 5 }}>{it.detail}</div>}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function ReturnSection() {
+  const [sub, setSub] = useState<AcqSubKey>('ontime')
+  return (
+    <div>
+      <div className="subnav-row">
+        <div className="subnav" style={{ marginBottom: 15 }}>
+          {ACQ_SUB.map(s => (
+            <button key={s.key} type="button" className={sub === s.key ? 'on' : ''} onClick={() => setSub(s.key)}>
+              {s.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      {sub === 'ontime' ? (
+        <SubDataPending label="Ontime" />
+      ) : (
+        <>
+          {sub === 'mbp' && (
+            <div style={{ marginBottom: 15 }}>
+              <ReturnReasonCard group={MBP_RETURN_REASONS} color={careCol.violet} />
+            </div>
+          )}
+          {sub === 'mpos' && (
+            <div className="grid" style={{ gap: 15, marginBottom: 15, gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
+              <MposReasonCard group={MPOS_RETURN_REASONS[0]} color={careCol.teal} />
+              <MposReasonCard group={MPOS_RETURN_REASONS[1]} color={careCol.blue} />
+            </div>
+          )}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, padding: '6px 12px',
+            background: `${C.gold}12`, border: `1px solid ${C.gold}33`, borderRadius: 8, fontSize: 12,
+          }}>
+            <span style={{ width: 8, height: 8, borderRadius: 2, background: C.gold, display: 'inline-block', flexShrink: 0 }} />
+            <span style={{ color: careCol.muted }}>Дүүрэг/аймгийн target ба хураасан тоо удахгүй орно</span>
+          </div>
+          <ReturnCatView data={RETURN_TEMPLATE} />
+        </>
+      )}
+    </div>
+  )
+}
+
+// ── Care — RETENTION (Pro сунгалт 2026: target, холбогдолтын үр дүн, сунгаагүй шалтгаанууд) ──
+type RetentionOutcome = { n: string; v: number; c: string }
+type RetentionReason = { n: string; count: number; examples: string[] }
+type RetentionData = {
+  totalTarget: number
+  currentTarget: number
+  outcomes: RetentionOutcome[]
+  topReasons: RetentionReason[]
+}
+
+// "Сунгалт 2026" тайлангаас гаргасан — Эргэн холбогдсон 170 харилцагчийн үр дүнгийн задаргаа
+const RETENTION_DATA: RetentionData = {
+  totalTarget: 152180000,
+  currentTarget: 94180900,
+  outcomes: [
+    { n: 'Амжилттай', v: 75, c: C.teal },
+    { n: 'M Business Plus шилжсэн', v: 40, c: C.blue },
+    { n: 'Үйл ажиллагаа зогссон', v: 29, c: C.coral },
+    { n: 'Утсаа аваагүй', v: 10, c: C.gold },
+    { n: 'Block', v: 7, c: C.violet },
+    { n: 'Өөр программ ашигладаг', v: 6, c: C.pink },
+    { n: 'Гэрээний мэдээлэл зөрүүтэй', v: 2, c: C.amber },
+    { n: 'Мэдээлэл өгсөн', v: 1, c: C.green },
+  ],
+  topReasons: [
+    { n: 'Үйл ажиллагаа зогссон / түр зогссон', count: 7, examples: ['Үйл ажиллагаа нь зогссон', 'Улирлын чанартай ажилладаг', 'Хугацаагаа дуусгаад гэрээгээ хаана'] },
+    { n: 'M Business Plus руу шилжих гэж байгаа', count: 4, examples: ['Мбиз шилжиж магадгүй', 'Түрээслэгч нь Мбизнес плас руу шилжиж магадгүй', 'Төхөөрөмжөө захиалчихсан хүлээж байгаа'] },
+    { n: 'Холбогдох боломжгүй / утасны асуудал', count: 4, examples: ['Холбогдох боломжгүй', 'Утсаа салгасан', 'Эхний дугаар аваагүй, 2 дахь нь буруу дугаар'] },
+    { n: 'Өөр шийдэл судалж байгаа', count: 2, examples: ['Өөр программ сонгож магадгүй судалж байна', 'Үргэлжлүүлж ашиглахгүй, дотор мэдээллээ ашиглана'] },
+    { n: 'Блок / техникийн асуудал', count: 2, examples: ['Block', 'Салаа POS'] },
+  ],
+}
+
+function RetentionSection() {
+  const data = RETENTION_DATA
+  const pct = Math.round(data.currentTarget / data.totalTarget * 100)
+  const totalOutcomes = data.outcomes.reduce((a, o) => a + o.v, 0)
+  const reasonMax = data.topReasons[0]?.count || 1
+
+  return (
+    <div className="grid" style={{ gap: 15 }}>
+      <div className="card">
+        <div className="card-h">
+          <div className="card-title"><span className="tdot" style={{ background: careCol.teal }} />Сунгалтын Target</div>
+          <div className="cbig" style={{ fontSize: 20 }}>{pct}%</div>
+        </div>
+        <div className="hbar-track"><div className="hbar-fill" style={{ width: `${pct}%`, background: careCol.teal }} /></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 12, color: careCol.muted }}>
+          <span>Нийт target: <b style={{ color: careCol.ink }}>{fmt(data.totalTarget)}₮</b></span>
+          <span>Одоо байгаа: <b style={{ color: careCol.ink }}>{fmt(data.currentTarget)}₮</b></span>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-h">
+          <div className="card-title"><span className="tdot" style={{ background: careCol.blue }} />Холбогдолтын мэдээлэл</div>
+          <div style={{ fontSize: 11, color: careCol.muted }}>Нийт {totalOutcomes} харилцагчтай холбогдсон</div>
+        </div>
+        <div className="donut-wrap">
+          <div style={{ position: 'relative' }} dangerouslySetInnerHTML={{ __html: mkCareDonut(data.outcomes) }} />
+          <div className="legend">
+            {data.outcomes.map(o => (
+              <div key={o.n} className="lg">
+                <div className="lg-l"><span className="lg-mk" style={{ background: o.c }} />{o.n}</div>
+                <div><span className="lg-v">{o.v}</span><span className="lg-c">{totalOutcomes ? Math.round(o.v / totalOutcomes * 100) : 0}%</span></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-h">
+          <div className="card-title"><span className="tdot" style={{ background: careCol.violet }} />Сунгаагүй газруудын Топ 5 тайлбар</div>
+        </div>
+        {data.topReasons.map((r, i) => (
+          <div key={r.n} className="hbar">
+            <div className="hbar-top"><span className="n">{i + 1}. {r.n}</span><span className="v">{r.count}</span></div>
+            <div className="hbar-track"><div className="hbar-fill" style={{ width: `${r.count / reasonMax * 100}%`, background: careCol.violet }} /></div>
+            <div style={{ fontSize: 11.5, color: careCol.muted, marginTop: 5 }}>{r.examples.join(' · ')}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function CareSection({ onBack, theme, onToggleTheme }: { onBack: () => void; theme: 'dark' | 'light'; onToggleTheme: (e: React.MouseEvent) => void }) {
   const [nav, setNav] = useState<CareNavKey>('acq')
+  const [period, setPeriod] = useState<CarePeriodKey>(CARE_PERIODS[0].key)
+  const [periodOpen, setPeriodOpen] = useState(false)
+
+  useEffect(() => {
+    if (!periodOpen) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setPeriodOpen(false) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [periodOpen])
+
   return (
     <div className="wrap">
       {/* Topbar — Call-тай ижил хаяг, ард нь "Care" */}
@@ -1256,11 +2124,51 @@ function CareSection({ onBack, theme, onToggleTheme }: { onBack: () => void; the
           <div>
             <h1>CRM Dashboard</h1>
             <div className="sub">
-              <span>OnTime Support · Care</span>
+              <span>OnTime Support · Care</span> ·
+              <span>{CARE_PERIODS.find(p => p.key === period)?.label}</span>
             </div>
           </div>
         </div>
         <div className="topctrls">
+          <div className="weeksel">
+            <button
+              type="button"
+              className={`weeksel-trigger${periodOpen ? ' open' : ''}`}
+              aria-expanded={periodOpen}
+              aria-haspopup="listbox"
+              onClick={() => setPeriodOpen(o => !o)}
+            >
+              <span className="wst-ic">🗓</span>
+              <span className="wst-label">
+                <b>{CARE_PERIODS.find(p => p.key === period)?.label}</b>
+                <i>Тайлант долоо хоног</i>
+              </span>
+              <span className="wst-caret">▾</span>
+            </button>
+            {periodOpen && (
+              <>
+                <div className="weeksel-backdrop" onClick={() => setPeriodOpen(false)} />
+                <div className="weeksel-panel" role="listbox" aria-label="Хугацаа сонгох">
+                  <div className="wsp-month">
+                    <div className="wsp-month-h">Долоо хоногоор</div>
+                    {CARE_PERIODS.map(p => (
+                      <button
+                        key={p.key}
+                        type="button"
+                        role="option"
+                        aria-selected={period === p.key}
+                        className={`wsp-row${period === p.key ? ' on' : ''}`}
+                        onClick={() => { setPeriod(p.key); setPeriodOpen(false) }}
+                      >
+                        <span className="wsp-d">{p.label}</span>
+                        <span className="wsp-check">{period === p.key ? '✓' : ''}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
           <button
             type="button"
             className="theme-btn"
@@ -1286,9 +2194,10 @@ function CareSection({ onBack, theme, onToggleTheme }: { onBack: () => void; the
         </div>
       </div>
 
-      <div style={{ background: careCol.card, border: `1px solid ${careCol.line}`, borderRadius: 16, padding: 48, textAlign: 'center', color: careCol.muted, fontSize: 13.5 }}>
-        «{CARE_NAV.find(t => t.key === nav)?.label}» дизайн тун удахгүй нэмэгдэнэ.
-      </div>
+      {nav === 'acq' && <AcqSection period={period} />}
+      {nav === 'inactive' && <InactiveSection />}
+      {nav === 'return' && <ReturnSection />}
+      {nav === 'retention' && <RetentionSection />}
     </div>
   )
 }
