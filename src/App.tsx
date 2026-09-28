@@ -2321,14 +2321,9 @@ export { ErrorBoundary }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function App() {
-<<<<<<< HEAD
+  const [topTab, setTopTab] = useState<'call' | 'care'>('call')
   const [rep, setRep] = useState<RepKey>('W12')
   const [selDays, setSelDays] = useState<Set<string>>(new Set(REPORTS.W12.defaultDays))
-=======
-  const [topTab, setTopTab] = useState<'call' | 'care'>('call')
-  const [rep, setRep] = useState<RepKey>('W11')
-  const [selDays, setSelDays] = useState<Set<string>>(new Set(REPORTS.W11.defaultDays))
->>>>>>> 4d516378c75e5985e2d0335abd8bf06a0cd949ec
   const [selProd, setSelProd] = useState<string | null>(null)
   const reducedMotion = useReducedMotion()
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
