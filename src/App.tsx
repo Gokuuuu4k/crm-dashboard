@@ -1168,7 +1168,7 @@ function DailyChart({ rows, selDays, selChan, onToggle }: {
   selChan: string | null
   onToggle: (d: string) => void
 }) {
-  const w = 760, h = 244, padB = 34, padT = 16, padL = 30, plot = h - padT - padB
+  const w = 760, h = 244, padB = 46, padT = 16, padL = 30, plot = h - padT - padB
   const [hover, setHover] = useState<string | null>(null)
   const lit = useMountFlag()
   const max = Math.max(...rows.map(r => chTot(r)), 1) * 1.12
@@ -1217,7 +1217,11 @@ function DailyChart({ rows, selDays, selChan, onToggle }: {
                 fontWeight={600} style={{ pointerEvents: 'none', transition: 'y .45s var(--ease-out)' }}>{chanVal(r) || ''}</text>
               <text x={cx} y={h - padB + 14} fill={sel ? 'var(--c-lbl-hi)' : 'var(--c-lbl)'} fontSize={9} textAnchor="middle"
                 fontWeight={sel ? 700 : 400} style={{ pointerEvents: 'none' }}>{r.lab}</text>
-              {sel && <rect x={x} y={h - padB + 18} width={barW} height={2.5} rx={1.2} fill="var(--sel-1)" style={{ pointerEvents: 'none' }} />}
+              {r.uniq != null && (
+                <text x={cx} y={h - padB + 26} fill={C.violet} fontSize={8.5} textAnchor="middle" opacity={sel ? 0.95 : 0.5}
+                  fontWeight={600} style={{ pointerEvents: 'none' }}>👥{r.uniq}</text>
+              )}
+              {sel && <rect x={x} y={h - padB + 30} width={barW} height={2.5} rx={1.2} fill="var(--sel-1)" style={{ pointerEvents: 'none' }} />}
               {hovd && <line x1={cx} y1={padT} x2={cx} y2={h - padB} stroke="var(--c-cross)" strokeWidth={1} strokeDasharray="3 3" style={{ pointerEvents: 'none' }} />}
             </g>
           )
@@ -1241,6 +1245,7 @@ function DailyChart({ rows, selDays, selChan, onToggle }: {
             })}
             <div className="chart-tip-row chart-tip-tot"><span>Нийт</span><b>{chTot(r)}</b></div>
             <div className="chart-tip-row"><span>Авсан</span><b>{r.a}</b></div>
+            {r.uniq != null && <div className="chart-tip-row"><span>Давхцаагүй</span><b>{r.uniq}</b></div>}
           </div>
         )
       })()}
