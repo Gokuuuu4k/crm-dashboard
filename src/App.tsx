@@ -247,15 +247,17 @@ const DAILY_J: DayRow[] = [
 // SmsRateExport.csv. Нийт/Амжилттай/Давхцаагүй хэрэглэгчийг хэрэглэгчийн өгсөн албан ёсны хүснэгтээр (Inbound
 // Total/Success/Unique user, 09/21–09/27) шууд тохируулав; xlsx-ээс гарсан ялгаа (өдөрт 1-6) ts (Technical support)
 // суваг руу шингээв — тухайн зөрүү аль сувагт хамаарахыг эх дата тодорхой заагаагүй тул.
+// pos = MBank pos guide + POS Operator (2026-09-21_...mm.pdf, 78 бодит мөр: 46 ANSWERED / 3 ABANDONED / 29 TIMEOUT)
+// нэг "pos" суваг болгон нэгтгэв — хэрэглэгчийн хүсэлтээр ("Mbankposguide болон pos operator нэг суваг").
 // sat = [1★,2★,3★,4★,5★] — SMS үнэлгээ, 129 хариулт / 692 илгээснээс, дундаж 4.54
 const DAILY_K: DayRow[] = [
-  { d: '2026-09-21', lab: '09/21', ts: 115, mb: 82,  pos: 26, loan: 11, nd: 0, a: 211, sat: [1,0,0,1,18], sent: 241, uniq: 161 },
-  { d: '2026-09-22', lab: '09/22', ts: 109, mb: 88,  pos: 45, loan: 11, nd: 0, a: 207, sat: [0,0,0,1,14], sent: 215, uniq: 168 },
-  { d: '2026-09-23', lab: '09/23', ts: 141, mb: 83,  pos: 48, loan: 17, nd: 0, a: 210, sat: [2,0,0,2,15], sent: 189, uniq: 162 },
-  { d: '2026-09-24', lab: '09/24', ts: 136, mb: 108, pos: 34, loan: 15, nd: 0, a: 237, sat: [3,0,0,1,26], sent: 204, uniq: 188 },
-  { d: '2026-09-25', lab: '09/25', ts: 111, mb: 86,  pos: 31, loan: 22, nd: 0, a: 185, sat: [3,1,0,2,19], sent: 162, uniq: 152 },
-  { d: '2026-09-26', lab: '09/26', ts: 107, mb: 92,  pos: 17, loan: 0,  nd: 0, a: 122, sat: [1,0,0,1,8],  sent: 117, uniq: 96  },
-  { d: '2026-09-27', lab: '09/27', ts: 75,  mb: 60,  pos: 17, loan: 0,  nd: 0, a: 108, sat: [1,2,0,0,5],  sent: 58,  uniq: 72  },
+  { d: '2026-09-21', lab: '09/21', ts: 115, mb: 82,  pos: 32, loan: 11, nd: 0, a: 216, sat: [1,0,0,1,18], sent: 241, uniq: 161 },
+  { d: '2026-09-22', lab: '09/22', ts: 109, mb: 88,  pos: 58, loan: 11, nd: 0, a: 217, sat: [0,0,0,1,14], sent: 215, uniq: 168 },
+  { d: '2026-09-23', lab: '09/23', ts: 141, mb: 83,  pos: 59, loan: 17, nd: 0, a: 216, sat: [2,0,0,2,15], sent: 189, uniq: 162 },
+  { d: '2026-09-24', lab: '09/24', ts: 136, mb: 108, pos: 48, loan: 15, nd: 0, a: 242, sat: [3,0,0,1,26], sent: 204, uniq: 188 },
+  { d: '2026-09-25', lab: '09/25', ts: 111, mb: 86,  pos: 55, loan: 22, nd: 0, a: 195, sat: [3,1,0,2,19], sent: 162, uniq: 152 },
+  { d: '2026-09-26', lab: '09/26', ts: 107, mb: 92,  pos: 22, loan: 0,  nd: 0, a: 127, sat: [1,0,0,1,8],  sent: 117, uniq: 96  },
+  { d: '2026-09-27', lab: '09/27', ts: 75,  mb: 60,  pos: 22, loan: 0,  nd: 0, a: 113, sat: [1,2,0,0,5],  sent: 58,  uniq: 72  },
 ]
 const DAILY_ALL: DayRow[] = DAILY_A.filter(r => r.d <= '2026-07-19').concat(DAILY_B).concat(DAILY_C).concat(DAILY_D).concat(DAILY_E).concat(DAILY_F).concat(DAILY_G).concat(DAILY_H).concat(DAILY_I).concat(DAILY_J).concat(DAILY_K)
 
@@ -315,11 +317,11 @@ const HOURLY_W11: HourRow[] = [
   ['16',87,41,0],['17',82,32,0],['18',41,26,0],['19',36,10,0],
 ]
 
-// W12 hourly — нийт 1,666 бодит дуудлага (авсан+шилжүүлсэн 1,276).
+// W12 hourly — нийт 1,744 бодит дуудлага (Inbound 1,666 + POS Operator 78), авсан+шилжүүлсэн 1,322.
 const HOURLY_W12: HourRow[] = [
-  ['08',27,15,0],['09',100,38,0],['10',145,44,0],['11',164,38,0],
-  ['12',144,29,0],['13',120,25,0],['14',128,47,0],['15',136,25,0],
-  ['16',116,42,0],['17',109,39,0],['18',51,35,0],['19',36,13,0],
+  ['08',28,18,0],['09',100,39,0],['10',150,50,0],['11',167,41,0],
+  ['12',148,33,0],['13',121,29,0],['14',129,54,0],['15',142,25,0],
+  ['16',122,44,0],['17',120,41,0],['18',56,35,0],['19',39,13,0],
 ]
 
 // ── Channel config for daily stacked chart ────────────────────────────────────
@@ -849,10 +851,9 @@ const RJ: Agg = {
 
 // W12: 2026.09.21–09.27 — эх сурвалж: 2026-09-21_00-00-00__2026-09-27_23-59-59.xlsx + Repairs_2026-09-28_ALL.xlsx +
 // SmsRateExport.csv. callTransferred = TRANSFERRED disposition (10). Remote = AnyDesk "Тийм" тоолол (190).
-// uniq = 999 — өдөр тутмын Unique user-үүдийн нийлбэр (161+168+162+188+152+96+72), хэрэглэгчийн албан ёсны
-// хүснэгттэй тааруулав (7 хоногийн cross-day dedup биш, өдөр бүрийн давхцаагүйн нийлбэр гэдгээр).
+// uniq = 1068 — хэрэглэгчийн засварласан утга.
 const RK: Agg = {
-  uniq: 999, callTransferred: 10 as number | null, resolved: 1099, unresolved: 22, tkTransferred: 65, tkTransfResolved: 34, missedUniq: 116,
+  uniq: 1068, callTransferred: 10 as number | null, resolved: 1099, unresolved: 22, tkTransferred: 65, tkTransfResolved: 34, missedUniq: 116,
   channels: mkCh([['Утсаар',1107],['Remote',190],['Сошиал',70],['Биечлэн',2],['Дуудлагаар',7]]),
   products: mkPr([['PROPOS',542],['MPLUS',565],['MPOS',78],['MOBILEPOS',1]]),
   issues: mkIs([
@@ -1065,7 +1066,7 @@ const CHAN_RATES: Record<RepKey, Record<string, number>> = {
   W9:  { ts: 0.671, mb: 0.705, pos: 0.748, loan: 0.769, nd: 0.50 },
   W10: { ts: 0.701, mb: 0.638, pos: 0.693, loan: 0.892, nd: 0.50 },
   W11: { ts: 0.714, mb: 0.706, pos: 0.748, loan: 0.734, nd: 0.50 },
-  W12: { ts: 0.801, mb: 0.731, pos: 0.651, loan: 0.789, nd: 0.50 },
+  W12: { ts: 0.801, mb: 0.731, pos: 0.635, loan: 0.789, nd: 0.50 },
   M7:  { ts: 0.76,  mb: 0.71,  pos: 0.71,  loan: 0.81,  nd: 0.90 },
   M8:  { ts: 0.54,  mb: 0.54,  pos: 0.57,  loan: 0.74,  nd: 0.70 },
   M9:  { ts: 0.686, mb: 0.672, pos: 0.717, loan: 0.844, nd: 0.50 },
