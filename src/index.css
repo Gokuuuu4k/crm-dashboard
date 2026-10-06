@@ -337,7 +337,9 @@ img, svg, table { max-width: 100%; }
 .grid > * { min-width: 0; }
 .kpis { grid-template-columns: repeat(4, 1fr); }
 .mid { grid-template-columns: 1fr 1fr 1.1fr; }
-.charts { grid-template-columns: 1.6fr 1fr; }
+.charts { grid-template-columns: 1fr 1.25fr; }
+.levels-prod { grid-template-columns: 2fr 8fr; }
+.issues-err { grid-template-columns: 1.7fr 1fr; }
 .two { grid-template-columns: 1.7fr 1fr; }
 
 .card {
@@ -565,7 +567,7 @@ img, svg, table { max-width: 100%; }
 /* Tablet: stack the wide multi-column sections, keep KPI cards in a 2x2 grid */
 @media (max-width: 1080px) {
   .kpis { grid-template-columns: repeat(2, 1fr); }
-  .mid, .charts, .two { grid-template-columns: 1fr; }
+  .mid, .charts, .two, .levels-prod, .issues-err { grid-template-columns: 1fr; }
   body { padding: 20px 20px 40px; }
 }
 

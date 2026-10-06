@@ -92,8 +92,10 @@ const C = {
 }
 const CHCOL = [C.blue, C.teal, C.violet, C.gold, C.coral]
 const PRCOL = [C.gold, C.teal, C.blue, C.violet, C.coral]
+const LVCOL = [C.teal, C.gold, C.coral]
 const mkCh = (a: [string, number][]) => a.map((x, i) => ({ n: x[0], v: x[1], c: CHCOL[i % CHCOL.length] }))
 const mkPr = (a: [string, number][]) => a.map((x, i) => ({ n: x[0], v: x[1], c: PRCOL[i % PRCOL.length] }))
+const mkLv = (a: [string, number][]) => a.map((x, i) => ({ n: x[0], v: x[1], c: LVCOL[i % LVCOL.length] }))
 const mkIs = (a: [string, number, string][]) => a.map(x => ({ n: x[0], v: x[1], t: x[2] }))
 const mkAg = (a: [string, number, number | null, number, number | null][]) =>
   a.map(x => ({ n: x[0], c: x[1], tk: x[2], t: x[3], r: x[4] }))
@@ -259,7 +261,23 @@ const DAILY_K: DayRow[] = [
   { d: '2026-09-26', lab: '09/26', ts: 107, mb: 92,  pos: 22, loan: 0,  nd: 0, a: 127, sat: [1,0,0,1,8],  sent: 117, uniq: 96  },
   { d: '2026-09-27', lab: '09/27', ts: 75,  mb: 60,  pos: 22, loan: 0,  nd: 0, a: 113, sat: [1,2,0,0,5],  sent: 58,  uniq: 72  },
 ]
-const DAILY_ALL: DayRow[] = DAILY_A.filter(r => r.d <= '2026-07-19').concat(DAILY_B).concat(DAILY_C).concat(DAILY_D).concat(DAILY_E).concat(DAILY_F).concat(DAILY_G).concat(DAILY_H).concat(DAILY_I).concat(DAILY_J).concat(DAILY_K)
+// W13: 2026.09.28–10.04 — эх сурвалж: 2026-09-28_00-00-00__2026-10-04_23-59-59.xlsx (2,550 мөр, LOGIN/LOGOUT/PAUSE
+// шүүж хаясан 2,079 бодит дуудлага) + Repairs_2026-10-05_ALL.xlsx (91 тикет, 09/28–10/02 хооронд бүртгэгдсэн) +
+// 2026-09-28_00-00-00__2026-10-04_23-59-59__SmsRateExport.csv (752 илгээсэн, 137 хариулсан, дундаж 4.42/5).
+// Нийт/Амжилттай/Давхцаагүй хэрэглэгчийг хэрэглэгчийн өгсөн албан ёсны хүснэгтээр (Inbound Total/Success/Unique
+// user, 09/28–10/04) шууд тохируулав; xlsx-ээс гарсан өдөр тутмын +1 зөрүү ts (Technical support) суваг руу
+// шингээв — тухайн зөрүү аль сувагт хамаарахыг эх дата тодорхой заагаагүй тул (W12-той адил арга).
+// Энэ долоо хоногт "Оператор" (nd) queue огт байхгүй — зөвхөн 4 суваг (ts/mb/pos/loan).
+const DAILY_L: DayRow[] = [
+  { d: '2026-09-28', lab: '09/28', ts: 127, mb: 116, pos: 57, loan: 24, nd: 0, a: 253, sat: [4,1,0,1,19], sent: 41, uniq: 192 },
+  { d: '2026-09-29', lab: '09/29', ts: 138, mb: 146, pos: 46, loan: 17, nd: 0, a: 239, sat: [0,2,0,1,18], sent: 20, uniq: 200 },
+  { d: '2026-09-30', lab: '09/30', ts: 245, mb: 108, pos: 54, loan: 30, nd: 0, a: 270, sat: [1,0,0,2,21], sent: 22, uniq: 246 },
+  { d: '2026-10-01', lab: '10/01', ts: 126, mb: 95,  pos: 37, loan: 20, nd: 0, a: 222, sat: [3,0,0,5,21], sent: 4,  uniq: 197 },
+  { d: '2026-10-02', lab: '10/02', ts: 177, mb: 106, pos: 38, loan: 22, nd: 0, a: 223, sat: [3,0,1,2,7],  sent: 4,  uniq: 179 },
+  { d: '2026-10-03', lab: '10/03', ts: 121, mb: 59,  pos: 39, loan: 0,  nd: 0, a: 118, sat: [2,0,1,1,12], sent: 0,  uniq: 111 },
+  { d: '2026-10-04', lab: '10/04', ts: 76,  mb: 44,  pos: 18, loan: 0,  nd: 0, a: 100, sat: [0,0,0,3,6],  sent: 0,  uniq: 92  },
+]
+const DAILY_ALL: DayRow[] = DAILY_A.filter(r => r.d <= '2026-07-19').concat(DAILY_B).concat(DAILY_C).concat(DAILY_D).concat(DAILY_E).concat(DAILY_F).concat(DAILY_G).concat(DAILY_H).concat(DAILY_I).concat(DAILY_J).concat(DAILY_K).concat(DAILY_L)
 
 // ── Hourly load data ──────────────────────────────────────────────────────────
 // Format: [hour, answered, missed, timeout]
@@ -322,6 +340,13 @@ const HOURLY_W12: HourRow[] = [
   ['08',28,18,0],['09',100,39,0],['10',150,50,0],['11',167,41,0],
   ['12',148,33,0],['13',121,29,0],['14',129,54,0],['15',142,25,0],
   ['16',122,44,0],['17',120,41,0],['18',56,35,0],['19',39,13,0],
+]
+
+// W13 hourly — xlsx call-log-оос disposition-оор шууд тооцов. missed=ABANDONED+TRANSFERRED, timeout=TIMEOUT тус тусад нь.
+const HOURLY_W13: HourRow[] = [
+  ['08',33,17,9],['09',124,28,5],['10',140,51,5],['11',173,40,17],
+  ['12',169,83,10],['13',135,43,8],['14',138,51,14],['15',135,41,3],
+  ['16',157,51,11],['17',92,74,28],['18',64,32,6],['19',48,37,7],
 ]
 
 // ── Channel config for daily stacked chart ────────────────────────────────────
@@ -390,6 +415,11 @@ type Agg = {
   recv: typeof A_RECV
   missedUniq?: number       // алдсан дуудлагын давхцаагүй хэрэглэгчийн тоо (эргэн холбогдол)
   tkTransfResolved?: number // "Шилжүүлсэн-Шийдсэн" тикет (tkTransferred-ийн дэд хэсэг)
+  unresWaiting?: number     // "Харилцагчийг хүлээж байгаа" тикет (unresolved-ийн дэд хэсэг)
+  levels?: ReturnType<typeof mkLv>  // асуудлын ач холбогдлын түвшин (Level 1/2/3)
+  prodIssues?: { prod: string; cats: { n: string; pct: number }[] }[]  // бүтээгдэхүүн тус бүрийн асуудлын төрлийн задаргаа (%)
+  prodSubcats?: Record<string, { n: string; pct: number; c: number }[]>  // key = `${prod}|${topcat}`, дэд ангиллын задаргаа (%, тоо)
+  errorByProd?: ReturnType<typeof mkPr>  // "Алдаа" ангиллын тикетүүд бүтээгдэхүүн тус бүрээр
   unresList?: { d: string; agent: string; issue: string }[]  // Шийдэгдээгүй тикетийн задаргаа
 }
 const RA: Agg = {
@@ -561,6 +591,27 @@ const K_RECV = [
   { n: 'Khadaan',         team: '', unres: 0, wait: 1, ok: 0  },
   { n: 'Nayanjin',        team: '', unres: 0, wait: 1, ok: 0  },
   { n: 'Bymbatogtokh.T',  team: '', unres: 0, wait: 1, ok: 0  },
+]
+// W13 асуудалтай тикет ажилтнаар (pivot): unres=Шийдэгдээгүй 14 · wait=Шилжүүлсэн (хэвээр) 56 ·
+// ok=Шийдэгдсэн атал Оролцогчид талбартай (= шилжүүлээд шийдсэн) 108 · нийт 178.
+// Tickets_2026-10-05_1231.xlsx: "Үүсгэсэн" (бүртгэсэн ажилтан) талбараар тоолов.
+const L_RECV = [
+  { n: 'Sumiya.D',        team: '', unres: 0, wait: 1,  ok: 26 },
+  { n: 'Zolbayr',         team: '', unres: 2, wait: 16, ok: 8  },
+  { n: 'Tugssaikhan.G',   team: '', unres: 0, wait: 6,  ok: 13 },
+  { n: 'Soyolzul.Ts',     team: '', unres: 0, wait: 2,  ok: 16 },
+  { n: 'Otgonbayar.L',    team: '', unres: 4, wait: 2,  ok: 9  },
+  { n: 'Ganchimeg.A',     team: '', unres: 1, wait: 6,  ok: 8  },
+  { n: 'Turmandakh.O',    team: '', unres: 5, wait: 2,  ok: 3  },
+  { n: 'CRM-Temuulen',    team: '', unres: 1, wait: 8,  ok: 1  },
+  { n: 'Khadaan',         team: '', unres: 0, wait: 2,  ok: 6  },
+  { n: 'Nayanjin',        team: '', unres: 1, wait: 2,  ok: 5  },
+  { n: 'Bymbatogtokh.T',  team: '', unres: 0, wait: 2,  ok: 4  },
+  { n: 'Bayarsaikhan.E',  team: '', unres: 0, wait: 4,  ok: 2  },
+  { n: 'Saranchimeg',     team: '', unres: 0, wait: 1,  ok: 3  },
+  { n: 'Baasanjargal',    team: '', unres: 0, wait: 2,  ok: 1  },
+  { n: 'Tsogbayar',       team: '', unres: 0, wait: 0,  ok: 2  },
+  { n: 'Khaliunaa',       team: '', unres: 0, wait: 0,  ok: 1  },
 ]
 // W9 асуудалтай тикет ажилтнаар (pivot): unres=Шийдэгдээгүй 24 · wait=Шилжүүлсэн хэвээр 25 · ok=Шилжүүлсэн-Шийдсэн 31 · нийт 80
 const H_RECV = [
@@ -914,6 +965,136 @@ const RK: Agg = {
   ],
 }
 
+// W13: 2026.09.28–10.04 — эх сурвалж: 2026-09-28_00-00-00__2026-10-04_23-59-59.xlsx +
+// Tickets_2026-10-05_1231.xlsx (1,430 мөр, шинэчлэгдсэн форматаар — Харилцсан суваг/Ач холбогдол/Оролцогчид
+// бүгд орсон тул энэ файлыг ticket-ийн цорын ганц эх сурвалж болгов, Repairs_*.xlsx-ийг орлов) +
+// SmsRateExport.csv (752 илгээсэн, 137 хариулсан, дундаж 4.42/5). callTransferred = TRANSFERRED disposition (15).
+// Remote энэ долоо хоногт тэмдэглэгдээгүй. uniq = 1,217 — хэрэглэгчийн өгсөн албан ёсны хүснэгтийн
+// "Unique user" мөрийн 7 хоногийн нийлбэр (192+200+246+197+179+111+92), хэрэглэгчийн засварласан утга.
+// r = SMS CSAT, extension-ээр ажилтанд холбосон (n цөөн тул заримдаа n=1 дээр бодогдсон, тоймлох хэрэгтэй).
+// Тикетийн статус (ticket-төлөв): Шийдэгдсэн 1,324 + Шийдэгдээгүй 14 + Харилцагчийг хүлээж байгаа 36 +
+// Шилжүүлсэн 56 = 1,430. "Харилцагчийг хүлээж байгаа"-г unresolved-д оруулав (14+36=50) — хараахан бодитоор
+// шийдэгдээгүй учраас. tkTransfResolved-гүй (энэ долоо хоногт "Шилжүүлсэн-Шийдсэн" тусдаа ангилал бүртгэгдээгүй).
+const RL: Agg = {
+  uniq: 1217, callTransferred: 15 as number | null, resolved: 1324, unresolved: 50, tkTransferred: 56, unresWaiting: 36, missedUniq: 442,
+  levels: mkLv([['Level 1',1311],['Level 2',98],['Level 3',21]]),
+  channels: mkCh([['Утсаар',1390],['Сошиал',30],['Дуудлагаар',8],['Биечлэн',2]]),
+  products: mkPr([['PROPOS',663],['MPLUS',628],['MPOS',137],['LITEPOS',1],['MOBILEPOS',1]]),
+  // Tickets_2026-10-05_1231.xlsx: "Засварын төрөл"-ийг "<Бүтээгдэхүүн> - <Ангилал> - ..." гэж задлаад
+  // бүтээгдэхүүн тус бүрийн доторх ангиллын эзлэх хувийг тооцов (Зээл/Lite — 1-ээр тул оруулаагүй).
+  prodIssues: [
+    { prod: 'PROPOS', cats: [['Мэдээлэл',43.0],['Засвар',23.2],['Сургалт',17.0],['Алдаа',8.7],['Төлбөрт үйлчилгээ',5.4]].map(([n,pct]) => ({ n: n as string, pct: pct as number })) },
+    { prod: 'MPLUS', cats: [['Мэдээлэл',58.3],['Сургалт',17.7],['Засвар',11.1],['Алдаа',8.6]].map(([n,pct]) => ({ n: n as string, pct: pct as number })) },
+    { prod: 'MPOS', cats: [['Мэдээлэл',46.0],['Засвар',28.5],['Алдаа',11.7],['Сургалт',11.7]].map(([n,pct]) => ({ n: n as string, pct: pct as number })) },
+  ],
+  // Дэд ангиллын задаргаа — тус бүрийн "Засварын төрөл"-ийн 3 дахь түвшин (топ 6, бусдыг оруулаагүй тул 100%-д дүүрэхгүй байж болно).
+  prodSubcats: Object.fromEntries(([
+    ['PROPOS|Мэдээлэл', [['Нөхөж залгасан',13,38],['Сунгалт',13,36],['Андуурсан дуудлага',11,31],['Сунгалт - 2жил',10,29],['Бүтээгдэхүүн',8,22],['Сунгалт - 3жил',7,20]]],
+    ['PROPOS|Засвар', [['Тохиргоо',19,30],['Принтер',17,26],['Бараа бүртгэл',12,19],['Тооллого',7,11],['Нэвтрэх хэсэг',6,9],['Гэрээний мэдээлэл шинэчилэх',4,6]]],
+    ['PROPOS|Сургалт', [['Тооллого',26,29],['Бараа бүртгэл',22,25],['Тайлан',12,13],['Борлуулалт',10,11],['Татан авалт',6,7],['Нэвтрэх хэсэг',5,6]]],
+    ['PROPOS|Алдаа', [['Нэвтрэх хэсэг',36,21],['Борлуулалт',19,11],['Принтер',12,7],['Тооллого',7,4],['Бараа бүртгэл',5,3],['Сервер - 540-сервер',3,2]]],
+    ['PROPOS|Төлбөрт үйлчилгээ', [['РД солих -200к',44,16],['Шинэ суулгалт',14,5],['Бааз цэвэрлэх',6,2],['Дахин суурилуулалт',6,2],['Шилжүүлэн суулгалт - Local бааз - 50к',3,1],['Дахин суурилуулалт - 540 сервер -- 100к',3,1]]],
+    ['MPLUS|Мэдээлэл', [['Нөхөж залгасан',14,50],['Төлбөр',13,49],['Бүтээгдэхүүн - T3 -DUO',5,20],['Посын шимтгэл',4,13],['Бүтээгдэхүүн',3,12],['Cashback',3,11]]],
+    ['MPLUS|Сургалт', [['Тооллого',21,23],['Бараа бүртгэл',20,22],['Борлуулалт',15,17],['Татан авалт',8,9],['Менежер web',5,6],['Пос',5,5]]],
+    ['MPLUS|Засвар', [['Тохиргоо',19,13],['Бараа бүртгэл',14,10],['Пос',10,7],['Qpay',9,6],['Төхөөрөмж - T3- Duo',6,4],['Төхөөрөмж - P3-Mini',6,4]]],
+    ['MPLUS|Алдаа', [['Пос - Гүйлгээний лавлагаа',17,9],['Борлуулалт',13,7],['Qpay',9,5],['Пос - Пос',7,4],['Нэвтрэх хэсэг',7,4],['Түүх - Шошго',6,3]]],
+    ['MPOS|Мэдээлэл', [['Бүтээгдэхүүн-',27,17],['Мбизнес апп - Цаас захиалах',8,5],['Мбизнес апп',6,4],['Шугам шилжүүлэх',6,4],['Буцаалт',6,4],['Андуурсан дуудлага',6,4]]],
+    ['MPOS|Засвар', [['Цаас бүртгэл',33,13],['Нэвтрэх нэр - Нууц үг',26,10],['Пос гэмтэл',13,5],['Тохиргоо',10,4],['Пос солих',8,3],['ECR холболт',3,1]]],
+    ['MPOS|Алдаа', [['Тохиргоо',38,6],['Пос гэмтэл',25,4],['Интернет',13,2],['Нэвтрэх нэр - Нууц үг',13,2],['ECR холболт',6,1]]],
+    ['MPOS|Сургалт', [['Посын заавар',56,9],['Гүйлгээ мэдээлэл',44,7]]],
+  ] as [string, [string, number, number][]][]).map(([k, v]) => [k, v.map(([n, pct, c]) => ({ n, pct, c }))])),
+  // "Засварын төрөл"-ийн "Алдаа" ангилалд орсон тикетүүд, бүтээгдэхүүн тус бүрээр (PROPOS 58, MPLUS 54, MPOS 16 = 128).
+  errorByProd: mkPr([['PROPOS',58],['MPLUS',54],['MPOS',16]]),
+  issues: mkIs([
+    ['ProPOS мэдээлэл - Сунгалт',102,'Мэдээлэл'],['MBusiness Plus мэдээлэл',82,'Мэдээлэл'],
+    ['MBusiness Plus мэдээлэл - Нөхөж залгасан',50,'Мэдээлэл'],['MBusiness Plus мэдээлэл - Төлбөр',49,'Мэдээлэл'],
+    ['MBusiness Plus мэдээлэл - Бүтээгдэхүүн',39,'Мэдээлэл'],['ProPOS мэдээлэл - Нөхөж залгасан',38,'Мэдээлэл'],
+    ['MBusiness Plus мэдээлэл - Мбизнес апп',37,'Мэдээлэл'],['ProPOS мэдээлэл - Андуурсан дуудлага',31,'Мэдээлэл'],
+    ['ProPOS засвар - Тохиргоо',30,'Засвар'],['ProPOS сургалт - Тооллого',29,'Сургалт'],
+    ['ProPOS засвар - Принтер',26,'Засвар'],['ProPOS сургалт - Бараа бүртгэл',25,'Сургалт'],
+    ['ProPOS засвар - Бараа бүртгэл',24,'Засвар'],['MBusiness Plus сургалт - Тооллого',23,'Сургалт'],
+  ]),
+  // extension→агент: 201 Khadaan, 203 Zolbayar.U(=Zolbayr), 204 Tsogbayar(IT), 206 Khaliunaa, 207 Bayarmaa.T,
+  // 208 Bayarmaa.N, 210 Tugssaikhan.G, 212 Baasanjargal, 214 Saranchimeg, 215 Soyolzul.Ts, 216 Turmandakh.O,
+  // 218 Temuulen(=CRM-Temuulen), 220 Otgonbayar.L, 222 Sumiya.D, 223 Ganchimeg.A, 227 Nayanjin, 228 Bymbatogtokh.T.
+  // tk (ticket тоо) = Tickets_2026-10-05_1231.xlsx-ийн "Үүсгэсэн" багана, нэрээр ажилтантай тааруулав.
+  // "Галтсайхан Төгссайхан" бол шинэ ажилтан биш — овог нь Галтсайхан, нэр нь Төгссайхан буюу яг Tugssaikhan.G
+  // мөн тул tk-г тэр мөрөнд нэгтгэв. Bayarsaikhan.E нь дуудлагын логд байхгүй (зөвхөн ticket бүртгэдэг) тул c=0, r=null.
+  agents: mkAg([
+    ['Otgonbayar.L',   199, 219, 4.62, 4.65],
+    ['Sumiya.D',       197, 213, 6.22, 4.32],
+    ['Nayanjin',       171, 125, 4.02, 3.89],
+    ['Ganchimeg.A',    115, 111, 4.43, 5.00],
+    ['Tugssaikhan.G',  106, 118, 4.62, 5.00],
+    ['Zolbayr',        102, 113, 4.43, 4.63],
+    ['Soyolzul.Ts',    100, 173, 3.06, 4.20],
+    ['Saranchimeg',    91,  104, 4.11, 4.50],
+    ['Turmandakh.O',   81,  95,  2.51, 3.91],
+    ['CRM-Temuulen',   78,  52,  8.31, 4.00],
+    ['Bymbatogtokh.T', 75,  57,  7.43, 5.00],
+    ['Bayarmaa.T',     47,  0,   2.51, null],
+    ['Bayarmaa.N',     30,  0,   3.56, null],
+    ['Baasanjargal',   8,   18,  5.54, 5.00],
+    ['Khaliunaa',      4,   1,   2.82, null],
+    ['Tsogbayar',      3,   9,   9.78, 5.00],
+    ['Khadaan',        1,   8,   8.75, null],
+    ['Bayarsaikhan.E', 0,   8,   0,    null],
+  ]),
+  recv: L_RECV,
+  unresList: [
+    { d: '09/28', agent: 'Tugssaikhan.G', issue: 'Засвар - Төхөөрөмж - Сим - MBusiness Plus' },
+    { d: '09/28', agent: 'Sumiya.D', issue: 'Засвар - Qpay - MBusiness Plus' },
+    { d: '09/28', agent: 'Ganchimeg.A', issue: 'Санал хүсэлт - MBusiness Plus' },
+    { d: '09/28', agent: 'Soyolzul.Ts', issue: 'Алдаа - Борлуулалт - MBusiness Plus' },
+    { d: '09/28', agent: 'Tugssaikhan.G', issue: 'Мэдээлэл - Бүтээгдэхүүн - MBusiness Plus' },
+    { d: '09/28', agent: 'Tugssaikhan.G', issue: 'Мэдээлэл - Андуурсан дуудлага - ProPOS' },
+    { d: '09/29', agent: 'Nayanjin', issue: 'Засвар - Бараа бүртгэл - ProPOS' },
+    { d: '09/29', agent: 'Nayanjin', issue: 'Засвар - Тайлан - Үлдэгдэлийн тайлан - MBusiness Plus' },
+    { d: '09/29', agent: 'Zolbayr', issue: 'Засвар - Тооллого - ProPOS' },
+    { d: '09/29', agent: 'Tsogbayar', issue: 'Сургалт - Интеграци - Цахилгаан жин - ProPOS' },
+    { d: '09/29', agent: 'Otgonbayar.L', issue: 'Засвар - Принтер - ProPOS' },
+    { d: '09/29', agent: 'Tugssaikhan.G', issue: 'Мэдээлэл - Сунгалт - ProPOS' },
+    { d: '09/29', agent: 'Turmandakh.O', issue: 'Мэдээлэл - MBusiness Plus' },
+    { d: '09/30', agent: 'Zolbayr', issue: 'Засвар - Интеграци - Голомт банк - ProPOS' },
+    { d: '09/30', agent: 'Turmandakh.O', issue: 'Мэдээлэл - Мбанк пос' },
+    { d: '09/30', agent: 'Zolbayr', issue: 'Алдаа - Нэвтрэх хэсэг - ProPOS' },
+    { d: '09/30', agent: 'Zolbayr', issue: 'Мэдээлэл - Төлбөр - MBusiness Plus' },
+    { d: '09/30', agent: 'Tugssaikhan.G', issue: 'Мэдээлэл - РД солих - MBusiness Plus' },
+    { d: '09/30', agent: 'Nayanjin', issue: 'Алдаа - Тооллого - MBusiness Plus' },
+    { d: '09/30', agent: 'Nayanjin', issue: 'Төлбөрт үйлчилгээ - Дахин суурилуулалт - ProPOS' },
+    { d: '09/30', agent: 'Turmandakh.O', issue: 'Мэдээлэл - Бүтээгдэхүүн - Мбанк пос' },
+    { d: '09/30', agent: 'Nayanjin', issue: 'Засвар - Тохиргоо - MBusiness Plus' },
+    { d: '09/30', agent: 'Zolbayr', issue: 'Төлбөрт үйлчилгээ - Бааз цэвэрлэх - ProPOS' },
+    { d: '09/30', agent: 'Дашням Түмэн-Өлзий', issue: 'Мэдээлэл - Бүтээгдэхүүн - ProPOS' },
+    { d: '09/30', agent: 'Zolbayr', issue: 'Төлбөрт үйлчилгээ - Дахин суурилуулалт - 540 сервер - ProPOS' },
+    { d: '09/30', agent: 'Nayanjin', issue: 'Гомдол - MBusiness Plus' },
+    { d: '09/30', agent: 'Tugssaikhan.G', issue: 'Алдаа - Принтер - ProPOS' },
+    { d: '09/30', agent: 'Nayanjin', issue: 'Мэдээлэл - Төлбөр - MBusiness Plus' },
+    { d: '09/30', agent: 'Turmandakh.O', issue: 'Алдаа - Тохиргоо - Мбанк пос' },
+    { d: '10/01', agent: 'Tugssaikhan.G', issue: 'Засвар - Принтер - ProPOS' },
+    { d: '10/01', agent: 'Otgonbayar.L', issue: 'Засвар - Тохиргоо - MBusiness Plus' },
+    { d: '10/01', agent: 'Otgonbayar.L', issue: 'Засвар - Шошго - ProPOS' },
+    { d: '10/02', agent: 'Sumiya.D', issue: 'Мэдээлэл - Бүтээгдэхүүн - MBusiness Plus' },
+    { d: '10/02', agent: 'Nayanjin', issue: 'Төлбөрт үйлчилгээ - Бааз цэвэрлэх - ProPOS' },
+    { d: '10/02', agent: 'Otgonbayar.L', issue: 'Мэдээлэл - Сунгалт - ProPOS' },
+    { d: '10/02', agent: 'Otgonbayar.L', issue: 'Мэдээлэл - Сунгалт - ProPOS' },
+    { d: '10/02', agent: 'Turmandakh.O', issue: 'Алдаа - Тохиргоо - Мбанк пос' },
+    { d: '10/02', agent: 'Bayarsaikhan.E', issue: 'Сургалт - MBusiness Plus' },
+    { d: '10/02', agent: 'Nayanjin', issue: 'Засвар - Тохиргоо - ProPOS' },
+    { d: '10/02', agent: 'Tugssaikhan.G', issue: 'Алдаа - Пос - Гүйлгээний лавлагаа - MBusiness Plus' },
+    { d: '10/02', agent: 'Turmandakh.O', issue: 'Мэдээлэл - MBusiness Plus' },
+    { d: '10/02', agent: 'Sumiya.D', issue: 'Мэдээлэл - Нөхөж залгасан - MBusiness Plus' },
+    { d: '10/02', agent: 'Tugssaikhan.G', issue: 'Алдаа - Пос - Гүйлгээний лавлагаа - MBusiness Plus' },
+    { d: '10/02', agent: 'Baasanjargal', issue: 'Засвар - Сервер - 540-сервер - ProPOS' },
+    { d: '10/02', agent: 'Turmandakh.O', issue: 'Мэдээлэл - ProPOS' },
+    { d: '10/03', agent: 'CRM-Temuulen', issue: 'Алдаа - Борлуулалт - ProPOS' },
+    { d: '10/03', agent: 'CRM-Temuulen', issue: 'Бусад - MBusiness Plus' },
+    { d: '10/03', agent: 'Zolbayr', issue: 'Мэдээлэл - Бүтээгдэхүүн - ProPOS' },
+    { d: '10/03', agent: 'Zolbayr', issue: 'Засвар - Тохиргоо - MBusiness Plus' },
+    { d: '10/04', agent: 'Zolbayr', issue: 'Санал хүсэлт - MBusiness Plus' },
+  ],
+}
+
 // All 8 weeks combined
 const RALL: Agg = {
   uniq: 5858, callTransferred: null as number | null, resolved: 8164, unresolved: 198, tkTransferred: 341,
@@ -1002,10 +1183,10 @@ const RM7 = mergeAgg(RA, RB, RC)
 const RM8 = mergeAgg(RD, RE, RF, RG)
 const JUL_DAYS = DAILY_ALL.filter(r => r.d < '2026-08-01').map(r => r.d)
 const AUG_DAYS = DAILY_ALL.filter(r => r.d >= '2026-08-01' && r.d < '2026-09-01').map(r => r.d)
-const SEP_DAYS = DAILY_ALL.filter(r => r.d >= '2026-09-01').map(r => r.d)
+const SEP_DAYS = DAILY_ALL.filter(r => r.d >= '2026-09-01' && r.d <= '2026-09-27').map(r => r.d)
 
 // ── Reports config ─────────────────────────────────────────────────────────────
-type RepKey = 'W1' | 'W2' | 'W3' | 'W4' | 'W5' | 'W6' | 'W7' | 'W8' | 'W9' | 'W10' | 'W11' | 'W12' | 'M7' | 'M8' | 'M9' | 'ALL'
+type RepKey = 'W1' | 'W2' | 'W3' | 'W4' | 'W5' | 'W6' | 'W7' | 'W8' | 'W9' | 'W10' | 'W11' | 'W12' | 'W13' | 'M7' | 'M8' | 'M9' | 'ALL'
 const REPORTS: Record<RepKey, { daily: DayRow[]; agg: Agg; hourly: HourRow[]; label: string; defaultDays: string[] }> = {
   W1: { daily: DAILY_A, agg: RA, hourly: HOURLY, label: '07/06–07/12',
         defaultDays: DAILY_A.filter(r => r.d <= '2026-07-12').map(r => r.d) },
@@ -1031,11 +1212,13 @@ const REPORTS: Record<RepKey, { daily: DayRow[]; agg: Agg; hourly: HourRow[]; la
         defaultDays: DAILY_J.map(r => r.d) },
   W12:{ daily: DAILY_K, agg: RK, hourly: HOURLY_W12, label: '09/21–09/27',
         defaultDays: DAILY_K.map(r => r.d) },
+  W13:{ daily: DAILY_L, agg: RL, hourly: HOURLY_W13, label: '09/28–10/04',
+        defaultDays: DAILY_L.map(r => r.d) },
   M7: { daily: DAILY_ALL.filter(r => r.d < '2026-08-01'), agg: RM7, hourly: HOURLY, label: '7-р сар',
         defaultDays: JUL_DAYS },
   M8: { daily: DAILY_ALL.filter(r => r.d >= '2026-08-01' && r.d < '2026-09-01'), agg: RM8, hourly: HOURLY, label: '8-р сар',
         defaultDays: AUG_DAYS },
-  M9: { daily: DAILY_ALL.filter(r => r.d >= '2026-09-01'), agg: mergeAgg(RH, RI, RJ, RK), hourly: HOURLY_W9, label: '9-р сар',
+  M9: { daily: DAILY_ALL.filter(r => r.d >= '2026-09-01' && r.d <= '2026-09-27'), agg: mergeAgg(RH, RI, RJ, RK), hourly: HOURLY_W9, label: '9-р сар',
         defaultDays: SEP_DAYS },
   ALL: { daily: DAILY_ALL, agg: RALL, hourly: HOURLY, label: 'Нэгдсэн',
          defaultDays: DAILY_ALL.map(r => r.d) },
@@ -1067,6 +1250,7 @@ const CHAN_RATES: Record<RepKey, Record<string, number>> = {
   W10: { ts: 0.701, mb: 0.638, pos: 0.693, loan: 0.892, nd: 0.50 },
   W11: { ts: 0.714, mb: 0.706, pos: 0.748, loan: 0.734, nd: 0.50 },
   W12: { ts: 0.801, mb: 0.731, pos: 0.635, loan: 0.789, nd: 0.50 },
+  W13: { ts: 0.655, mb: 0.696, pos: 0.709, loan: 0.681, nd: 0.50 },
   M7:  { ts: 0.76,  mb: 0.71,  pos: 0.71,  loan: 0.81,  nd: 0.90 },
   M8:  { ts: 0.54,  mb: 0.54,  pos: 0.57,  loan: 0.74,  nd: 0.70 },
   M9:  { ts: 0.686, mb: 0.672, pos: 0.717, loan: 0.844, nd: 0.50 },
@@ -1110,6 +1294,7 @@ const MONTHS: { label: string; rep: RepKey; keys: RepKey[] }[] = [
   { label: '7-р сар', rep: 'M7', keys: ['W1', 'W2', 'W3', 'W4'] },
   { label: '8-р сар', rep: 'M8', keys: ['W5', 'W6', 'W7', 'W8'] },
   { label: '9-р сар', rep: 'M9', keys: ['W9', 'W10', 'W11', 'W12'] },
+  { label: '10-р сар', rep: 'W13', keys: ['W13'] },
 ]
 const OVERVIEW: { rep: RepKey; label: string; sub: string; ic: string }[] = [
   { rep: 'ALL', label: 'Бүх хугацаа', sub: '10 долоо хоног', ic: '📊' },
@@ -1168,12 +1353,12 @@ function DailyChart({ rows, selDays, selChan, onToggle }: {
   selChan: string | null
   onToggle: (d: string) => void
 }) {
-  const w = 760, h = 244, padB = 46, padT = 16, padL = 30, plot = h - padT - padB
+  const w = 540, h = 300, padB = 52, padT = 18, padL = 34, plot = h - padT - padB
   const [hover, setHover] = useState<string | null>(null)
   const lit = useMountFlag()
   const max = Math.max(...rows.map(r => chTot(r)), 1) * 1.12
   const bw = (w - padL - 8) / rows.length
-  const barW = Math.min(bw * 0.62, 30)
+  const barW = Math.min(bw * 0.8, 40)
   const chanVal = (r: DayRow) => selChan ? ((r as unknown) as Record<string, number>)[selChan] as number : chTot(r)
   const barTr = 'height .45s var(--ease-out), y .45s var(--ease-out), opacity .25s ease'
   return (
@@ -1184,7 +1369,7 @@ function DailyChart({ rows, selDays, selChan, onToggle }: {
           return (
             <g key={g}>
               <line x1={padL} y1={y} x2={w - 4} y2={y} stroke="var(--c-grid)" strokeWidth={1} />
-              <text x={0} y={y + 3} fill="var(--c-axis)" fontSize={9}>{Math.round(max * (1 - g / 4))}</text>
+              <text x={0} y={y + 3} fill="var(--c-axis)" fontSize={10}>{Math.round(max * (1 - g / 4))}</text>
             </g>
           )
         })}
@@ -1213,12 +1398,12 @@ function DailyChart({ rows, selDays, selChan, onToggle }: {
                 <rect key={j} className="cz-bar" x={x} y={s.y} width={barW} height={s.bh} fill={s.ch.c} rx={1.5}
                   opacity={s.op} style={{ pointerEvents: 'none', transition: barTr }} />
               ))}
-              <text x={cx} y={stackTop - 4} fill={sel ? 'var(--c-lbl-hi)' : 'var(--c-lbl-dim)'} fontSize={9} textAnchor="middle"
-                fontWeight={600} style={{ pointerEvents: 'none', transition: 'y .45s var(--ease-out)' }}>{chanVal(r) || ''}</text>
-              <text x={cx} y={h - padB + 14} fill={sel ? 'var(--c-lbl-hi)' : 'var(--c-lbl)'} fontSize={9} textAnchor="middle"
-                fontWeight={sel ? 700 : 400} style={{ pointerEvents: 'none' }}>{r.lab}</text>
+              <text x={cx} y={stackTop - 5} fill={sel ? 'var(--c-lbl-hi)' : 'var(--c-lbl-dim)'} fontSize={11} textAnchor="middle"
+                fontWeight={700} style={{ pointerEvents: 'none', transition: 'y .45s var(--ease-out)' }}>{chanVal(r) || ''}</text>
+              <text x={cx} y={h - padB + 15} fill={sel ? 'var(--c-lbl-hi)' : 'var(--c-lbl)'} fontSize={10.5} textAnchor="middle"
+                fontWeight={sel ? 700 : 500} style={{ pointerEvents: 'none' }}>{r.lab}</text>
               {r.uniq != null && (
-                <text x={cx} y={h - padB + 26} fill={C.violet} fontSize={8.5} textAnchor="middle" opacity={sel ? 0.95 : 0.5}
+                <text x={cx} y={h - padB + 27} fill={C.violet} fontSize={9.5} textAnchor="middle" opacity={sel ? 0.95 : 0.5}
                   fontWeight={600} style={{ pointerEvents: 'none' }}>👥{r.uniq}</text>
               )}
               {sel && <rect x={x} y={h - padB + 30} width={barW} height={2.5} rx={1.2} fill="var(--sel-1)" style={{ pointerEvents: 'none' }} />}
@@ -1254,13 +1439,14 @@ function DailyChart({ rows, selDays, selChan, onToggle }: {
 }
 
 function HourChart({ hourly, fac }: { hourly: HourRow[]; fac: number }) {
-  const w = 900, h = 210, padB = 26, padT = 14, padL = 28, plot = h - padT - padB
+  const w = 620, h = 300, padB = 28, padT = 16, padL = 32, plot = h - padT - padB
   const [hover, setHover] = useState<number | null>(null)
   const lit = useMountFlag()
-  const merged = hourly.map(r => [r[0], r[1] * fac, (r[2] + r[3]) * fac] as [string, number, number])
-  const max = Math.max(...merged.map(r => r[1] + r[2]), 1) * 1.1
+  // HourRow = [hour, answered, abandoned, timeout]
+  const merged = hourly.map(r => [r[0], r[1] * fac, r[2] * fac, r[3] * fac] as [string, number, number, number])
+  const max = Math.max(...merged.map(r => r[1] + r[2] + r[3]), 1) * 1.1
   const bw = (w - padL - 8) / merged.length
-  const barW = Math.min(bw * 0.62, 44)
+  const barW = Math.min(bw * 0.68, 30)
   const barTr = 'height .5s var(--ease-out), y .5s var(--ease-out), opacity .2s ease'
   return (
     <div className="chart-host" onMouseLeave={() => setHover(null)}>
@@ -1277,19 +1463,22 @@ function HourChart({ hourly, fac }: { hourly: HourRow[]; fac: number }) {
         {merged.map((r, i) => {
           const x = padL + i * bw + (bw - barW) / 2
           const cx = padL + i * bw + bw / 2
-          const tot = r[1] + r[2]
+          const tot = r[1] + r[2] + r[3]
           const ansBh = lit ? r[1] / max * plot : 0
-          const lossBh = lit ? r[2] / max * plot : 0
-          const lossY = h - padB - lossBh
-          const ansY = lossY - ansBh
+          const abBh = lit ? r[2] / max * plot : 0
+          const toBh = lit ? r[3] / max * plot : 0
+          const toY = h - padB - toBh
+          const abY = toY - abBh
+          const ansY = abY - ansBh
           const topY = h - padB - (lit ? tot / max * plot : 0)
-          const ansRate = tot > 0 ? Math.round(r[1] / tot * 100) : 0
           const hv = hover === i
           return (
             <g key={i}>
               <rect x={padL + i * bw} y={padT} width={bw} height={plot + 20} fill="transparent"
                 onMouseEnter={() => setHover(i)} />
-              {lossBh > 0 && <rect className="hz-bar" x={x} y={lossY} width={barW} height={lossBh} fill={C.coral} rx={1.5}
+              {toBh > 0 && <rect className="hz-bar" x={x} y={toY} width={barW} height={toBh} fill={C.gold} rx={1.5}
+                opacity={hv ? 1 : 0.92} style={{ pointerEvents: 'none', transition: barTr }} />}
+              {abBh > 0 && <rect className="hz-bar" x={x} y={abY} width={barW} height={abBh} fill={C.coral} rx={1.5}
                 opacity={hv ? 1 : 0.92} style={{ pointerEvents: 'none', transition: barTr }} />}
               {ansBh > 0 && <rect className="hz-bar" x={x} y={ansY} width={barW} height={ansBh} fill={C.teal} rx={1.5}
                 opacity={hv ? 1 : 0.92} style={{ pointerEvents: 'none', transition: barTr }} />}
@@ -1299,11 +1488,15 @@ function HourChart({ hourly, fac }: { hourly: HourRow[]; fac: number }) {
               )}
               {ansBh >= 13 && (
                 <text x={cx} y={ansY + ansBh / 2 + 3} fill="#0d1b2a" fontSize={7.5} textAnchor="middle" fontWeight={800}
-                  style={{ pointerEvents: 'none', fontFamily: 'Space Grotesk,Inter,sans-serif' }}>{ansRate}%</text>
+                  style={{ pointerEvents: 'none', fontFamily: 'Space Grotesk,Inter,sans-serif' }}>{tot > 0 ? Math.round(r[1] / tot * 100) : 0}%</text>
               )}
-              {lossBh >= 13 && (
-                <text x={cx} y={lossY + lossBh / 2 + 3} fill="#fff" fontSize={7.5} textAnchor="middle" fontWeight={700}
-                  style={{ pointerEvents: 'none', fontFamily: 'Space Grotesk,Inter,sans-serif' }}>{100 - ansRate}%</text>
+              {abBh >= 13 && (
+                <text x={cx} y={abY + abBh / 2 + 3} fill="#fff" fontSize={7} textAnchor="middle" fontWeight={700}
+                  style={{ pointerEvents: 'none', fontFamily: 'Space Grotesk,Inter,sans-serif' }}>{tot > 0 ? Math.round(r[2] / tot * 100) : 0}%</text>
+              )}
+              {toBh >= 13 && (
+                <text x={cx} y={toY + toBh / 2 + 3} fill="#0d1b2a" fontSize={7} textAnchor="middle" fontWeight={700}
+                  style={{ pointerEvents: 'none', fontFamily: 'Space Grotesk,Inter,sans-serif' }}>{tot > 0 ? Math.round(r[3] / tot * 100) : 0}%</text>
               )}
               <text x={cx} y={h - padB + 14} fill="var(--c-lbl)" fontSize={9} textAnchor="middle" style={{ pointerEvents: 'none' }}>{r[0]}</text>
             </g>
@@ -1312,13 +1505,14 @@ function HourChart({ hourly, fac }: { hourly: HourRow[]; fac: number }) {
       </svg>
       {hover != null && merged[hover] && (() => {
         const r = merged[hover]
-        const tot = r[1] + r[2]
+        const tot = r[1] + r[2] + r[3]
         const leftPct = ((padL + hover * bw + bw / 2) / w) * 100
         return (
           <div className="chart-tip" style={{ left: `clamp(64px, ${leftPct}%, calc(100% - 64px))` }}>
             <div className="chart-tip-h">{r[0]}:00</div>
             <div className="chart-tip-row"><span><i style={{ background: C.teal }} />Авсан</span><b>{Math.round(r[1])}</b></div>
-            <div className="chart-tip-row"><span><i style={{ background: C.coral }} />Алдсан</span><b>{Math.round(r[2])}</b></div>
+            <div className="chart-tip-row"><span><i style={{ background: C.coral }} />Таслагдсан</span><b>{Math.round(r[2])}</b></div>
+            <div className="chart-tip-row"><span><i style={{ background: C.gold }} />Timeout</span><b>{Math.round(r[3])}</b></div>
             <div className="chart-tip-row chart-tip-tot"><span>Нийт</span><b>{Math.round(tot)}</b></div>
           </div>
         )
@@ -2328,15 +2522,15 @@ export { ErrorBoundary }
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [topTab, setTopTab] = useState<'call' | 'care'>('call')
-  const [rep, setRep] = useState<RepKey>('W12')
-  const [selDays, setSelDays] = useState<Set<string>>(new Set(REPORTS.W12.defaultDays))
+  const [rep, setRep] = useState<RepKey>('W13')
+  const [selDays, setSelDays] = useState<Set<string>>(new Set(REPORTS.W13.defaultDays))
   const [selProd, setSelProd] = useState<string | null>(null)
+  const [expandedCat, setExpandedCat] = useState<string | null>(null)
   const reducedMotion = useReducedMotion()
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     try { return localStorage.getItem('crm-theme') === 'light' ? 'light' : 'dark' } catch { return 'dark' }
   })
   const [weekOpen, setWeekOpen] = useState(false)
-  const [unresAgent, setUnresAgent] = useState<string | null>(null)
   const stripRef = useRef<HTMLDivElement>(null)
   const [dayRange, setDayRange] = useState<{ x: number; w: number } | null>(null)
   const anchorRef = useRef<string | null>(null)
@@ -2486,12 +2680,6 @@ export default function App() {
   const isAllSel = Math.abs(factor - 1) < 0.005
 
   const hourFac = factor * (prodChanKey ? hourFrac : 1)
-  const rangeLabel = useMemo(() => {
-    const ct = prodChanKey
-      ? selRows.reduce((a, r) => a + (((r as unknown) as Record<string, number>)[prodChanKey] as number || 0), 0)
-      : chSelSum
-    return `${selDays.size} өдөр · ${fmt(ct)} дуудлага${prodChanKey ? ` (${CH.find(c => c.k === prodChanKey)?.n})` : ''}`
-  }, [selRows, prodChanKey, chSelSum, selDays])
   // Selected product's share of tickets — reused to shape the CSAT + channel cards
   const prodShare = useMemo(() => {
     if (!selProd) return 1
@@ -2505,10 +2693,11 @@ export default function App() {
   const { svg: satSvg, score: satScore, resp: satResp } = useMemo(() => mkSatGaugeSvg(satDist), [satDist])
 
   // Callback / reconnect stats from ticket issues
-  const nokhjIssue = useMemo(() => R.issues.find(i => i.n.toLowerCase().includes('нөхөж')), [R.issues])
+  const nokhjIssues = useMemo(() => R.issues.filter(i => i.n.toLowerCase().includes('нөхөж')), [R.issues])
+  const nokhjIssueTotal = useMemo(() => nokhjIssues.reduce((s, i) => s + i.v, 0), [nokhjIssues])
   const cbFromRows  = useMemo(() => selRows.reduce((s, r) => s + (r.cb ?? 0), 0), [selRows])
   const cbNeedTotal = useMemo(() => selRows.reduce((s, r) => s + (r.cbNeed ?? 0), 0), [selRows])
-  const nokhjCount  = cbFromRows > 0 ? Math.round(cbFromRows * prodFactor) : Math.round((nokhjIssue?.v ?? 0) * prodFactor)
+  const nokhjCount  = cbFromRows > 0 ? Math.round(cbFromRows * prodFactor) : Math.round(nokhjIssueTotal * prodFactor)
   const missedCalls = Math.max((prodChanKey ? prodTotalCalls - prodAnswered : chSelSum - selAnswered), 0)
   const cbDenom     = cbNeedTotal > 0 ? Math.round(cbNeedTotal * prodFactor) : missedCalls
   const missedUniq  = R.missedUniq != null ? Math.round(R.missedUniq * prodFactor) : null
@@ -2773,10 +2962,14 @@ export default function App() {
       <div className="grid mid" style={{ marginBottom: 14 }}>
         <div className="card">
           <div className="card-h"><div className="card-title"><span className="tdot" style={{ background: C.teal }} />Тикетийн статус</div></div>
-          {(R.tkTransfResolved != null
-            ? [['Шийдэгдсэн', C.teal, R.resolved], ['Шийдэгдээгүй', C.amber, R.unresolved], ['Шилжүүлсэн', C.violet, R.tkTransferred - R.tkTransfResolved], ['Шилжүүлсэн-Шийдсэн', C.blue, R.tkTransfResolved]]
-            : [['Шийдэгдсэн', C.teal, R.resolved], ['Шийдэгдээгүй', C.amber, R.unresolved], ['Шилжүүлсэн', C.violet, R.tkTransferred]]
-          ).map(([label, color, val]) => (
+          {[
+            ['Шийдэгдсэн', C.teal, R.resolved],
+            ['Шийдэгдээгүй', C.coral, R.unresWaiting != null ? R.unresolved - R.unresWaiting : R.unresolved],
+            ...(R.unresWaiting != null ? [['Харилцагчийг хүлээж байгаа', C.gold, R.unresWaiting]] as const : []),
+            ...(R.tkTransfResolved != null
+              ? [['Шилжүүлсэн', C.violet, R.tkTransferred - R.tkTransfResolved], ['Шилжүүлсэн-Шийдсэн', C.blue, R.tkTransfResolved]] as const
+              : [['Шилжүүлсэн', C.violet, R.tkTransferred]] as const),
+          ].map(([label, color, val]) => (
             <div key={label as string} className="tk-row">
               <div className="tk-l"><span className="tk-mk" style={{ background: color as string }} />{label as string}</div>
               <div><span className="tk-v num">{fmt((val as number) * prodFactor)}</span><span className="tk-pct">{((val as number) / tkTot * 100).toFixed(1)}%</span></div>
@@ -2784,10 +2977,14 @@ export default function App() {
           ))}
           <div style={{ marginTop: 13 }}>
             <div style={{ display: 'flex', height: 10, borderRadius: 5, overflow: 'hidden', background: 'var(--track)' }}>
-              {(R.tkTransfResolved != null
-                ? [[R.resolved, C.teal],[R.unresolved, C.amber],[R.tkTransferred - R.tkTransfResolved, C.violet],[R.tkTransfResolved, C.blue]]
-                : [[R.resolved, C.teal],[R.unresolved, C.amber],[R.tkTransferred, C.violet]]
-              ).map(([v,c], i) => (
+              {[
+                [R.resolved, C.teal],
+                [R.unresWaiting != null ? R.unresolved - R.unresWaiting : R.unresolved, C.coral],
+                ...(R.unresWaiting != null ? [[R.unresWaiting, C.gold]] as const : []),
+                ...(R.tkTransfResolved != null
+                  ? [[R.tkTransferred - R.tkTransfResolved, C.violet],[R.tkTransfResolved, C.blue]] as const
+                  : [[R.tkTransferred, C.violet]] as const),
+              ].map(([v,c], i) => (
                 <div key={i} style={{ width: `${(v as number) / tkTot * 100}%`, background: c as string }} />
               ))}
             </div>
@@ -2860,57 +3057,36 @@ export default function App() {
         </div>
       </div>
 
-      {/* Daily chart + products */}
+      {/* Daily chart + hourly load */}
       <Reveal className="grid charts" style={{ marginBottom: 14 }}>
         <div className="card">
-          <div className="card-h">
+          <div className="card-h" style={{ flexWrap: 'wrap', rowGap: 6, alignItems: 'flex-end' }}>
             <div className="card-title"><span className="tdot" style={{ background: C.blue }} />Өдрийн дуудлага — сувгаар</div>
-            <div style={{ fontSize: 11, color: 'var(--muted)' }}>{rangeLabel}</div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 16 }}>
+              <div style={{ fontSize: 10, color: 'var(--muted)' }}>{selDays.size} өдөр</div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
+                <span className="num" style={{ fontSize: 20, fontWeight: 800, color: C.blue, lineHeight: 1 }}>{fmt(chSelSum)}</span>
+                <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>нийт дуудлага</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
+                <span className="num" style={{ fontSize: 20, fontWeight: 800, color: C.teal, lineHeight: 1 }}>{fmt(selAnswered)}</span>
+                <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>амжилттай авсан</span>
+              </div>
+            </div>
           </div>
           <DailyChart rows={daily} selDays={selDays} selChan={prodChanKey} onToggle={toggleDay} />
-          <div className="legend-inline">
+          <div className="legend-inline" style={{ fontSize: 9.5 }}>
             {CH.map(c => <span key={c.k}><i style={{ background: c.c }} />{c.n}</span>)}
             <span style={{ color: 'var(--muted2)' }}>👆 багана дарж өдөр нэмэх/хасах</span>
           </div>
         </div>
         <div className="card">
           <div className="card-h">
-            <div className="card-title"><span className="tdot" style={{ background: C.gold }} />Бүтээгдэхүүний төрөл</div>
-          </div>
-          <div style={{ marginTop: 4 }}>
-            {(() => {
-              const pmax = Math.max(...R.products.map(x => x.v))
-              return R.products.map((p, i) => {
-                const active = selProd === p.n
-                const dimmed = selProd !== null && !active
-                return (
-                  <div key={i} className="hbar" style={{ cursor: 'pointer', opacity: dimmed ? 0.35 : 1, transition: 'opacity .15s' }}
-                    onClick={() => setSelProd(prev => prev === p.n ? null : p.n)}>
-                    <div className="hbar-top">
-                      <span className="n" style={{ fontWeight: active ? 700 : 400, color: active ? C.gold : undefined }}>
-                        {active && '▶ '}{p.n}
-                      </span>
-                      <span className="v" style={{ color: p.c }}>{(p.v / ptot * 100).toFixed(1)}% · {fmt(p.v * factor)}</span>
-                    </div>
-                    <div className="hbar-track" style={{ outline: active ? `1.5px solid ${C.gold}55` : 'none', borderRadius: 4 }}>
-                      <div className="hbar-fill" style={{ width: `${Math.max(p.v / pmax * 100, 2)}%`, background: `linear-gradient(90deg,${p.c}99,${p.c})`, boxShadow: active ? `0 0 14px ${p.c}88` : `0 0 10px ${p.c}44` }} />
-                    </div>
-                  </div>
-                )
-              })
-            })()}
-          </div>
-        </div>
-      </Reveal>
-
-      {/* Hourly */}
-      <Reveal className="grid" style={{ gridTemplateColumns: '1fr', marginBottom: 14 }}>
-        <div className="card">
-          <div className="card-h">
             <div className="card-title"><span className="tdot" style={{ background: C.teal }} />Цагийн ачаалал</div>
             <div className="legend-inline">
               <span><i style={{ background: C.teal }} />Авсан</span>
-              <span><i style={{ background: C.coral }} />Алдсан</span>
+              <span><i style={{ background: C.coral }} />Таслагдсан</span>
+              <span><i style={{ background: C.gold }} />Timeout</span>
             </div>
           </div>
           <HourChart hourly={hourly} fac={hourFac} />
@@ -2922,8 +3098,111 @@ export default function App() {
         </div>
       </Reveal>
 
+      {/* Levels + products */}
+      <Reveal className={`grid ${R.levels ? 'levels-prod' : ''}`} style={R.levels ? { marginBottom: 14 } : { gridTemplateColumns: '1fr', marginBottom: 14 }}>
+        {R.levels && (() => {
+          const { svg: lvSvg, tot: lvTot } = mkDonutSvg(R.levels)
+          return (
+            <div className="card">
+              <div className="card-h">
+                <div className="card-title"><span className="tdot" style={{ background: C.coral }} />Асуудлын түвшин</div>
+              </div>
+              <div className="donut-wrap" style={{ flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+                <div style={{ position: 'relative', width: 140, height: 140 }}>
+                  <div dangerouslySetInnerHTML={{ __html: lvSvg }} />
+                  <div className="donut-center">
+                    <div className="dc-val num">{fmt(lvTot)}</div>
+                  </div>
+                </div>
+                <div className="legend" style={{ width: '100%' }}>
+                  {R.levels.map((lv, i) => (
+                    <div key={i} className="lg">
+                      <div className="lg-l"><span className="lg-mk" style={{ background: lv.c }} />{lv.n}</div>
+                      <div><span className="lg-v">{(lv.v / lvTot * 100).toFixed(1)}%</span><span className="lg-c">{fmt(lv.v)}</span></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )
+        })()}
+        <div className="card">
+          <div className="card-h">
+            <div className="card-title"><span className="tdot" style={{ background: C.gold }} />Бүтээгдэхүүний төрөл</div>
+          </div>
+          <div style={{ marginTop: 6 }}>
+            <div style={{ display: 'flex', height: 16, borderRadius: 8, overflow: 'hidden', background: 'var(--track)' }}>
+              {R.products.map((p, i) => {
+                const active = selProd === p.n
+                const dimmed = selProd !== null && !active
+                return (
+                  <div key={i} onClick={() => setSelProd(prev => prev === p.n ? null : p.n)} title={`${p.n} · ${(p.v / ptot * 100).toFixed(1)}%`}
+                    style={{ width: `${Math.max(p.v / ptot * 100, 0.3)}%`, background: p.c, cursor: 'pointer', opacity: dimmed ? 0.3 : 1, transition: 'opacity .15s', outline: active ? `1.5px solid ${C.gold}` : 'none', outlineOffset: -1.5 }} />
+                )
+              })}
+            </div>
+            <div className="legend-inline" style={{ marginTop: 12, justifyContent: 'space-between', fontSize: 12.5 }}>
+              {R.products.map((p, i) => {
+                const active = selProd === p.n
+                const dimmed = selProd !== null && !active
+                return (
+                  <span key={i} onClick={() => setSelProd(prev => prev === p.n ? null : p.n)}
+                    style={{ cursor: 'pointer', opacity: dimmed ? 0.45 : 1, fontWeight: active ? 700 : 500, color: active ? 'var(--fg)' : undefined }}>
+                    <i style={{ background: p.c, width: 10, height: 10 }} />{p.n} <b style={{ color: p.c }}>{(p.v / ptot * 100).toFixed(1)}%</b>
+                  </span>
+                )
+              })}
+            </div>
+          </div>
+          {R.prodIssues && (
+            <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {R.prodIssues.map((pi, i) => {
+                const pc = R.products.find(p => p.n === pi.prod)?.c || C.gold
+                return (
+                  <div key={i}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: pc, marginBottom: 6 }}>{pi.prod}</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                      {pi.cats.map((c, j) => {
+                        const key = `${pi.prod}|${c.n}`
+                        const subs = R.prodSubcats?.[key]
+                        const open = expandedCat === key
+                        return (
+                          <span key={j} onClick={() => subs && setExpandedCat(prev => prev === key ? null : key)}
+                            style={{ flex: '1 1 0', minWidth: 110, textAlign: 'center', fontSize: 11, padding: '7px 10px', borderRadius: 7,
+                              background: `${pc}1c`, color: 'var(--text-soft)', cursor: subs ? 'pointer' : 'default',
+                              outline: open ? `1.5px solid ${pc}` : 'none', outlineOffset: -1.5 }}>
+                            {c.n} <b style={{ color: pc }}>{c.pct.toFixed(0)}%</b>
+                          </span>
+                        )
+                      })}
+                    </div>
+                    {(() => {
+                      const openEntry = pi.cats.find(c => expandedCat === `${pi.prod}|${c.n}`)
+                      const subs = openEntry && R.prodSubcats?.[`${pi.prod}|${openEntry.n}`]
+                      if (!openEntry || !subs) return null
+                      return (
+                        <div style={{ marginTop: 8, padding: '10px 12px', borderRadius: 8, background: 'var(--panel-hi)', border: `1px solid ${pc}30` }}>
+                          <div style={{ fontSize: 10, color: 'var(--muted)', marginBottom: 7 }}>{pi.prod} · {openEntry.n} — дэд ангилал</div>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                            {subs.map((s, k) => (
+                              <span key={k} style={{ fontSize: 10.5, padding: '4px 9px', borderRadius: 6, background: 'var(--track)', color: 'var(--text-soft)' }}>
+                                {s.n} <b style={{ color: pc }}>{s.pct}%</b> · {s.c}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    })()}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </Reveal>
+
       {/* Issues */}
-      <Reveal className="grid" style={{ gridTemplateColumns: '1fr', marginBottom: 14 }}>
+      <Reveal className={`grid ${R.errorByProd ? 'issues-err' : ''}`} style={R.errorByProd ? { marginBottom: 14 } : { gridTemplateColumns: '1fr', marginBottom: 14 }}>
         <div className="card">
           <div className="card-h">
             <div className="card-title"><span className="tdot" style={{ background: C.violet }} />Топ асуудлын төрөл
@@ -2931,7 +3210,7 @@ export default function App() {
             </div>
           </div>
           <div style={{ marginTop: 4 }} key={selProd ?? 'all'} className="issue-list">
-            {filteredIssues.map((it, i) => {
+            {filteredIssues.slice(0, 10).map((it, i) => {
               const col = TAGCOL[it.t] || C.blue
               return (
                 <div key={i} className="hbar">
@@ -2947,6 +3226,45 @@ export default function App() {
             })}
           </div>
         </div>
+        {R.errorByProd && (() => {
+          const errTot = R.errorByProd.reduce((s, x) => s + x.v, 0) || 1
+          const errMax = Math.max(...R.errorByProd.map(x => x.v))
+          return (
+            <div className="card" style={{ border: '2px solid #ff2d3a', boxShadow: '0 0 14px #ff2d3a55' }}>
+              <div className="card-h">
+                <div className="card-title"><span className="tdot" style={{ background: C.coral }} />Алдааны тикет — бүтээгдэхүүнээр</div>
+                <div className="num" style={{ fontSize: 13, fontWeight: 700, color: C.coral }}>{fmt(errTot)}</div>
+              </div>
+              <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {R.errorByProd.map((p, i) => {
+                  const subs = R.prodSubcats?.[`${p.n}|Алдаа`]
+                  return (
+                    <div key={i}>
+                      <div className="hbar">
+                        <div className="hbar-top">
+                          <span className="n">{p.n}</span>
+                          <span className="v" style={{ color: p.c }}>{(p.v / errTot * 100).toFixed(1)}% · {fmt(p.v)}</span>
+                        </div>
+                        <div className="hbar-track">
+                          <div className="hbar-fill" style={{ width: `${Math.max(p.v / errMax * 100, 2)}%`, background: `linear-gradient(90deg,${p.c}99,${p.c})` }} />
+                        </div>
+                      </div>
+                      {subs && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+                          {subs.map((s, j) => (
+                            <span key={j} style={{ flex: '1 1 0', minWidth: 110, textAlign: 'center', fontSize: 10.5, padding: '6px 9px', borderRadius: 7, background: `${p.c}1c`, color: 'var(--text-soft)' }}>
+                              {s.n} <b style={{ color: p.c }}>{s.pct}%</b> · {s.c}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })()}
       </Reveal>
 
       {/* Agents + transferred */}
@@ -3018,99 +3336,40 @@ export default function App() {
                     {totalOk   > 0 && <div style={{ flex: totalOk,    background: GREEN }} />}
                   </div>
                 )}
-                {/* Header row */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 4px 4px', borderBottom: '1px solid var(--border)', marginBottom: 4 }}>
-                  <span style={{ fontSize: 9, color: 'var(--muted)', fontWeight: 600, letterSpacing: '0.04em' }}>АЖИЛТАН</span>
-                  <div style={{ display: 'flex', gap: 16, fontSize: 9, color: 'var(--muted)', fontWeight: 600 }}>
-                    <span style={{ color: RED,    minWidth: 28, textAlign: 'center' }}>✗</span>
-                    <span style={{ color: MAROON, minWidth: 28, textAlign: 'center' }}>↗</span>
-                    <span style={{ color: GREEN,  minWidth: 28, textAlign: 'center' }}>✓</span>
-                    <span style={{ color: C.gold, minWidth: 22, textAlign: 'right' }}>Нийт</span>
-                  </div>
-                </div>
-                {/* Per-agent rows */}
-                {R.recv.map((r, i) => {
-                  const unres = (r as { unres?: number }).unres ?? 0
-                  const rowBg = unres > 0 ? `${RED}12` : r.wait > 0 ? `${MAROON}12` : `${GREEN}08`
-                  return (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 6px', background: rowBg, borderRadius: 6, marginBottom: 2 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg)' }}>{r.n}</div>
-                      <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-                        <span className="num" style={{ minWidth: 28, textAlign: 'center', fontSize: 13, fontWeight: 700, color: unres > 0 ? RED : 'var(--muted)', opacity: unres > 0 ? 1 : 0.3 }}>{unres}</span>
-                        <span className="num" style={{ minWidth: 28, textAlign: 'center', fontSize: 13, fontWeight: 700, color: r.wait > 0 ? MAROON : 'var(--muted)', opacity: r.wait > 0 ? 1 : 0.3 }}>{r.wait}</span>
-                        <span className="num" style={{ minWidth: 28, textAlign: 'center', fontSize: 13, fontWeight: 700, color: r.ok > 0 ? GREEN : 'var(--muted)', opacity: r.ok > 0 ? 1 : 0.3 }}>{r.ok}</span>
-                        <b className="num" style={{ minWidth: 22, textAlign: 'right', fontSize: 12, color: C.gold }}>{r.ok + r.wait + unres}</b>
-                      </div>
+                <div style={{ position: 'relative' }}>
+                  {/* Highlight the X (unresolved) column across header + rows */}
+                  <div style={{ position: 'absolute', top: -2, bottom: -2, right: 120, width: 40, border: '3px solid #ff2d3a', borderRadius: 10, boxShadow: '0 0 10px #ff2d3a88', pointerEvents: 'none', zIndex: 2 }} />
+                  {/* Header row */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 4px 4px', borderBottom: '1px solid var(--border)', marginBottom: 4 }}>
+                    <span style={{ fontSize: 9, color: 'var(--muted)', fontWeight: 600, letterSpacing: '0.04em' }}>АЖИЛТАН</span>
+                    <div style={{ display: 'flex', gap: 16, fontSize: 9, color: 'var(--muted)', fontWeight: 600 }}>
+                      <span style={{ color: RED,    minWidth: 28, textAlign: 'center' }}>✗</span>
+                      <span style={{ color: MAROON, minWidth: 28, textAlign: 'center' }}>↗</span>
+                      <span style={{ color: GREEN,  minWidth: 28, textAlign: 'center' }}>✓</span>
+                      <span style={{ color: C.gold, minWidth: 22, textAlign: 'right' }}>Нийт</span>
                     </div>
-                  )
-                })}
+                  </div>
+                  {/* Per-agent rows */}
+                  {R.recv.map((r, i) => {
+                    const unres = (r as { unres?: number }).unres ?? 0
+                    const rowBg = unres > 0 ? `${RED}12` : r.wait > 0 ? `${MAROON}12` : `${GREEN}08`
+                    return (
+                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 6px', background: rowBg, borderRadius: 6, marginBottom: 2 }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg)' }}>{r.n}</div>
+                        <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+                          <span className="num" style={{ minWidth: 28, textAlign: 'center', fontSize: 13, fontWeight: 700, color: unres > 0 ? RED : 'var(--muted)', opacity: unres > 0 ? 1 : 0.3 }}>{unres}</span>
+                          <span className="num" style={{ minWidth: 28, textAlign: 'center', fontSize: 13, fontWeight: 700, color: r.wait > 0 ? MAROON : 'var(--muted)', opacity: r.wait > 0 ? 1 : 0.3 }}>{r.wait}</span>
+                          <span className="num" style={{ minWidth: 28, textAlign: 'center', fontSize: 13, fontWeight: 700, color: r.ok > 0 ? GREEN : 'var(--muted)', opacity: r.ok > 0 ? 1 : 0.3 }}>{r.ok}</span>
+                          <b className="num" style={{ minWidth: 22, textAlign: 'right', fontSize: 12, color: C.gold }}>{r.ok + r.wait + unres}</b>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             )
           })()}
         </div>
-
-        {R.unresList && R.unresList.length > 0 && (() => {
-          const list = R.unresList
-          const agentCounts = Object.entries(list.reduce((o: Record<string, number>, t) => (o[t.agent] = (o[t.agent] || 0) + 1, o), {})).sort((a, b) => b[1] - a[1])
-          const active = unresAgent && agentCounts.some(([a]) => a === unresAgent) ? unresAgent : null
-          const shown = active ? list.filter(t => t.agent === active) : list
-          const issueCounts = Object.entries(shown.reduce((o: Record<string, number>, t) => (o[t.issue] = (o[t.issue] || 0) + 1, o), {})).sort((a, b) => b[1] - a[1])
-          const issueMaxN = issueCounts[0]?.[1] || 1
-          return (
-          <div className="card" style={{ gridColumn: '1 / -1' }}>
-            <div className="card-h"><div className="card-title"><span className="tdot" style={{ background: C.amber }} />Шийдэгдээгүй тикет — хариуцсан ажилтан ба асуудлын төрөл</div>
-              <span style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600 }}>{active ? `${shown.length} / ${list.length}` : list.length}</span>
-            </div>
-            {/* by agent — clickable filter */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
-              {agentCounts.map(([agent, n]) => {
-                const on = active === agent
-                return (
-                  <button key={agent} type="button" onClick={() => setUnresAgent(on ? null : agent)}
-                    style={{ fontSize: 11, padding: '3px 9px', borderRadius: 6, cursor: 'pointer',
-                      background: on ? C.amber : `${C.amber}14`, border: `1px solid ${on ? C.amber : `${C.amber}30`}`,
-                      color: on ? '#1a1200' : 'var(--fg)', fontWeight: on ? 700 : 400 }}>
-                    {agent} <b style={{ color: on ? '#1a1200' : C.amber }}>{n}</b>
-                  </button>
-                )
-              })}
-              {active && <button type="button" onClick={() => setUnresAgent(null)} style={{ fontSize: 11, padding: '3px 9px', borderRadius: 6, cursor: 'pointer', background: 'transparent', border: '1px solid var(--border)', color: 'var(--muted)' }}>✕ Цэвэрлэх</button>}
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-              {/* detail list */}
-              <div>
-                <div style={{ fontSize: 9, color: 'var(--muted)', fontWeight: 600, letterSpacing: '0.04em', marginBottom: 5 }}>{active ? `${active.toUpperCase()} · ${shown.length}` : 'ЖАГСААЛТ'}</div>
-                <div style={{ display: 'grid', gap: 2 }}>
-                  {shown.map((t, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '5px 8px', background: i % 2 ? 'transparent' : 'var(--track)', borderRadius: 6, fontSize: 12 }}>
-                      <span style={{ color: 'var(--muted)', minWidth: 40, fontVariantNumeric: 'tabular-nums' }}>{t.d}</span>
-                      {!active && <span style={{ fontWeight: 600, minWidth: 110 }}>{t.agent}</span>}
-                      <span style={{ color: 'var(--fg)' }}>{t.issue}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              {/* by issue type — frequency with % */}
-              <div>
-                <div style={{ fontSize: 9, color: 'var(--muted)', fontWeight: 600, letterSpacing: '0.04em', marginBottom: 5 }}>АСУУДЛЫН ТӨРӨЛ · ДАВТАМЖ</div>
-                <div style={{ display: 'grid', gap: 4 }}>
-                  {issueCounts.map(([issue, n]) => (
-                    <div key={issue} style={{ fontSize: 12 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
-                        <span style={{ color: 'var(--fg)' }}>{issue}</span>
-                        <span style={{ color: 'var(--muted)', whiteSpace: 'nowrap', marginLeft: 8 }}><b style={{ color: C.amber }}>{n}</b> · {(n / shown.length * 100).toFixed(0)}%</span>
-                      </div>
-                      <div style={{ height: 4, borderRadius: 3, background: 'var(--track)', overflow: 'hidden' }}>
-                        <div style={{ width: `${n / issueMaxN * 100}%`, height: '100%', background: C.amber }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-          )
-        })()}
       </Reveal>
 
       <div className="hint">
