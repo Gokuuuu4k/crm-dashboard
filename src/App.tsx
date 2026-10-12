@@ -2086,14 +2086,47 @@ function InactiveSection() {
 type ReturnRow = { n: string; target: number; collected: number }
 type ReturnAreaData = { ub: ReturnRow[]; region: ReturnRow[] }
 
-const UB_DISTRICTS = ['Баянгол', 'Баянзүрх', 'Чингэлтэй', 'Сүхбаатар', 'Сонгинохайрхан', 'Хан-Уул', 'Налайх', 'Багануур', 'Багахангай']
-const AIMAGS = [
-  'Архангай', 'Баян-Өлгий', 'Баянхонгор', 'Булган', 'Говь-Алтай', 'Говьсүмбэр', 'Дархан-Уул', 'Дорноговь', 'Дорнод',
-  'Дундговь', 'Завхан', 'Орхон', 'Өвөрхангай', 'Өмнөговь', 'Сүхбаатар', 'Сэлэнгэ', 'Төв', 'Увс', 'Ховд', 'Хөвсгөл', 'Хэнтий',
+// MPOS хураалтын жагсаалт (mpos.pdf, 300 мөр) — ADDRESS талбарт байгаа аймаг/дүүргийн нэрээр ангилж,
+// "Посын Төлөв" баганаас target(=тухайн аймгийн нийт мөр)/collected(="хураалгасан" төлөвтэй мөр)-ийг тооцов.
+// УБ-д ердөө 2 мөр байгаа (MONGOL HUUSHUUR→Сүхбаатар дүүрэг, GREEN EYE BIO DELGUUR→Багануур) — жагсаалт
+// бараг бүхэлдээ орон нутгийн POS-уудад чиглэсэн байна.
+const RETURN_UB_DATA: ReturnRow[] = [
+  { n: 'Баянгол', target: 0, collected: 0 },
+  { n: 'Баянзүрх', target: 0, collected: 0 },
+  { n: 'Чингэлтэй', target: 0, collected: 0 },
+  { n: 'Сүхбаатар', target: 1, collected: 0 },
+  { n: 'Сонгинохайрхан', target: 0, collected: 0 },
+  { n: 'Хан-Уул', target: 0, collected: 0 },
+  { n: 'Налайх', target: 0, collected: 0 },
+  { n: 'Багануур', target: 1, collected: 0 },
+  { n: 'Багахангай', target: 0, collected: 0 },
+]
+const RETURN_REGION_DATA: ReturnRow[] = [
+  { n: 'Архангай', target: 3, collected: 1 },
+  { n: 'Баян-Өлгий', target: 1, collected: 0 },
+  { n: 'Баянхонгор', target: 30, collected: 11 },
+  { n: 'Булган', target: 4, collected: 0 },
+  { n: 'Говь-Алтай', target: 5, collected: 0 },
+  { n: 'Говьсүмбэр', target: 1, collected: 0 },
+  { n: 'Дархан-Уул', target: 59, collected: 23 },
+  { n: 'Дорноговь', target: 24, collected: 6 },
+  { n: 'Дорнод', target: 7, collected: 0 },
+  { n: 'Дундговь', target: 1, collected: 0 },
+  { n: 'Завхан', target: 3, collected: 0 },
+  { n: 'Орхон', target: 36, collected: 12 },
+  { n: 'Өвөрхангай', target: 15, collected: 5 },
+  { n: 'Өмнөговь', target: 27, collected: 0 },
+  { n: 'Сүхбаатар', target: 8, collected: 0 },
+  { n: 'Сэлэнгэ', target: 9, collected: 1 },
+  { n: 'Төв', target: 19, collected: 0 },
+  { n: 'Увс', target: 2, collected: 0 },
+  { n: 'Ховд', target: 16, collected: 0 },
+  { n: 'Хөвсгөл', target: 16, collected: 0 },
+  { n: 'Хэнтий', target: 12, collected: 0 },
 ]
 const RETURN_TEMPLATE: ReturnAreaData = {
-  ub: UB_DISTRICTS.map(n => ({ n, target: 0, collected: 0 })),
-  region: AIMAGS.map(n => ({ n, target: 0, collected: 0 })),
+  ub: RETURN_UB_DATA,
+  region: RETURN_REGION_DATA,
 }
 
 function ReturnTable({ rows }: { rows: ReturnRow[] }) {
@@ -2317,14 +2350,7 @@ function ReturnSection() {
               <MposReasonCard group={MPOS_RETURN_REASONS[1]} color={careCol.blue} />
             </div>
           )}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, padding: '6px 12px',
-            background: `${C.gold}12`, border: `1px solid ${C.gold}33`, borderRadius: 8, fontSize: 12,
-          }}>
-            <span style={{ width: 8, height: 8, borderRadius: 2, background: C.gold, display: 'inline-block', flexShrink: 0 }} />
-            <span style={{ color: careCol.muted }}>Дүүрэг/аймгийн target ба хураасан тоо удахгүй орно</span>
-          </div>
-          <ReturnCatView data={RETURN_TEMPLATE} />
+          {sub === 'mpos' && <ReturnCatView data={RETURN_TEMPLATE} />}
         </>
       )}
     </div>

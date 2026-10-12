@@ -1,0 +1,581 @@
+<title>MPOS хураалт</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#f4f6f9; --panel:#ffffff; --panel-hi:#ffffff; --line:#e2e6ee; --hair:#edf0f5;
+  --fg:#15202b; --muted:#5b6b82; --muted2:#8b97a9;
+  --teal:#1a9c78; --coral:#d64a3b; --gold:#b8821b; --blue:#2f6fd6; --violet:#7a5fd1;
+  --track:#eef1f6; --shadow: 0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --bg:#0b0f16; --panel:#121826; --panel-hi:#161e2e; --line:#232c3d; --hair:#1b2333;
+    --fg:#e7ecf3; --muted:#8c99b0; --muted2:#6c7890;
+    --teal:#2fd3a5; --coral:#ff6b5e; --gold:#f5c451; --blue:#4ea8ff; --violet:#9d8cff;
+    --track:#1a2231; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#0b0f16; --panel:#121826; --panel-hi:#161e2e; --line:#232c3d; --hair:#1b2333;
+  --fg:#e7ecf3; --muted:#8c99b0; --muted2:#6c7890;
+  --teal:#2fd3a5; --coral:#ff6b5e; --gold:#f5c451; --blue:#4ea8ff; --violet:#9d8cff;
+  --track:#1a2231; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.25);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  padding-inline:18px; padding-block:22px 48px;
+  font-size:14px; line-height:1.45;
+}
+.num{font-family:'Space Grotesk',Inter,sans-serif; font-variant-numeric:tabular-nums}
+.wrap{max-width:980px; margin:0 auto; display:flex; flex-direction:column; gap:14px}
+h1{font-family:'Space Grotesk',Inter,sans-serif; font-size:19px; font-weight:700; margin:0 0 2px; text-wrap:balance}
+.subtitle{color:var(--muted); font-size:12.5px; margin:0 0 6px}
+.note{
+  display:flex; align-items:center; gap:8px; font-size:12px; color:var(--gold);
+  background:color-mix(in srgb, var(--gold) 10%, var(--panel));
+  border:1px solid color-mix(in srgb, var(--gold) 30%, var(--panel));
+  border-radius:10px; padding:9px 13px;
+}
+.note i{width:6px;height:6px;border-radius:50%;background:var(--gold);flex:none}
+.tabs{display:flex; gap:8px}
+.tab{
+  font-family:'Space Grotesk',Inter,sans-serif; font-weight:600; font-size:13px;
+  padding:9px 18px; border-radius:10px; border:1px solid var(--line); background:var(--panel);
+  color:var(--muted); cursor:pointer; transition:background .15s,color .15s,border-color .15s;
+}
+.tab[aria-pressed="true"]{background:var(--teal); border-color:var(--teal); color:#06231a}
+:root[data-theme="dark"] .tab[aria-pressed="true"], @media (prefers-color-scheme:dark){ }
+.tab:not([aria-pressed="true"]):hover{border-color:var(--teal)}
+
+.card{
+  background:var(--panel); border:1px solid var(--line); border-radius:14px;
+  padding:16px 18px; box-shadow:var(--shadow);
+}
+.card-h{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px}
+.card-title{display:flex; align-items:center; gap:8px; font-size:11px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--muted)}
+.card-title i{width:6px;height:6px;border-radius:2px;background:var(--teal)}
+
+.kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:10px}
+.kpi{background:var(--panel-hi); border:1px solid var(--hair); border-radius:12px; padding:12px 14px; display:flex; flex-direction:column; gap:4px}
+.kpi .l{font-size:10.5px; color:var(--muted); font-weight:600; letter-spacing:.04em; text-transform:uppercase}
+.kpi .v{font-size:21px; font-weight:700}
+.kpi .v small{font-size:12px; color:var(--muted); font-weight:500}
+
+.gauge-row{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:8px}
+.gauge-pct{font-size:26px; font-weight:700; font-family:'Space Grotesk',Inter,sans-serif}
+.gauge-track{height:10px; border-radius:6px; background:var(--track); overflow:hidden; margin-bottom:8px}
+.gauge-fill{height:100%; background:linear-gradient(90deg,var(--teal),color-mix(in srgb,var(--teal) 60%,var(--blue))); border-radius:6px; transition:width .5s ease}
+.gauge-foot{display:flex; justify-content:space-between; font-size:12px; color:var(--muted)}
+.gauge-foot b{color:var(--fg)}
+
+table{width:100%; border-collapse:collapse; font-size:13px}
+thead th{
+  text-align:right; font-size:10.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
+  color:var(--muted); padding:8px 6px; border-bottom:1px solid var(--line);
+}
+thead th:first-child,thead th:nth-child(2){text-align:left}
+tbody td{padding:9px 6px; border-bottom:1px solid var(--hair); text-align:right; vertical-align:middle}
+tbody td:first-child{text-align:left; color:var(--muted2); width:26px}
+tbody td:nth-child(2){text-align:left}
+tbody tr{cursor:pointer}
+tbody tr:hover td{background:var(--track)}
+tbody tr.open td{background:var(--track)}
+.region-name{font-weight:600}
+.bar-cell{display:flex; align-items:center; gap:8px; justify-content:flex-end}
+.mini-track{width:72px; height:6px; border-radius:4px; background:var(--track); overflow:hidden; flex:none}
+.mini-fill{height:100%; border-radius:4px}
+.pctval{min-width:38px; text-align:right; font-weight:700}
+
+.detail-row td{padding:0; border-bottom:1px solid var(--hair)}
+.detail-wrap{padding:4px 6px 14px 30px; display:none}
+.detail-wrap.show{display:block}
+.detail-table{width:100%; border-collapse:collapse; font-size:12px}
+.detail-table th{text-align:left; font-size:9.5px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.04em; padding:5px 8px; border-bottom:1px solid var(--line)}
+.detail-table td{padding:5px 8px; border-bottom:1px solid var(--hair)}
+.detail-table tr:last-child td{border-bottom:none}
+.pill{display:inline-flex; align-items:center; gap:5px; font-size:10.5px; font-weight:600; padding:2px 8px; border-radius:20px}
+.pill.D{background:color-mix(in srgb, var(--teal) 16%, transparent); color:var(--teal)}
+.pill.P{background:color-mix(in srgb, var(--gold) 16%, transparent); color:var(--gold)}
+.pill.N{background:color-mix(in srgb, var(--muted2) 20%, transparent); color:var(--muted)}
+.pill.W{background:color-mix(in srgb, var(--coral) 16%, transparent); color:var(--coral)}
+.pill.A{background:color-mix(in srgb, var(--blue) 14%, transparent); color:var(--blue)}
+
+.legend{display:flex; flex-wrap:wrap; gap:12px; font-size:11.5px; color:var(--muted); margin-top:10px}
+.legend span{display:inline-flex; align-items:center; gap:6px}
+.legend i{width:8px;height:8px;border-radius:2px;display:inline-block}
+
+@media (max-width:560px){
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .hide-sm{display:none}
+}
+</style>
+
+<div class="wrap">
+  <div>
+    <h1>MPOS хураалтын явц</h1>
+    <p class="subtitle">Хураах жагсаалтад орсон 301 бичлэг — Улаанбаатар ба орон нутгаар, аймаг/дүүргээр задалсан гүйцэтгэл</p>
+  </div>
+
+  <div class="note"><i></i> Жагсаалтад Улаанбаатарын бичлэг цөөхөн (2) байгаа тул дата бодит байдлаар орон нутагт төвлөрсөн байна.</div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" id="tab-ub" role="tab" aria-pressed="false" onclick="setRegion('UB')">Улаанбаатар</button>
+    <button class="tab" id="tab-rural" role="tab" aria-pressed="true" onclick="setRegion('RURAL')">Орон нутаг</button>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="l">Нийт бичлэг</div><div class="v num" id="kpi-total">—</div></div>
+    <div class="kpi"><div class="l">Хураасан</div><div class="v num" style="color:var(--teal)" id="kpi-done">—</div></div>
+    <div class="kpi"><div class="l">Хураах шаардлагатай</div><div class="v num" style="color:var(--gold)" id="kpi-pending">—</div></div>
+    <div class="kpi"><div class="l">Холбогдоогүй/буруу</div><div class="v num" style="color:var(--coral)" id="kpi-problem">—</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-h"><div class="card-title"><i></i>Нийт гүйцэтгэл</div></div>
+    <div class="gauge-row"><span class="gauge-pct num" id="gauge-pct">0%</span></div>
+    <div class="gauge-track"><div class="gauge-fill" id="gauge-fill" style="width:0%"></div></div>
+    <div class="gauge-foot"><span>Target: <b class="num" id="gauge-target">0</b></span><span>Хураасан: <b class="num" id="gauge-done">0</b></span></div>
+    <div class="legend">
+      <span><i style="background:var(--teal)"></i>Хураалгасан</span>
+      <span><i style="background:var(--gold)"></i>Хураалгах</span>
+      <span><i style="background:var(--muted2)"></i>Утсаа аваагүй</span>
+      <span><i style="background:var(--coral)"></i>Буруу дугаар</span>
+      <span><i style="background:var(--blue)"></i>Ашиглана (шаардлагагүй)</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-h">
+      <div class="card-title"><i></i>Дүүрэг/аймгийн target ба хураасан тоо</div>
+      <span style="font-size:11px;color:var(--muted2)" class="hide-sm">Мөр дээр дарж задаргааг харна</span>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>#</th><th>Нэр</th><th>Target</th><th>Хураасан</th><th>Гүйцэтгэл</th></tr></thead>
+        <tbody id="region-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+// [merchantId, name, regionKey, status(D=хураалгасан,P=хураалгах,N=утсаа аваагүй,W=буруу дугаар,A=ашиглана), collector]
+const ROWS = [
+['MBM02822','SHARGALJUUT BUUNII TUV','BH','D','Tsatsral'],
+['MBM00900','8 NER','OR','P',''],
+['MBM01549','BAYANHARAAT','OM','P',''],
+['MBM01586','ORGIH SUPERMARKET 2','DG','P',''],
+['MBM01826','IKHER BAYN','OM','P',''],
+['MBM02674','OLON ULS ZAKH 1131','DU','D','Идэрболд/Tsatsral'],
+['MBM03204','ADAG OI','BO','P',''],
+['MBM00775','TANIL TAMHINII BUUNII HUDALDAA','OR','D','Цэрэгбаяр/Tsatsral'],
+['MBM00868','SODON DELGUUR','KT','P',''],
+['MBM01125','GEREL MARKET','DU','P',''],
+['MBM01487','11 MARKET','UV','P',''],
+['MBM01520','KHUDUUNII AIL','KO','P',''],
+['MBM01544','JIMS NOGOONI DELGUUR','BU','P',''],
+['MBM01695','BOLOR KHUR','UV','P',''],
+['MBM01705','BUGANT JARGALAN DELGUUR','SE','D','Идэрболд/Tsatsral'],
+['MBM01755','HAS SHOP','KO','P',''],
+['MBM01752','MUNGUN TULHUUR','KO','P',''],
+['MBM01802','UNDRAKH 8 NER','OM','P',''],
+['MBM01832','TSEGTS DELGUUR','OM','P',''],
+['MBM01828','UMNUGOVI DELGUUR','OM','P',''],
+['MBM01825','BIDNII DELGUUR','OM','P',''],
+['MBM01579','TSETSENKAN','DG','P',''],
+['MBM01854','DEL','BH','D','Tsatsral'],
+['MBM01863','UGUUMUR 6 NER','OM','P',''],
+['MBM01881','DURVUN BERKH','BH','D','Tsatsral'],
+['MBM01887','KHONGOR HAIRKHAN','BH','D','Tsatsral'],
+['MBM01913','ORANGE BUUNII TUV','OM','P',''],
+['MBM01915','OYU BOOKS COFFEE SHOP','OM','P',''],
+['MBM01874','TANSAG KHUNSNII DELGUUR','OM','P',''],
+['MBM01908','GURVAN MANDAL','BH','D','Tsatsral'],
+['MBM02044','SOLONGO SUPERMARKET 2','AR','P',''],
+['MBM02659','OLON ULS ZAKH 1137','DU','D','Идэрболд/Tsatsral'],
+['MBM02663','DARKHAN JOLOO','DU','D','Идэрболд/SUGAR'],
+['MBM02708','DEEDES MINI MARKET','OR','D','Цэрэгбаяр/Tsatsral'],
+['MBM02873','Baglaa tsetsteg','DU','D','Идэрболд/Tsatsral'],
+['MBM03175','GC-33','DU','D','Идэрболд/Tsatsral'],
+['MAB00043','BAYANBULAG','DU','D','Идэрболд/SUGAR'],
+['MAC00641','ALAG UUL','DU','D','Идэрболд/Tsatsral'],
+['MBM02187','ROYAL MARKET','OR','P',''],
+['MBM02657','TSATSRALT TUV','DU','P',''],
+['MBM02619','TSATSRALT TUV','DU','P',''],
+['MBM02713','BUYAN HURKH','OR','D','Цэрэгбаяр/Tsatsral'],
+['MBM02162','19 BANSHTAI TSAI JARGALTHAAN','KT','P',''],
+['MBM02227','ZUV HUNS','KS','P',''],
+['MBM01757','IDER DELGUUR','KO','P',''],
+['MAC00269','OLON BAYAN DELGUUR','OM','P',''],
+['MBM02791','SIILEN BUUR','SE','P',''],
+['MBM01797','OYU TAIHAR','KT','P',''],
+['MBM01765','MOLOR DELGUUR','KO','P',''],
+['MBM03209','URJIH','KT','P',''],
+['MBM01600','OD HUSLEN','DU','D','Идэрболд/Tsatsral'],
+['MAC00632','ZUL JAVKHLAN','DU','P',''],
+['MBM01708','IH HAIRHAN','UV','P',''],
+['MBM01350','ALTAN ORGIL DELGUUR','SE','P',''],
+['MBM01776','BOLOR2 ZOOGIIN GAZAR','DG','P',''],
+['MBM01889','BUYNII NARAN BULAG','BH','P',''],
+['MBM01877','NARAN MINI MARKET','BH','A',''],
+['MBM02135','DUURGA DELGUUR','OR','D','Цэрэгбаяр/Tsatsral'],
+['MBM02661','T-MARKET','DU','P',''],
+['MBM02697','UYG MINI MARKET','OR','D','Цэрэгбаяр/Tsatsral'],
+['MAC00342','OIS','DU','D','Идэрболд/Tsatsral'],
+['MBM00808','BOLOR MARKET','SE','P',''],
+['MBM01075','TUGS BARUUN URT','SU','P',''],
+['MBM01578','AVARGIIN BULAG','DG','D','Гэрээт'],
+['MBM01629','BUREN BULAG','KS','P',''],
+['MBM01650','UNI COFFE SHOP','DG','D','Гэрээт'],
+['MBM01774','DELGEREKH','DG','P',''],
+['MBM01824','MONKEY GANG BARBER SHOP','OM','P',''],
+['MBM01834','HAVTSGAI TSOOHOR','UV','P',''],
+['MBM01842','DOLGOON HANGAI','UV','P',''],
+['MBM01870','UMNUGOVI BUUNII HUDALDAA','OM','P',''],
+['MBM01899','BAYNBULAG BUUDAL','BH','D','Tsatsral'],
+['MBM02146','OD','KO','P',''],
+['MBM02164','ANAR MARKET','SU','P',''],
+['MBM02228','DARKHAN ALTAI','GA','P',''],
+['MBM02644','GOVIIN BUMBA','OR','D','Цэрэгбаяр/Tsatsral'],
+['MBM02658','BELEG MARKET','DU','D','Идэрболд/Tsatsral'],
+['MBM02706','TSANGIS DELGUUR','OR','D','Цэрэгбаяр/Tsatsral'],
+['MBM02712','TUGUL DELGUUR','OR','D','Цэрэгбаяр/Tsatsral'],
+['MBM03200','ULAMJLALT EMCHILGEE','OM','P',''],
+['MBM01917','ALTAI MINI MARKET','BH','P',''],
+['MBM02283','AUTO ZASVAR SELBEG','OM','P',''],
+['MBM01879','BAYLAG SUPERMARKET','BH','D','Tsatsral'],
+['MBM01807','BAYNGOBI','OM','P',''],
+['MAC01051','BOTSOT BUBBLE TEA AND BEVERAGE','OR','D','Цэрэгбаяр/Tsatsral'],
+['MBM02682','GOYO MARKET','DU','D','Идэрболд/Tsatsral'],
+['MAC00181','NARAN SARAN BULAG','DU','P',''],
+['MAC00608','SMILE MARKET','DU','D','Идэрболд/SUGAR'],
+['MBM02660','TELMEN DELGUUR','DU','D','Идэрболд/Tsatsral'],
+['MBM02279','TOGLOOM','KS','P',''],
+['MBM01999','TSELMEG','KS','P',''],
+['MAC00767','TUMEN MARKET','GA','P',''],
+['MBM02168','UGTAAL CHANDMANI','DN','P',''],
+['MBM01756','UGUUJ BUUNII TUV','KO','P',''],
+['MBM01673','ULZII MANDAL','BH','D','Tsatsral'],
+['MBM02158','ZURH MARTAHGUI PIRAMID','OR','P',''],
+['MBM02684','SHIREE NUUR','UB','P',''],
+['MBM01647','MINI MARKET','DG','D','Гэрээт'],
+['MAC00558','MONGOL HUUSHUUR','UB','P',''],
+['MAC01111','FAMILY','OR','D','Цэрэгбаяр/Tsatsral'],
+['MBM02651','LOTUS MARKET','OR','N',''],
+['MBM01293','AGAR MARKET','KS','P',''],
+['MBM02693','KHANGAIN BUS KHT','OR','P',''],
+['MBM02623','UYANGA','DU','N',''],
+['MAB00051','JARGALAN DELGUUR','DD','P',''],
+['MBM01538','AZI MINIMARKET','KS','N',''],
+['MBM01452','TSOGT BAYLAG ERDENE','SE','N',''],
+['MAC01336','GAZAR ZOHION BAIGUULALT','OR','P',''],
+['MBM02649','TENGER EEJ','OR','N',''],
+['MBM01827','YSON URLUG SUPERMARKET','OM','P',''],
+['MAC00777','AZ HUR RESTAURANT','OM','A',''],
+['MBM02014','KHUNSNII DELGUUR','UV','A',''],
+['MBM02072','KAGURA','ZA','A',''],
+['MBM01525','TURUUN HUNSNII DELGUUR','DU','W',''],
+['MBM02422','HERLEN DELGUUR','TU','A',''],
+['MBM01495','AUTO UGAALGA','OR','P',''],
+['MAC00408','MINERS MARKET','OM','A',''],
+['MBM03240','AMAR TEESH','DU','N',''],
+['MAC01489','AZ JARGALIIN TUV','UV','A',''],
+['MBM00477','BUMBA','TU','W',''],
+['MBM02617','Enkhjin Supermarket Darkhan','DU','D','Идэрболд/Tsatsral'],
+['MBM01829','ALTGANA DELGUUR','OM','N',''],
+['MBM02869','SHANKH BILLIARD','OM','P',''],
+['MBM01661','PEARL SUVDAN URGOO 2','DG','P',''],
+['MBM02615','LHAM MARKET','DU','A',''],
+['MBM02654','EEJ HAIRHAN','OR','A',''],
+['MAC00300','ECO FOODS MARKET','DU','P',''],
+['MAC00921','ANAR HUNSNII DELGUUR','OR','N',''],
+['MAC00402','Galactic dent','DD','A',''],
+['MBM01493','YSON ERDENE 2 MINIMARKET','SU','N',''],
+['MBM00697','TULGAT KHUNSNII DELGUUR','TU','A',''],
+['MBM01875','SEE MORE','BH','D','Tsatsral'],
+['MBM00776','ARVIJIH','DU','D','Идэрболд/Tsatsral'],
+['MBM01502','TSASTOGTOKH DELGUUR','UVS','N',''],
+['MBM02702','OYU HUNSNII DELGUUR','OR','A',''],
+['MBM02683','TEVKHEN','DU','D','Идэрболд/Tsatsral'],
+['MBM02625','ANAR HUNSNII DELGUUR','DU','D','Идэрболд/Tsatsral'],
+['MBM01636','BILLIARD','BH','N',''],
+['MAC00263','Muruudul market','DU','A',''],
+['MAC00661','UGLUUNII TSAI','DG','A',''],
+['MAC00401','Khool khurgelt','KT','P',''],
+['MAC00415','GOO KHAIRKHAN MARKET','KO','N',''],
+['MBM01577','BET NAIL ROOM','DG','P',''],
+['MAC00336','UNELGEE','KO','A',''],
+['MBM02973','SOR','TU','N',''],
+['MBM02711','SEEN DELGUUR','OR','P',''],
+['MAC01050','OD HUSLEN 2','DU','A',''],
+['MBM01518','MUNKH ERDES','KO','P',''],
+['MAC00853','MONGOL ZOOG','KT','A',''],
+['MBM01792','ARVAI MARKET','KT','P',''],
+['MBM01485','AGNIST HOVD','KO','N',''],
+['MBM02668','DARKHAN ZAKH 15','DU','N',''],
+['MBM02709','EEJ TUV','OR','N',''],
+['MBM01530','BAYANGOL DELGUUR','DU','A',''],
+['MBM01995','HORSHOO SELENGE','SE','N',''],
+['MBM02404','999 DELGUUR','DD','N',''],
+['MBM01195','TUYA','DU','A',''],
+['MBM01856','GOY DELGUUR','OM','A',''],
+['MBM02622','MURUUDUL','DU','N',''],
+['MBM02302','Musashi Japanese Restaurant','DU','A',''],
+['MBM02632','SUUN ZAM','DU','A',''],
+['MAC01334','RIVER LOUNGE','SE','P',''],
+['MBM01440','ANU MALL TUV','DU','D','Идэрболд/Tsatsral'],
+['MBM02452','BULAG XD','KO','A',''],
+['MBM00613','BAYAN UGZ','DD','A',''],
+['MBM02421','BOONII BARAA','UVS','N',''],
+['MAC00779','JUULCHIN TEEWER','DG','A',''],
+['MBM01670','DALAI EEJ KHUDALDAANII TUV2','BH','A',''],
+['MBM01785','DALAI EEJ KHUDALDAANII TUV4','BH','A',''],
+['MBM01880','HUVSHIKH HAIRHAN','BH','A',''],
+['MBM01804','ANAND MURUN DELGUUR','OM','W',''],
+['MBM02189','OCHIR UNDRAA','OM','P',''],
+['MBM03317','IKH KHORGO','AR','A',''],
+['MBM02407','TSERGIIN DELGUUR','DD','P',''],
+['MAC00431','ONLINE SHOP','GA','N',''],
+['MAC00755','RUSLAN GRAND','KO','N',''],
+['MBM02641','MOSKWA 1','OR','P',''],
+['MBM01185','AMAR MARKET','TU','P',''],
+['MBM02737','TUSHIG BAYANCHANDMANI','TU','P',''],
+['MBM02669','DARHAN HUNS HUDALDAA','DU','A',''],
+['MBM00813','LUNGIIN JIGUUR','TU','N',''],
+['MBM01805','MONGOL ZOOG','OM','A',''],
+['MBM02050','SHATHUUN TUGEEH','ZA','N',''],
+['MBM01760','VIBE','DG','D','Гэрээт'],
+['MBM01539','BULGAN ZOOG','BU','N',''],
+['MBM02775','TUSHIG HOOLNII GAZAR','TU','A',''],
+['MBM01697','HATAVCH TUN FARM','SU','W',''],
+['MBM01799','ONON MINI MARKET','KT','P',''],
+['MAC00943','NARA ONLINE SHOP','ZA','N',''],
+['MAC01156','TUSHIG','TU','A',''],
+['MBM01907','BUGAT','BH','A',''],
+['MBM01688','NOMIN MINI MARKET','DD','P',''],
+['MBM01724','MG PHONE SHOP','DU','A',''],
+['MBM01891','TSAGAAN HAIRHAN','BH','P',''],
+['MBM01386','DEEJ MARKET','DD','W',''],
+['MBM02187','ROYAL MARKET','OR','D','Цэрэгбаяр/Tsatsral'],
+['MBM02699','BAYAN-UUL SUPERMARKET','OR','A',''],
+['MBM01763','SMILE MARKET','KO','N',''],
+['MAC00435','BAYAN HAN HOHII','DU','A',''],
+['MAC00606','GREEN EYE BIO DELGUUR','UB','P',''],
+['MAC00919','IKH MURUN 1','DU','P',''],
+['MBM01797','OYU TAIHAR','KT','P',''],
+['MBM01214','DELGEREKH SHIM','KS','A',''],
+['MAC00296','TUNGAA','DU','A',''],
+['MBM01045','TUV MARKET','AR','D','Гэрээт'],
+['MBM01784','DALAI EEJ KHUDALDAANII TUV3','BH','A',''],
+['MBM01859','KHANGAI MARKET','OM','N',''],
+['MBM01612','MUNKHDUUREN MART','DG','N',''],
+['MBM02703','MOILT 2','OR','N',''],
+['MBM01898','4 BERKH','BH','D','Tsatsral'],
+['MBM01894','BAYAN MANDAL','BH','D','Tsatsral'],
+['MBM01593','365 RESTAURANTS','KS','P',''],
+['MBM01472','BAYANBARAAT ORGIL','TU','W',''],
+['MBM02045','HUMUL','DG','A',''],
+['MBM02232','KHOS SHAGAI','DU','A',''],
+['MBM01344','BULAG MARKET','TU','P',''],
+['MBM02859','SHNAIDERS','TU','W',''],
+['MAC01483','BAYN ZOOG','TU','A',''],
+['MBM01548','TAIGA KARAOKE','KS','P',''],
+['MAC00109','BAGAJ TUREES','OR','A',''],
+['MAC00219','HUUHDIIN HUVTSAS','GS','N',''],
+['MBM01552','HUHUL UYALAN','KT','P',''],
+['MBM03176','BADMAARAG SUPERMARKET','SU','A',''],
+['MAC00227','Superfit Gym','OR','A',''],
+['MBM01631','MAAMUU NAASH IR','KS','P',''],
+['MBM01521','BAYALAG BULAG SUPERMARKET','BH','N',''],
+['MBM00672','KH MARKET','KS','P',''],
+['MBM02695','SOYOOLJ DELGUUR','OR','N',''],
+['MBM01897','DALAI EEJ KHUDALDAANII TUV1','BH','A',''],
+['MBM03105','MY CHICKEN','OR','A',''],
+['MBM02657','TSATSRALT TUV 2','DU','A',''],
+['MAC00324','DORNOGOVI MINIMAL SONGOLT','DG','N',''],
+['MAC00904','BG MARKET','KT','P',''],
+['MAC00801','1 TSEGEES HURGELT','DG','A',''],
+['MBM01719','ZAYA HUNSNII DELGUUR','DU','N',''],
+['MBM01723','MUNKH TSETSEG','DU','A',''],
+['MBM02798','TSETSEG MARKET','SE','A',''],
+['MBM01169','MANDALAA KHUNSNII DELGUUR','SU','P',''],
+['MBM01878','KHULEG','BH','A',''],
+['MBM01503','BATSUMBER UGUUJ2','TU','A',''],
+['MBM00089','VINIATO LLC','TU','P',''],
+['MAC00218','MALIIN TEJEEL UILCHILGEE','SE','A',''],
+['MBM02679','ITGELT MURUN MINI MARKET','DU','P',''],
+['MAC00562','KHANUI KHUNSNII ELGUUR','BU','P',''],
+['MAC00063','Suwdan market','BU','N',''],
+['MBM01680','COZY COMES CAFE','DG','P',''],
+['MBM02868','FAMILIA SADO MARKET','OR','A',''],
+['MBM01602','ROMEO DELGUUR','DU','D','Идэрболд/BABU'],
+['MAC00064','Orgil-1 supermarket','KS','A',''],
+['MBM02587','MYANGAD YESUNERDENE','KO','P',''],
+['MBM01500','BINDER MT','KT','A',''],
+['MBM01492','KHISHIG MINI MARKET','SU','P',''],
+['MBM03222','KHULAAKHAN KIDS SHOP','KO','P',''],
+['MBM02747','OLON DELGUUR','OR','P',''],
+['MAC00344','NOMUUN','KS','P',''],
+['MBM03251','G MARKET','DU','D','Идэрболд/Tsatsral'],
+['MBM01361','TALIN MONGOL DELGUUR','KS','A',''],
+['MBM00805','UNDRAKH SUNDER','TU','N',''],
+['MBM01660','GANGNAM HUVTSAS','DG','W',''],
+['MAB00046','STYLESHOP','DG','P',''],
+['MBM01671','NURAG HAIRHAN','BH','P',''],
+['MBM02595','DJB PRO MART','GA','N',''],
+['MBM02696','BOSGOT TRADE','OR','A',''],
+['MBM01657','GERELT OD','DG','A',''],
+['MBM01749','NORVAN','DG','D','Гэрээт'],
+['MAC00554','BOLOR KHUR UV','UV','P',''],
+['MBM01488','GURVAN ERDENE SUPERMARKET','GA','P',''],
+['MBM00757','FAMILY MART','OR','P',''],
+['MBM01536','TAIGA BAR LOUNGE','KS','P',''],
+['MAB00052','URGAH NARAN','DU','A',''],
+['MAC00686','UNDARGA','KS','P',''],
+['MAC00994','KHUDALDAA','TU','P',''],
+['MBM01671','NURAG HAIRHAN','BH','P',''],
+['MBM02737','TUSHIG BAYANCHANDMANI','TU','P',''],
+['MBM01169','MANDALAA KHUNSNII DELGUUR','SU','P',''],
+['MBM01671','NURAG HAIRHAN','BH','P',''],
+['MBM02737','TUSHIG BAYANCHANDMANI','TU','P',''],
+['MBM03091','USUKH AZ MARKET','DU','D','Идэрболд/Tsatsral'],
+['MBM02918','NUR','DU','D','Идэрболд/Tsatsral'],
+['MBM02677','ZENDMEN','DU','D','Идэрболд'],
+['MBM01838','SANGIIN DALAI DELGUUR','UV','D','Tsatsral'],
+['MBM01842','DOLGOON HANGAI','UV','D','BABU'],
+['MBM00830','DELGER KHAAN','OR','D','Баасанжаргал/Tsatsral'],
+['MBM01843','OCHIRT NOYON HAIRHAN','UV','P',''],
+['MBM02789','JIMSNII DELGUUR','DU','P',''],
+['MBM01840','PB3M246L20782','UV','D','Tsatsral'],
+['MBM01841','PB3M246L20838','UV','D','Tsatsral'],
+['MBM01837','PB3M246L20253','UV','D','Tsatsral'],
+['MBM02661','T-MARKET','DU','P',''],
+['MAB00041','DELGERKHAAN','DU','P',''],
+['MAC01080','SODON GER AKHUI','BH','P',''],
+['MBM01811','ELBEG KHUNSNII DELGUUR','OM','P',''],
+['MAC00291','SUUNZAM HUNSNII DELGUUR','DU','P',''],
+['MAC01555','257TCASQ400580608984','UV','P',''],
+['MBM01910','BAYN UNDARGA DELGUUR','BH','P',''],
+['MAC01071','KHOOL UNDAA US','DG','P',''],
+['MBM01677','GOO SAIHNII DELGUUR','DG','D','Гэрээт'],
+['MAC00716','BARILGA UGSRALT','DG','P',''],
+['MBM01916','MINII DELGUUR','BH','P',''],
+['MBM03240','AMAR TEESH','DU','P',''],
+];
+
+const REGION_NAME = {AR:'Архангай',BO:'Баян-Өлгий',BH:'Баянхонгор',BU:'Булган',GA:'Говь-Алтай',GS:'Говьсүмбэр',
+DU:'Дархан-Уул',DG:'Дорноговь',DD:'Дорнод',DN:'Дундговь',ZA:'Завхан',OR:'Орхон',UV:'Өвөрхангай',OM:'Өмнөговь',
+SE:'Сэлэнгэ',SU:'Сүхбаатар',TU:'Төв',UVS:'Увс',KO:'Ховд',KS:'Хөвсгөл',KT:'Хэнтий'};
+const STATUS_LABEL = {D:'Хураалгасан',P:'Хураалгах',N:'Утсаа аваагүй',W:'Буруу дугаар',A:'Ашиглана'};
+const STATUS_COLOR_VAR = {D:'--teal',P:'--gold',N:'--muted2',W:'--coral',A:'--blue'};
+
+let region = 'RURAL';
+let openRegion = null;
+
+function setRegion(r){
+  region = r;
+  document.getElementById('tab-ub').setAttribute('aria-pressed', r==='UB');
+  document.getElementById('tab-rural').setAttribute('aria-pressed', r==='RURAL');
+  openRegion = null;
+  render();
+}
+
+function regionRows(key){
+  return ROWS.filter(r => (r[2]==='UB') === (key==='UB'));
+}
+
+function statsFor(rows){
+  const done = rows.filter(r=>r[3]==='D').length;
+  const pending = rows.filter(r=>r[3]==='P').length;
+  const noanswer = rows.filter(r=>r[3]==='N').length;
+  const wrong = rows.filter(r=>r[3]==='W').length;
+  const active = rows.filter(r=>r[3]==='A').length;
+  const target = done + pending + noanswer + wrong;
+  return {done,pending,noanswer,wrong,active,target,total:rows.length};
+}
+
+function render(){
+  const rows = regionRows(region);
+  const s = statsFor(rows);
+
+  document.getElementById('kpi-total').textContent = rows.length;
+  document.getElementById('kpi-done').textContent = s.done;
+  document.getElementById('kpi-pending').textContent = s.pending;
+  document.getElementById('kpi-problem').textContent = s.noanswer + s.wrong;
+
+  const pct = s.target > 0 ? Math.round(s.done / s.target * 100) : 0;
+  document.getElementById('gauge-pct').textContent = pct + '%';
+  document.getElementById('gauge-fill').style.width = pct + '%';
+  document.getElementById('gauge-target').textContent = s.target;
+  document.getElementById('gauge-done').textContent = s.done;
+
+  const tbody = document.getElementById('region-tbody');
+  tbody.innerHTML = '';
+
+  if(region === 'UB'){
+    // Too few UB records for an aimag-style breakdown — list them directly.
+    rows.forEach((r,i)=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${i+1}</td><td class="region-name">${r[1]}</td><td colspan="3" style="text-align:right">
+        <span class="pill ${r[3]}">${STATUS_LABEL[r[3]]}</span></td>`;
+      tbody.appendChild(tr);
+    });
+    return;
+  }
+
+  const byRegion = {};
+  rows.forEach(r=>{ (byRegion[r[2]] = byRegion[r[2]] || []).push(r); });
+  const regions = Object.keys(byRegion)
+    .map(k=>({key:k, name:REGION_NAME[k]||k, rows:byRegion[k], stats:statsFor(byRegion[k])}))
+    .sort((a,b)=> b.stats.target - a.stats.target || b.stats.total - a.stats.total);
+
+  regions.forEach((rg,i)=>{
+    const pct = rg.stats.target>0 ? Math.round(rg.stats.done/rg.stats.target*100) : 0;
+    const tr = document.createElement('tr');
+    tr.dataset.key = rg.key;
+    tr.innerHTML = `
+      <td>${i+1}</td>
+      <td class="region-name">${rg.name}</td>
+      <td class="num">${rg.stats.target}</td>
+      <td class="num">${rg.stats.done}</td>
+      <td><div class="bar-cell"><div class="mini-track"><div class="mini-fill" style="width:${pct}%;background:var(--teal)"></div></div><span class="pctval num">${pct}%</span></div></td>
+    `;
+    tr.addEventListener('click', ()=>{
+      openRegion = openRegion === rg.key ? null : rg.key;
+      render();
+    });
+    if(openRegion === rg.key) tr.classList.add('open');
+    tbody.appendChild(tr);
+
+    if(openRegion === rg.key){
+      const dtr = document.createElement('tr');
+      dtr.className = 'detail-row';
+      const sortedRows = [...rg.rows].sort((a,b)=>{
+        const order = {P:0,N:1,W:2,D:3,A:4};
+        return order[a[3]]-order[b[3]];
+      });
+      const body = sortedRows.map(r=>`
+        <tr>
+          <td>${r[0]}</td>
+          <td>${r[1]}</td>
+          <td><span class="pill ${r[3]}">${STATUS_LABEL[r[3]]}</span></td>
+          <td>${r[4] || '—'}</td>
+        </tr>`).join('');
+      dtr.innerHTML = `<td colspan="5"><div class="detail-wrap show">
+        <table class="detail-table">
+          <thead><tr><th>ID</th><th>Нэр</th><th>Төлөв</th><th>Хураасан ажилтан</th></tr></thead>
+          <tbody>${body}</tbody>
+        </table>
+      </div></td>`;
+      tbody.appendChild(dtr);
+    }
+  });
+}
+
+render();
+</script>
