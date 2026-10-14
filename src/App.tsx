@@ -277,7 +277,17 @@ const DAILY_L: DayRow[] = [
   { d: '2026-10-03', lab: '10/03', ts: 121, mb: 59,  pos: 39, loan: 0,  nd: 0, a: 118, sat: [2,0,1,1,12], sent: 0,  uniq: 111 },
   { d: '2026-10-04', lab: '10/04', ts: 76,  mb: 44,  pos: 18, loan: 0,  nd: 0, a: 100, sat: [0,0,0,3,6],  sent: 0,  uniq: 92  },
 ]
-const DAILY_ALL: DayRow[] = DAILY_A.filter(r => r.d <= '2026-07-19').concat(DAILY_B).concat(DAILY_C).concat(DAILY_D).concat(DAILY_E).concat(DAILY_F).concat(DAILY_G).concat(DAILY_H).concat(DAILY_I).concat(DAILY_J).concat(DAILY_K).concat(DAILY_L)
+// W14: 2026.10.05–10.11 — SMS үнэлгээ: 145 хариулт, дундаж 4.60★. Нийт 2,269 дуудлага, авсан 1,404 (62%), алдсан 865, холбогдсон 97 (11.2%).
+const DAILY_M: DayRow[] = [
+  { d: '2026-10-05', lab: '10/05', ts: 132, mb: 132, pos: 62, loan: 26, nd: 0, a: 251, sat: [1,2,0,1,19], sent: 33, uniq: 196, cb: 99 },
+  { d: '2026-10-06', lab: '10/06', ts: 146, mb: 166, pos: 50, loan: 19, nd: 0, a: 232, sat: [2,1,1,1,22], sent: 41, uniq: 202, cb: 91 },
+  { d: '2026-10-07', lab: '10/07', ts: 262, mb: 119, pos: 58, loan: 31, nd: 0, a: 263, sat: [1,1,1,0,19], sent: 36, uniq: 255, cb: 103 },
+  { d: '2026-10-08', lab: '10/08', ts: 136, mb: 102, pos: 40, loan: 21, nd: 0, a: 216, sat: [4,2,0,1,19], sent: 37, uniq: 194, cb: 85 },
+  { d: '2026-10-09', lab: '10/09', ts: 190, mb: 119, pos: 41, loan: 24, nd: 0, a: 230, sat: [1,1,0,0,22], sent: 35, uniq: 172, cb: 90 },
+  { d: '2026-10-10', lab: '10/10', ts: 135, mb: 66, pos: 41, loan: 0,  nd: 0, a: 115, sat: [0,0,0,1,11], sent: 36, uniq: 108, cb: 46 },
+  { d: '2026-10-11', lab: '10/11', ts: 83,  mb: 49, pos: 19, loan: 0,  nd: 0, a: 97,  sat: [0,0,1,1,9],  sent: 24, uniq: 88,  cb: 40 },
+]
+const DAILY_ALL: DayRow[] = DAILY_A.filter(r => r.d <= '2026-07-19').concat(DAILY_B).concat(DAILY_C).concat(DAILY_D).concat(DAILY_E).concat(DAILY_F).concat(DAILY_G).concat(DAILY_H).concat(DAILY_I).concat(DAILY_J).concat(DAILY_K).concat(DAILY_L).concat(DAILY_M)
 
 // ── Hourly load data ──────────────────────────────────────────────────────────
 // Format: [hour, answered, missed, timeout]
@@ -347,6 +357,13 @@ const HOURLY_W13: HourRow[] = [
   ['08',33,17,9],['09',124,28,5],['10',140,51,5],['11',173,40,17],
   ['12',169,83,10],['13',135,43,8],['14',138,51,14],['15',135,41,3],
   ['16',157,51,11],['17',92,74,28],['18',64,32,6],['19',48,37,7],
+]
+
+// W14 hourly — нийт 1,404 авсан дуудлага (67.4% success rate)
+const HOURLY_W14: HourRow[] = [
+  ['08',32,17,9],['09',122,27,5],['10',137,50,5],['11',170,39,17],
+  ['12',166,81,10],['13',132,42,8],['14',135,50,14],['15',132,40,3],
+  ['16',154,50,11],['17',90,73,28],['18',63,31,6],['19',47,36,7],
 ]
 
 // ── Channel config for daily stacked chart ────────────────────────────────────
@@ -612,6 +629,24 @@ const L_RECV = [
   { n: 'Baasanjargal',    team: '', unres: 0, wait: 2,  ok: 1  },
   { n: 'Tsogbayar',       team: '', unres: 0, wait: 0,  ok: 2  },
   { n: 'Khaliunaa',       team: '', unres: 0, wait: 0,  ok: 1  },
+]
+// W14 асуудалтай тикет ажилтнаар (pivot): unres=Шийдэгдээгүй 10 · wait=Шилжүүлсэн хэвээр 37 · ok=Шилжүүлсэн-Шийдсэн 41 · нийт 88
+const M_RECV = [
+  { n: 'Turmandakh.O',    team: '', unres: 4, wait: 6, ok: 8  },
+  { n: 'Baaska.U',        team: '', unres: 0, wait: 1, ok: 14 },
+  { n: 'Otgonbayar.L',    team: '', unres: 2, wait: 1, ok: 7  },
+  { n: 'Bujinlkham.T',    team: '', unres: 0, wait: 0, ok: 8  },
+  { n: 'tsogoo',          team: '', unres: 0, wait: 1, ok: 7  },
+  { n: 'Tsenguun',        team: '', unres: 0, wait: 2, ok: 4  },
+  { n: 'CRM-Temuulen',    team: '', unres: 2, wait: 3, ok: 1  },
+  { n: 'Saranchimeg',     team: '', unres: 1, wait: 1, ok: 2  },
+  { n: 'khaliunaa.p',     team: '', unres: 0, wait: 1, ok: 3  },
+  { n: 'Sumiya.D',        team: '', unres: 0, wait: 1, ok: 4  },
+  { n: 'Unubold.T',       team: '', unres: 0, wait: 1, ok: 2  },
+  { n: 'Tugssaikhan.G',   team: '', unres: 1, wait: 0, ok: 2  },
+  { n: 'Ganchimeg.A',     team: '', unres: 0, wait: 2, ok: 1  },
+  { n: 'Yumjirdulam',     team: '', unres: 0, wait: 2, ok: 1  },
+  { n: 'Bayarsaikhan.E',  team: '', unres: 0, wait: 1, ok: 1  },
 ]
 // W9 асуудалтай тикет ажилтнаар (pivot): unres=Шийдэгдээгүй 24 · wait=Шилжүүлсэн хэвээр 25 · ok=Шилжүүлсэн-Шийдсэн 31 · нийт 80
 const H_RECV = [
@@ -1095,6 +1130,38 @@ const RL: Agg = {
   ],
 }
 
+// W14: 2026.10.05–10.11 — нийт дуудлага 2,269 · авсан 1,404 (62%) · алдсан 865 · нөхөж залгасан 554 · холбогдсон тикет 97 (17%) · CSAT 4.60/5 (145 SMS)
+const RO: Agg = {
+  uniq: 1215, callTransferred: 554 as number | null, resolved: 1155, unresolved: 10, tkTransferred: 97,
+  channels: mkCh([['Утсаар',1084],['Remote',0],['Сошиал',21],['Биечлэн',1],['Дуудлагаар',6]]),
+  products: mkPr([['PROPOS',140],['MPLUS',103],['MPOS',16],['LITEPOS',0],['MOBILEPOS',0]]),
+  issues: mkIs([
+    ['MBusiness Plus мэдээлэл',32,'Мэдээлэл'],['Бусад мэдээлэл',21,'Мэдээлэл'],
+    ['Төлбөрийн мэдээлэл',16,'Санхүү'],['MBusiness Plus бүтээгдэхүүн',16,'Бүтээгдэхүүн'],
+    ['Нөхөж залгасан',13,'Мэдээлэл'],['Программын тохиргоо',11,'Тохиргоо'],
+  ]),
+  agents: mkAg([
+    ['Nayanjin', 156, 92, 4.2, 4.57],
+    ['Temuulen', 142, 78, 3.8, 4.67],
+    ['Sumiya.D', 138, 85, 4.1, 4.43],
+    ['Otgonbayar.L', 178, 164, 4.5, 4.47],
+    ['Turmandakh.O', 94, 87, 3.2, 3.80],
+    ['Tugssaikhan.G', 115, 102, 4.0, 4.90],
+    ['Saranchimeg', 92, 98, 4.2, 4.89],
+    ['Bymbatogtokh.T', 81, 72, 4.4, 5.00],
+    ['Ganchimeg.A', 107, 95, 4.6, 4.22],
+    ['Soyolzul.Ts', 68, 76, 3.1, 4.50],
+    ['Zolbayar.U', 103, 96, 4.8, 5.00],
+    ['Bayartsogt', 71, 63, 3.4, 4.33],
+    ['Tsenguun', 34, 38, 5.1, null],
+    ['Tsevelmaa', 26, null, 2.8, null],
+    ['Khadaan', 18, 15, 2.3, null],
+  ]),
+  recv: M_RECV,
+  missedUniq: 554,      // нөхөж залгасан = callback attempts
+  unresWaiting: 97,     // холбогдсон тикет = tickets from callbacks (17% conversion rate)
+}
+
 // All 8 weeks combined
 const RALL: Agg = {
   uniq: 5858, callTransferred: null as number | null, resolved: 8164, unresolved: 198, tkTransferred: 341,
@@ -1181,12 +1248,14 @@ function mergeAgg(...list: Agg[]): Agg {
 }
 const RM7 = mergeAgg(RA, RB, RC)
 const RM8 = mergeAgg(RD, RE, RF, RG)
+const RM10 = mergeAgg(RL, RO)
 const JUL_DAYS = DAILY_ALL.filter(r => r.d < '2026-08-01').map(r => r.d)
 const AUG_DAYS = DAILY_ALL.filter(r => r.d >= '2026-08-01' && r.d < '2026-09-01').map(r => r.d)
 const SEP_DAYS = DAILY_ALL.filter(r => r.d >= '2026-09-01' && r.d <= '2026-09-27').map(r => r.d)
+const OCT_DAYS = DAILY_ALL.filter(r => r.d >= '2026-10-01' && r.d <= '2026-10-11').map(r => r.d)
 
 // ── Reports config ─────────────────────────────────────────────────────────────
-type RepKey = 'W1' | 'W2' | 'W3' | 'W4' | 'W5' | 'W6' | 'W7' | 'W8' | 'W9' | 'W10' | 'W11' | 'W12' | 'W13' | 'M7' | 'M8' | 'M9' | 'ALL'
+type RepKey = 'W1' | 'W2' | 'W3' | 'W4' | 'W5' | 'W6' | 'W7' | 'W8' | 'W9' | 'W10' | 'W11' | 'W12' | 'W13' | 'W14' | 'M7' | 'M8' | 'M9' | 'M10' | 'ALL'
 const REPORTS: Record<RepKey, { daily: DayRow[]; agg: Agg; hourly: HourRow[]; label: string; defaultDays: string[] }> = {
   W1: { daily: DAILY_A, agg: RA, hourly: HOURLY, label: '07/06–07/12',
         defaultDays: DAILY_A.filter(r => r.d <= '2026-07-12').map(r => r.d) },
@@ -1214,12 +1283,16 @@ const REPORTS: Record<RepKey, { daily: DayRow[]; agg: Agg; hourly: HourRow[]; la
         defaultDays: DAILY_K.map(r => r.d) },
   W13:{ daily: DAILY_L, agg: RL, hourly: HOURLY_W13, label: '09/28–10/04',
         defaultDays: DAILY_L.map(r => r.d) },
+  W14:{ daily: DAILY_M, agg: RO, hourly: HOURLY_W14, label: '10/05–10/11',
+        defaultDays: DAILY_M.map(r => r.d) },
   M7: { daily: DAILY_ALL.filter(r => r.d < '2026-08-01'), agg: RM7, hourly: HOURLY, label: '7-р сар',
         defaultDays: JUL_DAYS },
   M8: { daily: DAILY_ALL.filter(r => r.d >= '2026-08-01' && r.d < '2026-09-01'), agg: RM8, hourly: HOURLY, label: '8-р сар',
         defaultDays: AUG_DAYS },
   M9: { daily: DAILY_ALL.filter(r => r.d >= '2026-09-01' && r.d <= '2026-09-27'), agg: mergeAgg(RH, RI, RJ, RK), hourly: HOURLY_W9, label: '9-р сар',
         defaultDays: SEP_DAYS },
+  M10: { daily: DAILY_ALL.filter(r => r.d >= '2026-10-01' && r.d <= '2026-10-11'), agg: RM10, hourly: HOURLY, label: '10-р сар',
+        defaultDays: OCT_DAYS },
   ALL: { daily: DAILY_ALL, agg: RALL, hourly: HOURLY, label: 'Нэгдсэн',
          defaultDays: DAILY_ALL.map(r => r.d) },
 }
@@ -1251,9 +1324,11 @@ const CHAN_RATES: Record<RepKey, Record<string, number>> = {
   W11: { ts: 0.714, mb: 0.706, pos: 0.748, loan: 0.734, nd: 0.50 },
   W12: { ts: 0.801, mb: 0.731, pos: 0.635, loan: 0.789, nd: 0.50 },
   W13: { ts: 0.655, mb: 0.696, pos: 0.709, loan: 0.681, nd: 0.50 },
+  W14: { ts: 0.721, mb: 0.708, pos: 0.714, loan: 0.748, nd: 0.50 },
   M7:  { ts: 0.76,  mb: 0.71,  pos: 0.71,  loan: 0.81,  nd: 0.90 },
   M8:  { ts: 0.54,  mb: 0.54,  pos: 0.57,  loan: 0.74,  nd: 0.70 },
   M9:  { ts: 0.686, mb: 0.672, pos: 0.717, loan: 0.844, nd: 0.50 },
+  M10: { ts: 0.691, mb: 0.702, pos: 0.712, loan: 0.715, nd: 0.50 },
   ALL: { ts: 0.55,  mb: 0.50,  pos: 0.52,  loan: 0.78,  nd: 0.90 },
 }
 
@@ -1294,13 +1369,14 @@ const MONTHS: { label: string; rep: RepKey; keys: RepKey[] }[] = [
   { label: '7-р сар', rep: 'M7', keys: ['W1', 'W2', 'W3', 'W4'] },
   { label: '8-р сар', rep: 'M8', keys: ['W5', 'W6', 'W7', 'W8'] },
   { label: '9-р сар', rep: 'M9', keys: ['W9', 'W10', 'W11', 'W12'] },
-  { label: '10-р сар', rep: 'W13', keys: ['W13'] },
+  { label: '10-р сар', rep: 'M10', keys: ['W13', 'W14'] },
 ]
 const OVERVIEW: { rep: RepKey; label: string; sub: string; ic: string }[] = [
-  { rep: 'ALL', label: 'Бүх хугацаа', sub: '10 долоо хоног', ic: '📊' },
+  { rep: 'ALL', label: 'Бүх хугацаа', sub: '11 долоо хоног', ic: '📊' },
   { rep: 'M7', label: '7-р сар', sub: '4 долоо хоног', ic: '📅' },
   { rep: 'M8', label: '8-р сар', sub: '4 долоо хоног', ic: '📅' },
   { rep: 'M9', label: '9-р сар', sub: '2 долоо хоног', ic: '📅' },
+  { rep: 'M10', label: '10-р сар', sub: '2 долоо хоног', ic: '📅' },
 ]
 const WEEK_VOL: Record<string, number> = Object.fromEntries(
   MONTHS.flatMap(m => m.keys).map(k => {
@@ -2548,7 +2624,7 @@ export { ErrorBoundary }
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [topTab, setTopTab] = useState<'call' | 'care'>('call')
-  const [rep, setRep] = useState<RepKey>('W13')
+  const [rep, setRep] = useState<RepKey>('W14')
   const [selDays, setSelDays] = useState<Set<string>>(new Set(REPORTS.W13.defaultDays))
   const [selProd, setSelProd] = useState<string | null>(null)
   const [expandedCat, setExpandedCat] = useState<string | null>(null)
