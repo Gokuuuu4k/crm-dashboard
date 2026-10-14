@@ -277,15 +277,15 @@ const DAILY_L: DayRow[] = [
   { d: '2026-10-03', lab: '10/03', ts: 121, mb: 59,  pos: 39, loan: 0,  nd: 0, a: 118, sat: [2,0,1,1,12], sent: 0,  uniq: 111 },
   { d: '2026-10-04', lab: '10/04', ts: 76,  mb: 44,  pos: 18, loan: 0,  nd: 0, a: 100, sat: [0,0,0,3,6],  sent: 0,  uniq: 92  },
 ]
-// W14: 2026.10.05–10.11 — SMS үнэлгээ: 145 хариулт, дундаж 4.60★. Нийт 2,269 дуудлага, авсан 1,404 (62%), алдсан 865, холбогдсон 97 (11.2%).
+// W14: 2026.10.05–10.11 — SMS үнэлгээ: 145 хариулт, дундаж 4.60★. Нийт 2,269 дуудлага, авсан 1,404 (62%), алдсан 865, нөхөж залгасан 554, холбогдсон тикет 97 (17.5%).
 const DAILY_M: DayRow[] = [
-  { d: '2026-10-05', lab: '10/05', ts: 132, mb: 132, pos: 62, loan: 26, nd: 0, a: 251, sat: [1,2,0,1,19], sent: 33, uniq: 196, cb: 99 },
-  { d: '2026-10-06', lab: '10/06', ts: 146, mb: 166, pos: 50, loan: 19, nd: 0, a: 232, sat: [2,1,1,1,22], sent: 41, uniq: 202, cb: 91 },
-  { d: '2026-10-07', lab: '10/07', ts: 262, mb: 119, pos: 58, loan: 31, nd: 0, a: 263, sat: [1,1,1,0,19], sent: 36, uniq: 255, cb: 103 },
-  { d: '2026-10-08', lab: '10/08', ts: 136, mb: 102, pos: 40, loan: 21, nd: 0, a: 216, sat: [4,2,0,1,19], sent: 37, uniq: 194, cb: 85 },
-  { d: '2026-10-09', lab: '10/09', ts: 190, mb: 119, pos: 41, loan: 24, nd: 0, a: 230, sat: [1,1,0,0,22], sent: 35, uniq: 172, cb: 90 },
-  { d: '2026-10-10', lab: '10/10', ts: 135, mb: 66, pos: 41, loan: 0,  nd: 0, a: 115, sat: [0,0,0,1,11], sent: 36, uniq: 108, cb: 46 },
-  { d: '2026-10-11', lab: '10/11', ts: 83,  mb: 49, pos: 19, loan: 0,  nd: 0, a: 97,  sat: [0,0,1,1,9],  sent: 24, uniq: 88,  cb: 40 },
+  { d: '2026-10-05', lab: '10/05', ts: 132, mb: 132, pos: 62, loan: 26, nd: 0, a: 251, sat: [1,2,0,1,19], sent: 33, uniq: 196, cb: 99, cbNeed: 17 },
+  { d: '2026-10-06', lab: '10/06', ts: 146, mb: 166, pos: 50, loan: 19, nd: 0, a: 232, sat: [2,1,1,1,22], sent: 41, uniq: 202, cb: 91, cbNeed: 16 },
+  { d: '2026-10-07', lab: '10/07', ts: 262, mb: 119, pos: 58, loan: 31, nd: 0, a: 263, sat: [1,1,1,0,19], sent: 36, uniq: 255, cb: 103, cbNeed: 18 },
+  { d: '2026-10-08', lab: '10/08', ts: 136, mb: 102, pos: 40, loan: 21, nd: 0, a: 216, sat: [4,2,0,1,19], sent: 37, uniq: 194, cb: 85, cbNeed: 15 },
+  { d: '2026-10-09', lab: '10/09', ts: 190, mb: 119, pos: 41, loan: 24, nd: 0, a: 230, sat: [1,1,0,0,22], sent: 35, uniq: 172, cb: 90, cbNeed: 16 },
+  { d: '2026-10-10', lab: '10/10', ts: 135, mb: 66, pos: 41, loan: 0,  nd: 0, a: 115, sat: [0,0,0,1,11], sent: 36, uniq: 108, cb: 46, cbNeed: 8 },
+  { d: '2026-10-11', lab: '10/11', ts: 83,  mb: 49, pos: 19, loan: 0,  nd: 0, a: 97,  sat: [0,0,1,1,9],  sent: 24, uniq: 88,  cb: 40, cbNeed: 7 },
 ]
 const DAILY_ALL: DayRow[] = DAILY_A.filter(r => r.d <= '2026-07-19').concat(DAILY_B).concat(DAILY_C).concat(DAILY_D).concat(DAILY_E).concat(DAILY_F).concat(DAILY_G).concat(DAILY_H).concat(DAILY_I).concat(DAILY_J).concat(DAILY_K).concat(DAILY_L).concat(DAILY_M)
 
@@ -1132,7 +1132,7 @@ const RL: Agg = {
 
 // W14: 2026.10.05–10.11 — нийт дуудлага 2,269 · авсан 1,404 (62%) · алдсан 865 · нөхөж залгасан 554 · холбогдсон тикет 97 (17%) · CSAT 4.60/5 (145 SMS)
 const RO: Agg = {
-  uniq: 1215, callTransferred: 554 as number | null, resolved: 1155, unresolved: 10, tkTransferred: 97,
+  uniq: 1215, callTransferred: 97 as number | null, resolved: 1155, unresolved: 10, tkTransferred: 88,
   channels: mkCh([['Утсаар',1084],['Remote',0],['Сошиал',21],['Биечлэн',1],['Дуудлагаар',6]]),
   products: mkPr([['PROPOS',140],['MPLUS',103],['MPOS',16],['LITEPOS',0],['MOBILEPOS',0]]),
   issues: mkIs([
