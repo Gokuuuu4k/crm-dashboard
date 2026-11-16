@@ -564,10 +564,20 @@ img, svg, table { max-width: 100%; }
   .reveal { opacity: 1 !important; transform: none !important; }
 }
 
+/* Mline POS: KPI card (left) + agent table card (right) */
+.mline { grid-template-columns: minmax(240px, 1fr) 2.6fr; }
+.mline-kpis { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+@media (max-width: 1080px) {
+  .mline-kpis { display: grid; grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 380px) {
+  .mline-kpis { grid-template-columns: 1fr; }
+}
+
 /* Tablet: stack the wide multi-column sections, keep KPI cards in a 2x2 grid */
 @media (max-width: 1080px) {
   .kpis { grid-template-columns: repeat(2, 1fr); }
-  .mid, .charts, .two, .levels-prod, .issues-err { grid-template-columns: 1fr; }
+  .mid, .charts, .two, .levels-prod, .issues-err, .mline { grid-template-columns: 1fr; }
   body { padding: 20px 20px 40px; }
 }
 

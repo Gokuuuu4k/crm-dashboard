@@ -92,7 +92,7 @@ const C = {
 }
 const CHCOL = [C.blue, C.teal, C.violet, C.gold, C.coral]
 const PRCOL = [C.gold, C.teal, C.blue, C.violet, C.coral]
-const LVCOL = [C.teal, C.gold, C.coral]
+const LVCOL = [C.teal, C.gold, C.coral, C.blue]
 const mkCh = (a: [string, number][]) => a.map((x, i) => ({ n: x[0], v: x[1], c: CHCOL[i % CHCOL.length] }))
 const mkPr = (a: [string, number][]) => a.map((x, i) => ({ n: x[0], v: x[1], c: PRCOL[i % PRCOL.length] }))
 const mkLv = (a: [string, number][]) => a.map((x, i) => ({ n: x[0], v: x[1], c: LVCOL[i % LVCOL.length] }))
@@ -337,7 +337,23 @@ const DAILY_P: DayRow[] = [
   { d: '2026-10-31', lab: '10/31', ts: 97,  mb: 67,  pos: 57,  loan: 0,  nd: 0, a: 145, sat: [0,1,0,0,10], sent: 161, cb: 32, uniq: 126 },
   { d: '2026-11-01', lab: '11/01', ts: 53,  mb: 58,  pos: 78,  loan: 0,  nd: 0, a: 128, sat: [0,0,0,0,17], sent: 142, cb: 13, uniq: 135 },
 ]
-const DAILY_ALL: DayRow[] = DAILY_A.filter(r => r.d <= '2026-07-19').concat(DAILY_B).concat(DAILY_C).concat(DAILY_D).concat(DAILY_E).concat(DAILY_F).concat(DAILY_G).concat(DAILY_H).concat(DAILY_I).concat(DAILY_J).concat(DAILY_K).concat(DAILY_L).concat(DAILY_M).concat(DAILY_N).concat(DAILY_O).concat(DAILY_P)
+// W18: 2026.11.02–11.08 — эх сурвалж: "Дуудлагын төвийн тайлан 11 02–11 08.pdf" (нэгтгэсэн тайлан, xlsx байхгүй).
+// ts = Technical support, mb = Mbusiness Plus Cass, pos = MBank pos guide + Mline POS (өдрийн нийтээс бусад queue-г хасаж гаргав:
+// Mline 10/6/9/6/5/5/4 = 45). loan = 0 — энэ тайланд Business loan queue байхгүй.
+// a = өдрийн нийт × авсан хувь (194+199+178+194+185+150+88 = 1,188, PDF-тэй таарна).
+// sat / sent — PDF-д зөвхөн 7 хоногийн нийт байгаа (714 SMS, 133 хариу, 4.68/5, 123 нь 4–5 оноо) тул
+//   өдрүүдэд авсан дуудлагын тоогоор хуваарилав. 1–3 онооны 10 хариуны задаргаа (3/1/6) нь ТААМАГ.
+// cb / uniq — өдрөөр байхгүй (7 хоногийн давхцаагүй 908 нь RR.uniq-д).
+const DAILY_Q: DayRow[] = [
+  { d: '2026-11-02', lab: '11/02', ts: 155, mb: 118, pos: 90, loan: 0, nd: 0, a: 194, sat: [1,1,1,3,17], sent: 116 },
+  { d: '2026-11-03', lab: '11/03', ts: 104, mb: 89,  pos: 69, loan: 0, nd: 0, a: 199, sat: [0,0,1,3,18], sent: 120 },
+  { d: '2026-11-04', lab: '11/04', ts: 138, mb: 72,  pos: 74, loan: 0, nd: 0, a: 178, sat: [1,0,1,2,16], sent: 107 },
+  { d: '2026-11-05', lab: '11/05', ts: 111, mb: 74,  pos: 61, loan: 0, nd: 0, a: 194, sat: [0,0,1,3,17], sent: 117 },
+  { d: '2026-11-06', lab: '11/06', ts: 129, mb: 52,  pos: 53, loan: 0, nd: 0, a: 185, sat: [0,0,1,2,17], sent: 111 },
+  { d: '2026-11-07', lab: '11/07', ts: 94,  mb: 98,  pos: 66, loan: 0, nd: 0, a: 150, sat: [1,0,1,2,14], sent: 90  },
+  { d: '2026-11-08', lab: '11/08', ts: 53,  mb: 27,  pos: 27, loan: 0, nd: 0, a: 88,  sat: [0,0,0,1,8],  sent: 53  },
+]
+const DAILY_ALL: DayRow[] = DAILY_A.filter(r => r.d <= '2026-07-19').concat(DAILY_B).concat(DAILY_C).concat(DAILY_D).concat(DAILY_E).concat(DAILY_F).concat(DAILY_G).concat(DAILY_H).concat(DAILY_I).concat(DAILY_J).concat(DAILY_K).concat(DAILY_L).concat(DAILY_M).concat(DAILY_N).concat(DAILY_O).concat(DAILY_P).concat(DAILY_Q)
 
 // ── Hourly load data ──────────────────────────────────────────────────────────
 // Format: [hour, answered, missed, timeout]
@@ -441,6 +457,14 @@ const HOURLY_W17: HourRow[] = [
   ['16',110,63,16],['17',115,70,22],['18',61,47,8],['19',32,19,4],
 ]
 
+// W18 hourly — PDF-ийн "Цагийн ачаалал" хуудаснаас. answered = Авсан (1,188), missed = Алдсан (566: тасарсан + хугацаа хэтэрсэн
+// нийлбэр — PDF-д тусад нь задлаагүй тул timeout = 0).
+const HOURLY_W18: HourRow[] = [
+  ['08',25,4,0],['09',101,22,0],['10',125,74,0],['11',170,38,0],
+  ['12',99,85,0],['13',126,41,0],['14',104,43,0],['15',137,77,0],
+  ['16',124,65,0],['17',95,57,0],['18',54,20,0],['19',28,40,0],
+]
+
 // ── Channel config for daily stacked chart ────────────────────────────────────
 const CH = [
   { k: 'ts',   n: 'Technical support', c: C.blue   },
@@ -509,10 +533,22 @@ type Agg = {
   tkTransfResolved?: number // "Шилжүүлсэн-Шийдсэн" тикет (tkTransferred-ийн дэд хэсэг)
   unresWaiting?: number     // "Харилцагчийг хүлээж байгаа" тикет (unresolved-ийн дэд хэсэг)
   levels?: ReturnType<typeof mkLv>  // асуудлын ач холбогдлын түвшин (Level 1/2/3)
-  prodIssues?: { prod: string; cats: { n: string; pct: number }[] }[]  // бүтээгдэхүүн тус бүрийн асуудлын төрлийн задаргаа (%)
+  prodIssues?: { prod: string; sub?: string; cats: { n: string; pct: number; c?: number }[] }[]  // бүтээгдэхүүн тус бүрийн асуудлын төрлийн задаргаа (%, c = тоо)
   prodSubcats?: Record<string, { n: string; pct: number; c: number }[]>  // key = `${prod}|${topcat}`, дэд ангиллын задаргаа (%, тоо)
   errorByProd?: ReturnType<typeof mkPr>  // "Алдаа" ангиллын тикетүүд бүтээгдэхүүн тус бүрээр
   unresList?: { d: string; agent: string; issue: string }[]  // Шийдэгдээгүй тикетийн задаргаа
+  mline?: MlineData         // Mline POS шугамын тусдаа үзүүлэлт
+  issueStatus?: Record<string, [number, number, number]>  // топ асуудал → [шийдсэн, хүлээгдэж/шийдээгүй, шилжүүлсэн]
+}
+// Mline POS шугам: шууд ирсэн дуудлага + Operator queue-ээс шилжиж ирсэн дуудлага, ажилтан (6xx дотуур) тус бүрээр.
+// transAns = шилжиж ирснээс авсан (ярианы хугацаа > 0), ok = авсан ба 24 цагийн дотор дахин залгаагүй.
+// days = өдөр бүрийн задаргаа (dir/dirAns = шууд ирсэн/авсан; noDur = тэр өдрийн шилжүүлгийн бичлэгт ярианы хугацаа бүртгэгдээгүй).
+// rows[].daily = өдөр бүрийн [шууд авсан, шилжиж ирсэн], null = тухайн өдөр дуудлага аваагүй, шилжиж ирээгүй.
+type MlineData = {
+  direct: number; directAns: number; waitSec: number
+  transferred: number; transAns: number; ok: number
+  rows: { ext: string; n: string; direct: number; trans: number; transAns: number; ok: number; daily?: ([number, number] | null)[] }[]
+  days?: { d: string; dir: number; dirAns: number; trans: number; transAns: number; ok: number; noDur?: boolean }[]
 }
 const RA: Agg = {
   uniq: 845, callTransferred: 20 as number | null, resolved: 1328, unresolved: 20, tkTransferred: 52,
@@ -795,6 +831,36 @@ const P_RECV = [
   { n: 'Bayarsaikhan.E',  team: '', unres: 0, wait: 2, ok: 0  },
   { n: 'Khaliunaa',       team: '', unres: 0, wait: 0, ok: 1  },
   { n: 'Nayanjin',        team: '', unres: 0, wait: 1, ok: 0  },
+]
+// W18 асуудалтай тикет ажилтнаар:
+//   unres = Шийдэгдээгүй 8 (хэрэглэгчээс: Turmandakh.O 3, Sumiya.D / Tugssaikhan.G / Bayarsaikhan.E / Khadaan / Otgonbayar.L тус бүр 1).
+//   wait  = Шилжүүлсэн 24 тикет "Оролцогчид" талбараар (PDF 14/16-р хуудас; талбар хоосон 6-г бүртгэсэн ажилтан дээр:
+//           Zolbayar.G 3, Turmandakh.O / Tugssaikhan.G / Khadaan тус бүр 1). Нэг тикет хэд хэдэн хүнд очдог тул нийлбэр 40.
+//   ok    = мэдээлэлгүй (0). "Харилцагчийг хүлээж байгаа" 21 тикет энд ороогүй (W17-тэй адил).
+const Q_RECV = [
+  { n: 'Zolbayr',           team: '', unres: 0, wait: 4, ok: 0 },
+  { n: 'Delgerekh.G',       team: '', unres: 0, wait: 4, ok: 0 },
+  { n: 'Turmandakh.O',      team: '', unres: 3, wait: 1, ok: 0 },
+  { n: 'Otgonbayar.L',      team: '', unres: 1, wait: 2, ok: 0 },
+  { n: 'Yumjirdulam',       team: '', unres: 0, wait: 3, ok: 0 },
+  { n: 'Dolgor.P',          team: '', unres: 0, wait: 3, ok: 0 },
+  { n: 'Tsogbayar',         team: '', unres: 0, wait: 3, ok: 0 },
+  { n: 'Uugankhuu.P',       team: '', unres: 0, wait: 3, ok: 0 },
+  { n: 'Zolbayar.G',        team: '', unres: 0, wait: 3, ok: 0 },
+  { n: 'Tsenguun',          team: '', unres: 0, wait: 2, ok: 0 },
+  { n: 'Tugssaikhan.G',     team: '', unres: 1, wait: 1, ok: 0 },
+  { n: 'Khadaan',           team: '', unres: 1, wait: 1, ok: 0 },
+  { n: 'Bayarsaikhan.E',    team: '', unres: 1, wait: 1, ok: 0 },
+  { n: 'Sumiya.D',          team: '', unres: 1, wait: 0, ok: 0 },
+  { n: 'Munkh-Orgil.B',     team: '', unres: 0, wait: 1, ok: 0 },
+  { n: 'Baasanjargal',      team: '', unres: 0, wait: 1, ok: 0 },
+  { n: 'Baterdene',         team: '', unres: 0, wait: 1, ok: 0 },
+  { n: 'Bujinlkham.T',      team: '', unres: 0, wait: 1, ok: 0 },
+  { n: 'Otgonbayar.Ts',     team: '', unres: 0, wait: 1, ok: 0 },
+  { n: 'Zorigtbaatar.Ts',   team: '', unres: 0, wait: 1, ok: 0 },
+  { n: 'Tsetsegmaa.M',      team: '', unres: 0, wait: 1, ok: 0 },
+  { n: 'Byambatsogt.B',     team: '', unres: 0, wait: 1, ok: 0 },
+  { n: 'Iderbold.Ch',       team: '', unres: 0, wait: 1, ok: 0 },
 ]
 // W9 асуудалтай тикет ажилтнаар (pivot): unres=Шийдэгдээгүй 24 · wait=Шилжүүлсэн хэвээр 25 · ok=Шилжүүлсэн-Шийдсэн 31 · нийт 80
 const H_RECV = [
@@ -1712,6 +1778,98 @@ const RQ: Agg = {
   ],
 }
 
+// W18: 2026.11.02–11.08 — 1,754 дуудлага · авсан 1,188 (67.7%) · 1,399 тикет · CSAT 4.68/5 (133 SMS).
+// Эх сурвалж: "Дуудлагын төвийн тайлан 11 02–11 08.pdf". 7777-3444: 10 сек-ээс богино тасарсан ба шилжүүлгийн давхар бичлэгийг хассан.
+// uniq = 908 давхцаагүй хэрэглэгч. callTransferred / missedUniq / prodSubcats — PDF-д байхгүй.
+// Тикетийн статус: Шийдэгдсэн 1,346 + Шилжүүлсэн 24 + Харилцагчийг хүлээж байгаа 21 + Шийдэгдээгүй 8 = 1,399.
+// levels — хэрэглэгчээс: Level 1 942 + Level 2 417 + Level 3 39 + P4 (Low) 1 = 1,399.
+const RR: Agg = {
+  uniq: 908, callTransferred: null as number | null, resolved: 1346, unresolved: 29, tkTransferred: 24, unresWaiting: 21,
+  levels: mkLv([['Level 1',942],['Level 2',417],['Level 3',39],['P4 (Low)',1]]),
+  channels: mkCh([['Утсаар',1352],['Сошиал',45],['Дуудлагаар',2]]),
+  products: mkPr([['MPLUS',755],['PROPOS',544],['MPOS',95],['Бусад',5]]),
+  // "Засварын төрөл 3"-аар топ 10 (156 тикетэд бүртгээгүй). Ангиллын шошго (t) нь өмнөх долоо хоногуудын дэд ангиллаас таамагласан.
+  issues: mkIs([
+    ['Бүтээгдэхүүн',130,'Бүтээгдэхүүн'],['Пос',87,'Засвар'],
+    ['Бараа бүртгэл',74,'Сургалт'],['Тооллого',71,'Сургалт'],
+    ['Борлуулалт',70,'Сургалт'],['Сунгалт',51,'Мэдээлэл'],
+    ['Нөхөж залгасан',51,'Мэдээлэл'],['Андуурсан дуудлага',49,'Мэдээлэл'],
+    ['Тайлан',46,'Сургалт'],['Тохиргоо',42,'Тохиргоо'],
+  ]),
+  // PDF хуудас 12 — топ 10 асуудлын төлөв: [шийдсэн, хүлээгдэж/шийдээгүй, шилжүүлсэн]
+  issueStatus: {
+    'Бүтээгдэхүүн': [123,6,1], 'Пос': [87,0,0], 'Бараа бүртгэл': [69,1,4], 'Тооллого': [71,0,0], 'Борлуулалт': [70,0,0],
+    'Сунгалт': [51,0,0], 'Нөхөж залгасан': [51,0,0], 'Андуурсан дуудлага': [48,0,1], 'Тайлан': [45,1,0], 'Тохиргоо': [40,1,1],
+  },
+  // 7777-3444 шугамын ажилтны хүснэгт (PDF 5–6): c = авсан дуудлага (нийт 1,155; + Mline шууд авсан 33 = 1,188),
+  // tk = бүртгэсэн тикет (1,348), t = дундаж ярианы минут, r = SMS үнэлгээний дундаж оноо.
+  agents: mkAg([
+    ['Otgonbayar.L',   200, 217, 4.2, 4.70],
+    ['Sumiya.D',       168, 181, 6.2, 4.93],
+    ['Soyolzul.Ts',    131, 188, 4.9, 4.59],
+    ['Tugssaikhan.G',  110, 125, 5.8, 4.94],
+    ['Ganchimeg.A',    107, 134, 6.4, 4.50],
+    ['CRM-Temuulen',   103, 99,  6.2, 4.00],
+    ['Munkh-Orgil.B',  65,  93,  8.6, 4.29],
+    ['Saranchimeg',    62,  64,  4.0, 5.00],
+    ['Amanbol',        57,  54,  5.5, 4.29],
+    ['Bymbatogtokh.T', 53,  65,  4.4, 5.00],
+    ['Nayanjin',       41,  40,  5.3, 5.00],
+    ['Zolbayr',        24,  24,  5.1, 5.00],
+    ['Baasanjargal',   14,  18,  3.8, 4.75],
+    ['Khaliunaa',      8,   3,   2.3, null],
+    ['Khadaan',        6,   29,  4.4, null],
+    ['Tsogbayar',      4,   5,   8.3, 5.00],
+    ['Bayarsaikhan.E', 2,   9,   9.6, null],
+  ]),
+  recv: Q_RECV,
+  // PDF хуудас 11 — бүтээгдэхүүн бүрийн топ асуудал (засварын төрөл 3), pct = тухайн бүтээгдэхүүний тикетэд эзлэх хувь.
+  // Бусад 5 = Гэрэгэ 2, Mobile 2, Loan 1.
+  prodIssues: [
+    { prod: 'MPLUS', sub: 'шийдсэн 95.1% · нээлттэй 21 · шилжүүлсэн 16', cats: [
+      { n: 'Бүтээгдэхүүн', pct: 12.2, c: 92 }, { n: 'Пос', pct: 11.5, c: 87 }, { n: 'Борлуулалт', pct: 5.8, c: 44 },
+      { n: 'Буцаалт', pct: 4.5, c: 34 }, { n: 'Бараа бүртгэл', pct: 4.4, c: 33 }, { n: 'Төлбөр', pct: 4.2, c: 32 },
+      { n: 'Ангилалгүй', pct: 12.6, c: 95 },
+    ] },
+    { prod: 'PROPOS', sub: 'шийдсэн 98.0% · нээлттэй 4 · шилжүүлсэн 7', cats: [
+      { n: 'Сунгалт', pct: 9.4, c: 51 }, { n: 'Тооллого', pct: 8.1, c: 44 }, { n: 'Бараа бүртгэл', pct: 7.5, c: 41 },
+      { n: 'Интеграци', pct: 6.3, c: 34 }, { n: 'Нөхөж залгасан', pct: 5.3, c: 29 }, { n: 'Андуурсан дуудлага', pct: 5.3, c: 29 },
+      { n: 'Ангилалгүй', pct: 7.5, c: 41 },
+    ] },
+    { prod: 'MPOS', sub: 'шийдсэн 94.7% · нээлттэй 4 · шилжүүлсэн 1', cats: [
+      { n: 'Бүтээгдэхүүн', pct: 18.9, c: 18 }, { n: 'Посын заавар', pct: 7.4, c: 7 }, { n: 'Тохиргоо', pct: 7.4, c: 7 },
+      { n: 'Нэвтрэх нэр, нууц үг', pct: 6.3, c: 6 }, { n: 'Шугам шилжүүлэх', pct: 5.3, c: 5 }, { n: 'Андуурсан дуудлага', pct: 5.3, c: 5 },
+      { n: 'Ангилалгүй', pct: 15.8, c: 15 },
+    ] },
+  ],
+  // PDF хуудас 7 (Mline) ба 12 (хүлээлт 31 сек).
+  mline: {
+    direct: 45, directAns: 33, waitSec: 31, transferred: 126, transAns: 38, ok: 29,
+    // PDF хуудас 8 — өдөр бүрээр. noDur: тэр өдрийн шилжүүлгийн бичлэгт ярианы хугацаа бүртгэгдээгүй (0% нь бодит биш байж болно).
+    // rows[].daily — PDF хуудас 9 (өдөр бүрийн [шууд авсан, шилжиж ирсэн]); баганын нийлбэр хуудас 8-тай таарна.
+    days: [
+      { d: '2026-11-02', dir: 10, dirAns: 7, trans: 23, transAns: 0, ok: 0, noDur: true },
+      { d: '2026-11-03', dir: 6, dirAns: 5, trans: 18, transAns: 9, ok: 7 },
+      { d: '2026-11-04', dir: 9, dirAns: 8, trans: 19, transAns: 2, ok: 2 },
+      { d: '2026-11-05', dir: 6, dirAns: 4, trans: 28, transAns: 0, ok: 0, noDur: true },
+      { d: '2026-11-06', dir: 5, dirAns: 3, trans: 11, transAns: 0, ok: 0, noDur: true },
+      { d: '2026-11-07', dir: 5, dirAns: 4, trans: 16, transAns: 16, ok: 12 },
+      { d: '2026-11-08', dir: 4, dirAns: 2, trans: 11, transAns: 11, ok: 8 },
+    ],
+    rows: [
+      { ext: '628', n: 'Turmandakh',     direct: 7, trans: 32, transAns: 4,  ok: 3, daily: [[0,1], [1,8], [3,8], [2,10], [1,5], null, null] },
+      // 624/637/630/633/636 — хэрэглэгчийн зааснаар нэрийг засав (PDF-д 624 Золбаяр, 637 Цэнгүүн, 630 Бат-Эрдэнэ, 633/636 нэргүй байсан)
+      { ext: '624', n: 'Tugsuu',         direct: 7, trans: 28, transAns: 17, ok: 13, daily: [null, [2,1], [1,3], [0,5], [1,2], [2,9], [1,8]] },
+      { ext: '615', n: 'Unubold',        direct: 8, trans: 27, transAns: 5,  ok: 4, daily: [null, [2,9], [3,6], [2,9], [1,3], null, null] },
+      { ext: '637', n: 'Togtokhoo',      direct: 4, trans: 13, transAns: 10, ok: 7, daily: [null, null, [1,2], [0,2], [0,1], [2,7], [1,1]] },
+      { ext: '630', n: 'Khadaan',        direct: 3, trans: 13, transAns: 0,  ok: 0, daily: [[3,13], null, null, null, null, null, null] },
+      { ext: '623', n: 'Soyolzul',       direct: 4, trans: 8,  transAns: 0,  ok: 0, daily: [[4,8], null, null, null, null, null, null] },
+      { ext: '633', n: 'Saraa.Sumiya',   direct: 0, trans: 4,  transAns: 2,  ok: 2, daily: [null, null, null, [0,2], null, null, [0,2]] },
+      { ext: '636', n: 'Zolbayr.U',      direct: 0, trans: 1,  transAns: 0,  ok: 0, daily: [[0,1], null, null, null, null, null, null] },
+    ],
+  },
+}
+
 // All 8 weeks combined
 const RALL: Agg = {
   uniq: 5858, callTransferred: null as number | null, resolved: 8164, unresolved: 198, tkTransferred: 341,
@@ -1799,13 +1957,15 @@ function mergeAgg(...list: Agg[]): Agg {
 const RM7 = mergeAgg(RA, RB, RC)
 const RM8 = mergeAgg(RD, RE, RF, RG)
 const RM10 = mergeAgg(RL, RO, RN, RP, RQ)
+const RM11 = RR  // одоогоор зөвхөн W18 — шууд ашиглаж levels / mline-г хадгална; 2 дахь долоо хоног ирэхэд mergeAgg болгоно
 const JUL_DAYS = DAILY_ALL.filter(r => r.d < '2026-08-01').map(r => r.d)
 const AUG_DAYS = DAILY_ALL.filter(r => r.d >= '2026-08-01' && r.d < '2026-09-01').map(r => r.d)
 const SEP_DAYS = DAILY_ALL.filter(r => r.d >= '2026-09-01' && r.d <= '2026-09-27').map(r => r.d)
 const OCT_DAYS = DAILY_ALL.filter(r => r.d >= '2026-10-01' && r.d <= '2026-11-01').map(r => r.d)
+const NOV_DAYS = DAILY_ALL.filter(r => r.d >= '2026-11-02').map(r => r.d)
 
 // ── Reports config ─────────────────────────────────────────────────────────────
-type RepKey = 'W1' | 'W2' | 'W3' | 'W4' | 'W5' | 'W6' | 'W7' | 'W8' | 'W9' | 'W10' | 'W11' | 'W12' | 'W13' | 'W14' | 'W15' | 'W16' | 'W17' | 'M7' | 'M8' | 'M9' | 'M10' | 'ALL'
+type RepKey = 'W1' | 'W2' | 'W3' | 'W4' | 'W5' | 'W6' | 'W7' | 'W8' | 'W9' | 'W10' | 'W11' | 'W12' | 'W13' | 'W14' | 'W15' | 'W16' | 'W17' | 'W18' | 'M7' | 'M8' | 'M9' | 'M10' | 'M11' | 'ALL'
 const REPORTS: Record<RepKey, { daily: DayRow[]; agg: Agg; hourly: HourRow[]; label: string; defaultDays: string[] }> = {
   W1: { daily: DAILY_A, agg: RA, hourly: HOURLY, label: '07/06–07/12',
         defaultDays: DAILY_A.filter(r => r.d <= '2026-07-12').map(r => r.d) },
@@ -1841,6 +2001,8 @@ const REPORTS: Record<RepKey, { daily: DayRow[]; agg: Agg; hourly: HourRow[]; la
         defaultDays: DAILY_O.map(r => r.d) },
   W17:{ daily: DAILY_P, agg: RQ, hourly: HOURLY_W17, label: '10/26–11/01',
         defaultDays: DAILY_P.map(r => r.d) },
+  W18:{ daily: DAILY_Q, agg: RR, hourly: HOURLY_W18, label: '11/02–11/08',
+        defaultDays: DAILY_Q.map(r => r.d) },
   M7: { daily: DAILY_ALL.filter(r => r.d < '2026-08-01'), agg: RM7, hourly: HOURLY, label: '7-р сар',
         defaultDays: JUL_DAYS },
   M8: { daily: DAILY_ALL.filter(r => r.d >= '2026-08-01' && r.d < '2026-09-01'), agg: RM8, hourly: HOURLY, label: '8-р сар',
@@ -1849,6 +2011,8 @@ const REPORTS: Record<RepKey, { daily: DayRow[]; agg: Agg; hourly: HourRow[]; la
         defaultDays: SEP_DAYS },
   M10: { daily: DAILY_ALL.filter(r => r.d >= '2026-10-01' && r.d <= '2026-11-01'), agg: RM10, hourly: HOURLY, label: '10-р сар',
         defaultDays: OCT_DAYS },
+  M11: { daily: DAILY_ALL.filter(r => r.d >= '2026-11-02'), agg: RM11, hourly: HOURLY_W18, label: '11-р сар',
+        defaultDays: NOV_DAYS },
   ALL: { daily: DAILY_ALL, agg: RALL, hourly: HOURLY, label: 'Нэгдсэн',
          defaultDays: DAILY_ALL.map(r => r.d) },
 }
@@ -1884,10 +2048,12 @@ const CHAN_RATES: Record<RepKey, Record<string, number>> = {
   W15: { ts: 0.605, mb: 0.618, pos: 0.549, loan: 0.828, nd: 0.50 },
   W16: { ts: 0.623, mb: 0.535, pos: 0.578, loan: 0.917, nd: 0.50 },
   W17: { ts: 0.653, mb: 0.578, pos: 0.480, loan: 0.679, nd: 0.50 },
+  W18: { ts: 0.767, mb: 0.700, pos: 0.491, loan: 0.50,  nd: 0.50 },  // pos = (MBank 183 + Mline 33) / (395 + 45)
   M7: { ts: 0.76,  mb: 0.71,  pos: 0.71,  loan: 0.81,  nd: 0.90 },
   M8:  { ts: 0.54,  mb: 0.54,  pos: 0.57,  loan: 0.74,  nd: 0.70 },
   M9:  { ts: 0.686, mb: 0.672, pos: 0.717, loan: 0.844, nd: 0.50 },
   M10: { ts: 0.630, mb: 0.610, pos: 0.567, loan: 0.774, nd: 0.50 },  // W13–W17 дуудлагын тоогоор жигнэсэн
+  M11: { ts: 0.767, mb: 0.700, pos: 0.491, loan: 0.50,  nd: 0.50 },  // одоогоор зөвхөн W18
   ALL: { ts: 0.55,  mb: 0.50,  pos: 0.52,  loan: 0.78,  nd: 0.90 },
 }
 
@@ -1929,6 +2095,7 @@ const MONTHS: { label: string; rep: RepKey; keys: RepKey[] }[] = [
   { label: '8-р сар', rep: 'M8', keys: ['W5', 'W6', 'W7', 'W8'] },
   { label: '9-р сар', rep: 'M9', keys: ['W9', 'W10', 'W11', 'W12'] },
   { label: '10-р сар', rep: 'M10', keys: ['W13', 'W14', 'W15', 'W16', 'W17'] },
+  { label: '11-р сар', rep: 'M11', keys: ['W18'] },
 ]
 const OVERVIEW: { rep: RepKey; label: string; sub: string; ic: string }[] = [
   { rep: 'ALL', label: 'Бүх хугацаа', sub: '11 долоо хоног', ic: '📊' },
@@ -1936,6 +2103,7 @@ const OVERVIEW: { rep: RepKey; label: string; sub: string; ic: string }[] = [
   { rep: 'M8', label: '8-р сар', sub: '4 долоо хоног', ic: '📅' },
   { rep: 'M9', label: '9-р сар', sub: '2 долоо хоног', ic: '📅' },
   { rep: 'M10', label: '10-р сар', sub: '5 долоо хоног', ic: '📅' },
+  { rep: 'M11', label: '11-р сар', sub: '1 долоо хоног', ic: '📅' },
 ]
 const WEEK_VOL: Record<string, number> = Object.fromEntries(
   MONTHS.flatMap(m => m.keys).map(k => {
@@ -2149,6 +2317,99 @@ function HourChart({ hourly, fac }: { hourly: HourRow[]; fac: number }) {
             <div className="chart-tip-row"><span><i style={{ background: C.coral }} />Таслагдсан</span><b>{Math.round(r[2])}</b></div>
             <div className="chart-tip-row"><span><i style={{ background: C.gold }} />Timeout</span><b>{Math.round(r[3])}</b></div>
             <div className="chart-tip-row chart-tip-tot"><span>Нийт</span><b>{Math.round(tot)}</b></div>
+          </div>
+        )
+      })()}
+    </div>
+  )
+}
+
+// Mline POS өдөр бүрээр: багана = шууд ирсэн + Operator-оос шилжүүлсэн, Авсан / Алдсан-аар задалсан.
+// Hover tooltip-д шууд/шилжүүлсний задаргаа ба ажилтан бүрийн [шууд авсан · шилжиж ирсэн].
+function MlineDayChart({ m }: { m: MlineData }) {
+  const days = m.days ?? []
+  const w = 1000, h = 280, padB = 40, padT = 18, padL = 32, plot = h - padT - padB
+  const [hover, setHover] = useState<number | null>(null)
+  const lit = useMountFlag()
+  const rows = days.map((d, i) => ({
+    d, lab: d.d.slice(5).replace('-', '/'),
+    ans: d.dirAns + d.transAns,
+    miss: d.dir + d.trans - d.dirAns - d.transAns,
+    agents: m.rows.flatMap(r => { const c = r.daily?.[i]; return c ? [{ n: r.n, ext: r.ext, c }] : [] }),
+  }))
+  const max = Math.max(...rows.map(r => r.ans + r.miss), 1) * 1.12
+  const bw = (w - padL - 8) / (rows.length || 1)
+  const barW = Math.min(bw * 0.56, 64)
+  const barTr = 'height .5s var(--ease-out), y .5s var(--ease-out), opacity .2s ease'
+  const lblFont = { pointerEvents: 'none' as const, fontFamily: 'Space Grotesk,Inter,sans-serif' }
+  return (
+    <div className="chart-host" onMouseLeave={() => setHover(null)}>
+      <svg width="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="xMidYMid meet">
+        {[0, 1, 2, 3, 4].map(g => {
+          const y = padT + plot * g / 4
+          return (
+            <g key={g}>
+              <line x1={padL} y1={y} x2={w - 4} y2={y} stroke="var(--c-grid)" />
+              <text x={0} y={y + 3} fill="var(--c-axis)" fontSize={10}>{Math.round(max * (1 - g / 4))}</text>
+            </g>
+          )
+        })}
+        {rows.map((r, i) => {
+          const x = padL + i * bw + (bw - barW) / 2
+          const cx = padL + i * bw + bw / 2
+          const tot = r.ans + r.miss
+          const missBh = lit ? r.miss / max * plot : 0
+          const ansBh = lit ? r.ans / max * plot : 0
+          const missY = h - padB - missBh
+          const ansY = missY - ansBh
+          const hv = hover === i
+          return (
+            <g key={i}>
+              <rect x={padL + i * bw} y={padT} width={bw} height={plot + padB} fill="transparent" onMouseEnter={() => setHover(i)} />
+              {missBh > 0 && <rect className="hz-bar" x={x} y={missY} width={barW} height={missBh} fill={C.coral} rx={2}
+                opacity={hv ? 1 : 0.92} style={{ pointerEvents: 'none', transition: barTr }} />}
+              {ansBh > 0 && <rect className="hz-bar" x={x} y={ansY} width={barW} height={ansBh} fill={C.teal} rx={2}
+                opacity={hv ? 1 : 0.92} style={{ pointerEvents: 'none', transition: barTr }} />}
+              {tot > 0 && (
+                <text x={cx} y={ansY - 5} fill="var(--c-lbl-hi)" fontSize={11} textAnchor="middle" fontWeight={600}
+                  style={{ ...lblFont, transition: 'y .5s var(--ease-out)' }}>{tot}</text>
+              )}
+              {ansBh >= 15 && (
+                <text x={cx} y={ansY + ansBh / 2 + 4} fill="#0d1b2a" fontSize={10} textAnchor="middle" fontWeight={800} style={lblFont}>
+                  {Math.round(r.ans / tot * 100)}%</text>
+              )}
+              {missBh >= 15 && (
+                <text x={cx} y={missY + missBh / 2 + 4} fill="#fff" fontSize={10} textAnchor="middle" fontWeight={700} style={lblFont}>
+                  {Math.round(r.miss / tot * 100)}%</text>
+              )}
+              <text x={cx} y={h - padB + 15} fill="var(--c-lbl)" fontSize={11} textAnchor="middle" style={{ pointerEvents: 'none' }}>
+                {r.lab}{r.d.noDur ? '*' : ''}</text>
+              <text x={cx} y={h - padB + 29} fill="var(--c-axis)" fontSize={10} textAnchor="middle" style={{ pointerEvents: 'none' }}>{weekday(r.d.d)}</text>
+            </g>
+          )
+        })}
+      </svg>
+      {hover != null && rows[hover] && (() => {
+        const r = rows[hover]
+        const leftPct = ((padL + hover * bw + bw / 2) / w) * 100
+        return (
+          <div className="chart-tip" style={{ left: `clamp(90px, ${leftPct}%, calc(100% - 90px))`, minWidth: 190 }}>
+            <div className="chart-tip-h">{r.lab} {weekday(r.d.d)}</div>
+            <div className="chart-tip-row"><span><i style={{ background: C.teal }} />Авсан</span><b>{r.ans}</b></div>
+            <div className="chart-tip-row"><span><i style={{ background: C.coral }} />Алдсан</span><b>{r.miss}</b></div>
+            <div className="chart-tip-row chart-tip-tot"><span>Нийт</span><b>{r.ans + r.miss}</b></div>
+            <div className="chart-tip-row" style={{ marginTop: 6 }}><span>Шууд ирсэн</span><b>{r.d.dirAns} / {r.d.dir}</b></div>
+            <div className="chart-tip-row"><span>Шилжүүлсэн</span><b>{r.d.transAns} / {r.d.trans}{r.d.noDur ? '*' : ''}</b></div>
+            <div className="chart-tip-row"><span>Амжилттай</span><b>{r.d.ok}</b></div>
+            {r.agents.length > 0 && (
+              <>
+                <div className="chart-tip-h" style={{ marginTop: 8 }}>Ажилтан · шууд авсан · шилжиж ирсэн</div>
+                {r.agents.map((a, j) => (
+                  <div key={j} className="chart-tip-row"><span>{a.n} <span style={{ opacity: .6 }}>{a.ext}</span></span>
+                    <b><span style={{ color: C.blue }}>{a.c[0]}</span> · <span style={{ color: C.violet }}>{a.c[1]}</span></b></div>
+                ))}
+              </>
+            )}
           </div>
         )
       })()}
@@ -3183,7 +3444,7 @@ export { ErrorBoundary }
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [topTab, setTopTab] = useState<'call' | 'care'>('call')
-  const [rep, setRep] = useState<RepKey>('W17')
+  const [rep, setRep] = useState<RepKey>('W18')
   const [selDays, setSelDays] = useState<Set<string>>(new Set(REPORTS.W13.defaultDays))
   const [selProd, setSelProd] = useState<string | null>(null)
   const [expandedCat, setExpandedCat] = useState<string | null>(null)
@@ -3619,6 +3880,105 @@ export default function App() {
         </div>
       </div>
 
+      {/* Mline POS line */}
+      {R.mline && (() => {
+        const m = R.mline
+        const pct = (a: number, b: number) => b ? a / b * 100 : 0
+        const rateCol = (p: number) => p >= 50 ? C.teal : p >= 25 ? C.gold : C.coral
+        const transMax = Math.max(...m.rows.map(r => r.trans), 1)
+        const kpi = (label: string, main: string, sub: string, col: string) => (
+          <div style={{ flex: '1 1 0', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: `${col}12`, border: `1px solid ${col}30`, borderRadius: 10, padding: '10px 14px' }}>
+            <div style={{ fontSize: 10, color: col, fontWeight: 600, letterSpacing: '0.04em', marginBottom: 4 }}>{label}</div>
+            <div className="num" style={{ fontSize: 24, fontWeight: 800, color: 'var(--fg)', lineHeight: 1.1 }}>{main}</div>
+            <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 3 }}>{sub}</div>
+          </div>
+        )
+        return (
+          <>
+          <Reveal className="grid mline" style={{ marginBottom: 14 }}>
+            <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
+              <div className="card-h">
+                <div className="card-title"><span className="tdot" style={{ background: C.violet }} />Mline POS — үзүүлэлт</div>
+              </div>
+              <div className="mline-kpis">
+                {kpi('ШУУД ИРСЭНЭЭС АВСАН', `${m.directAns} / ${m.direct}`, `${pct(m.directAns, m.direct).toFixed(1)}%`, C.blue)}
+                {kpi('ШИЛЖҮҮЛСНЭЭС АВСАН', `${m.transAns} / ${m.transferred}`, `${pct(m.transAns, m.transferred).toFixed(1)}%`, C.violet)}
+                {kpi('АМЖИЛТТАЙ', fmt(m.ok), `шилжүүлсний ${pct(m.ok, m.transferred).toFixed(1)}% · 24ц дахин залгаагүй`, C.teal)}
+                {kpi('ДУНДАЖ ХҮЛЭЭЛТ', `${m.waitSec} сек`, 'шууд ирсэн дуудлага', C.gold)}
+              </div>
+            </div>
+            <div className="card">
+              <div className="card-h">
+                <div className="card-title"><span className="tdot" style={{ background: C.violet }} />Mline POS — ажилтнаар</div>
+                <div style={{ fontSize: 11, color: 'var(--muted)' }}>Шууд ирсэн ба Operator queue-ээс шилжиж ирсэн</div>
+              </div>
+              <div style={{ overflowX: 'auto' }}>
+                <table className="tbl">
+                  <thead><tr>
+                    <th>Дотуур</th><th>Ажилтан</th>
+                    <th style={{ textAlign: 'right' }}>Шууд авсан</th>
+                    <th style={{ textAlign: 'right' }}>Шилжиж ирсэн</th>
+                    <th>Авсан / шилжсэн</th>
+                    <th style={{ textAlign: 'right' }}>Амжилттай</th>
+                    <th style={{ textAlign: 'right' }}>Авсан %</th>
+                  </tr></thead>
+                  <tbody>
+                    {m.rows.map((r, i) => {
+                      const p = pct(r.transAns, r.trans)
+                      return (
+                        <tr key={i}>
+                          <td className="num" style={{ color: 'var(--muted)' }}>{r.ext}</td>
+                          <td className="name" style={{ opacity: r.n === 'Нэр бүртгэлгүй' ? 0.6 : 1 }}>{r.n}</td>
+                          <td className="num" style={{ textAlign: 'right', color: C.blue, fontWeight: 600 }}>{r.direct}</td>
+                          <td className="num" style={{ textAlign: 'right' }}>{r.trans}</td>
+                          <td className="barcell">
+                            <div className="tbl-bar" style={{ position: 'relative' }}>
+                              <span style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${r.trans / transMax * 100}%`, background: `${C.violet}33` }} />
+                              <span style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${r.transAns / transMax * 100}%`, background: C.violet }} />
+                            </div>
+                          </td>
+                          <td className="num" style={{ textAlign: 'right', color: C.teal, fontWeight: 600 }}>{r.ok}</td>
+                          <td className="num" style={{ textAlign: 'right', fontWeight: 700, color: rateCol(p) }}>{p.toFixed(1)}%</td>
+                        </tr>
+                      )
+                    })}
+                    <tr style={{ borderTop: '1px solid var(--border)' }}>
+                      <td></td><td className="name" style={{ fontWeight: 700 }}>Нийт</td>
+                      <td className="num" style={{ textAlign: 'right', fontWeight: 700 }}>{m.directAns}</td>
+                      <td className="num" style={{ textAlign: 'right', fontWeight: 700 }}>{m.transferred}</td>
+                      <td className="num" style={{ color: 'var(--muted)', fontSize: 11 }}>авсан {m.transAns}</td>
+                      <td className="num" style={{ textAlign: 'right', fontWeight: 700, color: C.teal }}>{m.ok}</td>
+                      <td className="num" style={{ textAlign: 'right', fontWeight: 700, color: rateCol(pct(m.transAns, m.transferred)) }}>{pct(m.transAns, m.transferred).toFixed(1)}%</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div style={{ fontSize: 10.5, color: 'var(--muted)', marginTop: 8 }}>
+                Авсан = ярианы хугацаа &gt; 0 · Амжилттай = авсан ба 24 цагийн дотор дахин залгаагүй · Авсан % = шилжиж ирснээс авсан
+              </div>
+            </div>
+          </Reveal>
+          {m.days && (
+            <Reveal className="grid" style={{ gridTemplateColumns: '1fr', marginBottom: 14 }}>
+              <div className="card">
+                <div className="card-h">
+                  <div className="card-title"><span className="tdot" style={{ background: C.violet }} />Mline POS — өдөр бүрээр</div>
+                  <div className="legend-inline">
+                    <span><i style={{ background: C.teal }} />Авсан</span>
+                    <span><i style={{ background: C.coral }} />Алдсан</span>
+                  </div>
+                </div>
+                <MlineDayChart m={m} />
+                <div style={{ fontSize: 10.5, color: 'var(--muted)', marginTop: 6 }}>
+                  Багана = шууд ирсэн + Operator-оос шилжүүлсэн · * тэр өдрийн шилжүүлгийн бичлэгт ярианы хугацаа бүртгэгдээгүй · 👆 багана дээр очиж ажилтнаар харна
+                </div>
+              </div>
+            </Reveal>
+          )}
+          </>
+        )
+      })()}
+
       {/* Mid */}
       <div className="grid mid" style={{ marginBottom: 14 }}>
         <div className="card">
@@ -3821,7 +4181,9 @@ export default function App() {
                 const pc = R.products.find(p => p.n === pi.prod)?.c || C.gold
                 return (
                   <div key={i}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: pc, marginBottom: 6 }}>{pi.prod}</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: pc, marginBottom: 6 }}>{pi.prod}
+                      {pi.sub && <span style={{ fontWeight: 500, color: 'var(--muted)', marginLeft: 8 }}>{pi.sub}</span>}
+                    </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                       {pi.cats.map((c, j) => {
                         const key = `${pi.prod}|${c.n}`
@@ -3832,7 +4194,7 @@ export default function App() {
                             style={{ flex: '1 1 0', minWidth: 110, textAlign: 'center', fontSize: 11, padding: '7px 10px', borderRadius: 7,
                               background: `${pc}1c`, color: 'var(--text-soft)', cursor: subs ? 'pointer' : 'default',
                               outline: open ? `1.5px solid ${pc}` : 'none', outlineOffset: -1.5 }}>
-                            {c.n} <b style={{ color: pc }}>{c.pct.toFixed(0)}%</b>
+                            {c.n} <b style={{ color: pc }}>{c.c != null ? c.pct.toFixed(1) : c.pct.toFixed(0)}%</b>{c.c != null && <span style={{ color: 'var(--muted)' }}> · {c.c}</span>}
                           </span>
                         )
                       })}
@@ -3869,6 +4231,11 @@ export default function App() {
             <div className="card-title"><span className="tdot" style={{ background: C.violet }} />Топ асуудлын төрөл
               {selProd && <span style={{ fontSize: 10, color: C.gold, fontWeight: 600, marginLeft: 10, letterSpacing: .5 }}>· {selProd}</span>}
             </div>
+            {R.issueStatus && (
+              <div style={{ fontSize: 10, color: 'var(--muted)' }}>
+                <span style={{ color: C.teal }}>✓ шийдсэн</span> · <span style={{ color: C.coral }}>⏳ хүлээгдэж/шийдээгүй</span> · <span style={{ color: C.violet }}>↗ шилжүүлсэн</span>
+              </div>
+            )}
           </div>
           <div style={{ marginTop: 4 }} key={selProd ?? 'all'} className="issue-list">
             {filteredIssues.slice(0, 10).map((it, i) => {
@@ -3877,7 +4244,20 @@ export default function App() {
                 <div key={i} className="hbar">
                   <div className="hbar-top">
                     <span className="n"><b style={{ color: 'var(--muted)', marginRight: 6 }}>{i + 1}</b>{it.n} <span className="tag" style={{ background: `${col}22`, color: col }}>{it.t}</span></span>
-                    <span className="v" style={{ color: col }}>{Math.round(it.v * prodFactor)}</span>
+                    <span style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+                      {(() => {
+                        const st = R.issueStatus?.[it.n]
+                        if (!st) return null
+                        return (
+                          <span style={{ fontSize: 10, color: 'var(--muted)', whiteSpace: 'nowrap' }}>
+                            <span style={{ color: C.teal }}>✓{st[0]}</span>
+                            {st[1] > 0 && <span style={{ color: C.coral, fontWeight: 700 }}> · ⏳{st[1]}</span>}
+                            {st[2] > 0 && <span style={{ color: C.violet, fontWeight: 700 }}> · ↗{st[2]}</span>}
+                          </span>
+                        )
+                      })()}
+                      <span className="v" style={{ color: col }}>{Math.round(it.v * prodFactor)}</span>
+                    </span>
                   </div>
                   <div className="hbar-track">
                     <div className="hbar-fill" style={{ width: `${it.v / issueMax * 100}%`, background: `linear-gradient(90deg,${col}88,${col})` }} />
