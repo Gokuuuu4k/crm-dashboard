@@ -2652,8 +2652,9 @@ const careCol = {
 const tint = (color: string, pct = 16) => `color-mix(in srgb, ${color} ${pct}%, ${careCol.card})`
 
 // Care — тайлант долоо хоногууд (огнооны цэс)
-type CarePeriodKey = 'p2026-09-15'
+type CarePeriodKey = 'p2026-11-01' | 'p2026-09-15'
 const CARE_PERIODS: { key: CarePeriodKey; label: string }[] = [
+  { key: 'p2026-11-01', label: '2026.11' },
   { key: 'p2026-09-15', label: '2026.09.15 – 2026.09.21' },
 ]
 
@@ -2811,6 +2812,339 @@ function AcqMbp({ data }: { data: MbpAcqData }) {
   )
 }
 
+// ── ACQ › M Business Plus — шинэ харилцагчийн холболт (CareCall) ──
+// Эх сурвалж: "Шинэ харилцагчийн холболт ба ашиглалтын тайлан.pdf" (CareCall_2026-11-01_2026-11-17.xlsx).
+// «Авсан дуудлага» = 1 бол холбогдсонд тооцов. Амжилт = холбогдсон ÷ тухайн бүлгийн нийт харилцагч.
+type CareGroup = { n: string; total: number; reached: number; note?: string }
+type MbpConnectData = {
+  total: number; reached: number
+  pending: { n: number; label: string }   // дуудлага хараахан бүртгэгдээгүй харилцагч
+  products: CareGroup[]
+  contract: CareGroup[]
+  cohorts: CareGroup[]
+  scheduleNote: string
+  questions: { q: string; c: number }[]
+  takeaways: string[]
+}
+const CARE_ACQ_CONNECT: Partial<Record<CarePeriodKey, MbpConnectData>> = {
+  'p2026-11-01': {
+    total: 257, reached: 185,
+    pending: { n: 28, label: '11.15 – 11.17-нд эхэлсэн' },
+    products: [
+      { n: 'P3 Mini', total: 129, reached: 94 },
+      { n: 'T3 Duo', total: 113, reached: 84 },
+      { n: 'T3 Duo + P3 Mini', total: 6, reached: 4 },
+      // Pro программ (9 / 3) — Ontime хэсэгт харуулна.
+    ],
+    contract: [
+      { n: 'Шинэ гэрээ', total: 200, reached: 142 },
+      { n: 'Pro-с MBusiness Plus руу шилжсэн', total: 57, reached: 43 },
+    ],
+    cohorts: [
+      { n: '11.01 – 11.07', total: 143, reached: 133 },
+      { n: '11.08 – 11.14', total: 86, reached: 52, note: '11.10, 11.12-ны бүлэгт холбогдоогүй 24' },
+      { n: '11.15 – 11.17', total: 28, reached: 0, note: 'Дуудлага хараахан хийгдээгүй' },
+    ],
+    scheduleNote: 'Дуудлагын хуваарь (1, 7, 14 дэх өдөр) үргэлжилж байгаа тул сүүлийн хоёр бүлгийн хувь цаашид өснө.',
+    questions: [
+      { q: 'Сарын төлбөр, урамшуулал хэрхэн тооцогдох вэ? (сарын цикл)', c: 101 },
+      { q: 'Бараагаа хэрхэн бүртгэх, татах, үнэ өөрчлөх вэ?', c: 34 },
+      { q: 'Карт уншихгүй, гацаад байна — яах вэ? (сүлжээ, Wi-Fi)', c: 18 },
+      { q: 'Посын шимтгэл, cashback хэд вэ? Бууруулж болох уу?', c: 17 },
+      { q: 'Менежер вэбээр хэрэглэгч, эрх нэмэх, тайлан харах', c: 17 },
+      { q: 'Сканнер, keyboard болон бусад тохиргоо хийх', c: 15 },
+      { q: 'QPay, Toki, E-barimt, данс хэрхэн холбох вэ?', c: 14 },
+      { q: 'Баримт хэвлэх: НӨАТ, дотоод баримт, буцаалт, шошго', c: 12 },
+      { q: 'Пос нэгтгэл хийх, мөнгө данс руу хэзээ орох вэ?', c: 9 },
+      { q: 'Хөнгөлөлт тохируулах, бэлэгтэй хүрд эргүүлэх', c: 8 },
+    ],
+    takeaways: [
+      '257 шинэ харилцагчийн 72% (185)-тай холбогдсон; эхний 7 хоногийн бүлэгт 93% хүрсэн.',
+      '11.15-аас хойш эхэлсэн 28, мөн 11.10 ба 11.12-ны 24 харилцагчид дахин залгах.',
+      'T3 Duo 74%, P3 Mini 73% амжилттай; Pro программын харилцагчид (33%) анхаарах.',
+      'Төлбөр, урамшуулал ба бараа бүртгэлийн асуултад зориулсан товч заавар (FAQ) бэлдэх.',
+    ],
+  },
+}
+
+// ── ACQ › Ontime — Pro программын шинэ харилцагч (CareCall) + Pro сунгалт ──
+// Pro программ: мөн PDF-ийн бүтээгдэхүүний задаргаа (9 харилцагч, 3 холбогдсон). Pro сунгалт — хэрэглэгчээс (10-р сар 100%).
+type OntimeProData = {
+  pro: CareGroup
+  renewal: { month: string; pct: number }
+  target?: { goal: number; current: number }   // сунгалтын төлөвлөгөө (₮) — хэрэглэгчээс
+}
+const CARE_ACQ_ONTIME_PRO: Partial<Record<CarePeriodKey, OntimeProData>> = {
+  'p2026-11-01': {
+    pro: { n: 'Pro программ', total: 9, reached: 3, note: 'шинэ харилцагчийн 4%' },
+    renewal: { month: '10-р сар', pct: 100 },
+  },
+}
+
+const pct1 = (a: number, b: number) => (b ? a / b * 100 : 0).toFixed(1)
+
+function AcqOntimePro({ data }: { data: OntimeProData }) {
+  const { pro, renewal, target } = data
+  const tPct = target ? target.current / target.goal * 100 : 0
+  return (
+    <div className="grid" style={{ gap: 15 }}>
+      <div className="substrip">
+        <AcqStat label="Pro программ" value={pro.total} sub="шинэ харилцагч" />
+        <AcqStat label="Холбогдсон" value={`${pro.reached}/${pro.total}`} sub={`${pct1(pro.reached, pro.total)}% холболтын амжилт`} />
+        <AcqStat label={`Pro сунгалт · ${renewal.month}`} value={`${renewal.pct}%`} sub="сунгалтын гүйцэтгэл" />
+        {target && (
+          <AcqStat label="Сунгалт · Target-ийн гүйцэтгэл" value={`${tPct.toFixed(1)}%`}
+            sub={`${fmt(target.current)}₮ / ${fmt(target.goal)}₮`} />
+        )}
+      </div>
+      <div className="two grid" style={{ gap: 15 }}>
+        <div className="card">
+          <div className="card-h">
+            <div className="card-title"><span className="tdot" style={{ background: careCol.blue }} />Pro программ — холболтын амжилт</div>
+          </div>
+          <CareRateRows rows={[pro]} />
+          <div style={{ fontSize: 11, color: careCol.muted, marginTop: 8 }}>
+            Бусад бүтээгдэхүүн 67–74% байхад Pro программын харилцагчидтай холбогдох амжилт бага — анхаарах.
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-h">
+            <div className="card-title"><span className="tdot" style={{ background: careCol.teal }} />Pro сунгалт — {renewal.month}</div>
+          </div>
+          <div className="hbar">
+            <div className="hbar-top"><span className="n">Сунгалтын гүйцэтгэл</span><span className="v" style={{ color: careCol.teal }}>{renewal.pct}%</span></div>
+            <div className="hbar-track"><div className="hbar-fill" style={{ width: `${Math.min(renewal.pct, 100)}%`, background: careCol.teal }} /></div>
+          </div>
+          {target && (
+            <div style={{ marginTop: 14, paddingTop: 12, borderTop: `1px dashed ${careCol.line}` }}>
+              <div className="tk-row">
+                <div className="tk-l"><span className="tk-mk" style={{ background: careCol.muted2 }} />Сунгалтын Target</div>
+                <div className="tk-v">{fmt(target.goal)}₮</div>
+              </div>
+              <div className="tk-row">
+                <div className="tk-l"><span className="tk-mk" style={{ background: careCol.blue }} />Одоогоор</div>
+                <div className="tk-v">{fmt(target.current)}₮</div>
+              </div>
+              <div className="tk-row">
+                <div className="tk-l"><span className="tk-mk" style={{ background: C.gold }} />Үлдэгдэл</div>
+                <div className="tk-v">{fmt(target.goal - target.current)}₮</div>
+              </div>
+              <div className="hbar" style={{ marginTop: 6 }}>
+                <div className="hbar-top"><span className="n">Target-ийн гүйцэтгэл</span><span className="v" style={{ color: careCol.blue }}>{tPct.toFixed(1)}%</span></div>
+                <div className="hbar-track"><div className="hbar-fill" style={{ width: `${Math.min(tPct, 100)}%`, background: careCol.blue }} /></div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function CareRateRows({ rows, base, warnBelow = 50 }: { rows: CareGroup[]; base?: number; warnBelow?: number }) {
+  return (
+    <>
+      {rows.map(r => {
+        const rate = r.total ? r.reached / r.total * 100 : 0
+        const col = rate < warnBelow ? 'var(--coral, #e5484d)' : careCol.blue
+        return (
+          <div key={r.n} className="hbar">
+            <div className="hbar-top">
+              <span className="n">{r.n}</span>
+              <span className="v" style={{ color: col }}>{rate.toFixed(1)}%</span>
+            </div>
+            <div className="hbar-track"><div className="hbar-fill" style={{ width: `${rate}%`, background: col }} /></div>
+            <div style={{ fontSize: 11, color: careCol.muted, marginTop: 4 }}>
+              {r.total} харилцагч{base ? ` (${Math.round(r.total / base * 100)}%)` : ''} · {r.reached} холбогдсон{r.note ? ` · ${r.note}` : ''}
+            </div>
+          </div>
+        )
+      })}
+    </>
+  )
+}
+
+function CareTakeaways({ items, start = 1 }: { items: string[]; start?: number }) {
+  return (
+    <div className="card">
+      <div className="card-h">
+        <div className="card-title"><span className="tdot" style={{ background: C.gold }} />Дүгнэлт ба дараагийн алхам</div>
+      </div>
+      {items.map((t, i) => (
+        <div key={i} className="tk-row" style={{ alignItems: 'flex-start' }}>
+          <div className="tk-l" style={{ alignItems: 'flex-start' }}>
+            <b style={{ color: C.gold, minWidth: 18 }}>{start + i}</b><span>{t}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function AcqMbpConnect({ data }: { data: MbpConnectData }) {
+  const notReached = data.total - data.reached
+  const exclBase = data.total - data.pending.n
+  const qMax = Math.max(...data.questions.map(q => q.c), 1)
+  return (
+    <div className="grid" style={{ gap: 15 }}>
+      <div className="substrip">
+        <AcqStat label="Нийт шинэ харилцагч" value={data.total} />
+        <AcqStat label="Холбогдсон" value={data.reached} sub="утсаа авсан" />
+        <AcqStat label="Холболтын амжилт" value={`${pct1(data.reached, data.total)}%`}
+          sub={`Дуудлагагүй ${data.pending.n}-г хасвал ${pct1(data.reached, exclBase)}% (${exclBase}-өөс ${data.reached})`} />
+        <AcqStat label="Холбогдоогүй" value={notReached} sub={`${data.pending.label} ${data.pending.n}-д дуудлага хараахан бүртгэгдээгүй`} />
+      </div>
+
+      <div className="card">
+        <div className="card-h">
+          <div className="card-title"><span className="tdot" style={{ background: careCol.blue }} />Бүтээгдэхүүнээр холболтын амжилт</div>
+        </div>
+        <CareRateRows rows={data.products} base={data.total} />
+      </div>
+
+      <div className="two grid" style={{ gap: 15 }}>
+        <div className="card">
+          <div className="card-h">
+            <div className="card-title"><span className="tdot" style={{ background: careCol.teal }} />Гэрээний төрлөөр</div>
+          </div>
+          <CareRateRows rows={data.contract} base={data.total} />
+        </div>
+        <div className="card">
+          <div className="card-h">
+            <div className="card-title"><span className="tdot" style={{ background: careCol.violet }} />Эхэлсэн долоо хоногоор</div>
+          </div>
+          <CareRateRows rows={data.cohorts} warnBelow={0.1} />
+          <div style={{ fontSize: 11, color: careCol.muted, marginTop: 8 }}>{data.scheduleNote}</div>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-h">
+          <div className="card-title"><span className="tdot" style={{ background: careCol.teal }} />Харилцагчдын топ 10 асуулт</div>
+          <div style={{ fontSize: 11, color: careCol.muted }}>холбогдсон {data.reached} дуудлагаас</div>
+        </div>
+        {data.questions.map((q, i) => (
+          <div key={i} className="hbar">
+            <div className="hbar-top">
+              <span className="n">{i + 1}. {q.q}</span>
+              <span className="v">{q.c} · {pct1(q.c, data.reached)}%</span>
+            </div>
+            <div className="hbar-track"><div className="hbar-fill" style={{ width: `${q.c / qMax * 100}%`, background: careCol.teal }} /></div>
+          </div>
+        ))}
+        <div style={{ fontSize: 11, color: careCol.muted, marginTop: 8 }}>Нэг дуудлагад хэд хэдэн сэдэв орж болно.</div>
+      </div>
+
+      <CareTakeaways items={data.takeaways} />
+    </div>
+  )
+}
+
+// ── INACTIVE › M Business Plus — сарын ашиглалтын тайлан (ашиглалтгүй харилцагчид залгасан дүн) ──
+// Эх сурвалж: мөн PDF (10сар ашиглалт.xlsx · merchant_type = «Ашиглалтгүй»).
+type InactiveUsageData = {
+  month: string
+  total: number
+  status: { n: string; v: number; c: string; called: boolean }[]
+  notes: string[]
+  reasons: { n: string; count: number; fixable?: boolean }[]
+  reasonNote: string
+  takeaways: string[]
+}
+const CARE_INACTIVE_USAGE: Partial<Record<CarePeriodKey, InactiveUsageData>> = {
+  'p2026-11-01': {
+    month: '10-р сар',
+    total: 267,
+    status: [
+      { n: 'Амжилттай', v: 121, c: careCol.blue, called: true },
+      { n: 'Холбогдох боломжгүй', v: 11, c: '#e07b24', called: true },
+      { n: 'Утсаа аваагүй', v: 10, c: '#f0bf8f', called: true },
+      { n: 'Хараахан залгаагүй', v: 125, c: careCol.muted2, called: false },
+    ],
+    notes: [
+      'Залгасан бүлэг: 9-р сард мэдээлэлгүй (10-р сард шинээр нэмэгдсэн) 143 харилцагчаас 142 — 99%-ийг хамарсан. Залгалт 11.04 – 11.07-нд хийгдсэн.',
+      'Үлдсэн 124 (9-р сартай харьцуулахад буурсан 64, өссөн 60) харилцагчид хараахан холбогдоогүй.',
+      'Холбогдож чадаагүй 21 харилцагчид (боломжгүй 11, утсаа аваагүй 10) өөр дугаараар дахин холбогдох шаардлагатай.',
+    ],
+    reasons: [
+      { n: 'Бизнесийн онцлог', count: 71 },
+      { n: 'Борлуулалт буурсан', count: 14 },
+      { n: 'Төхөөрөмж, сүлжээний гэмтэл', count: 13, fixable: true },
+      { n: 'Сургалт дутмаг', count: 11, fixable: true },
+      { n: 'Бусад банкнаас зээлтэй', count: 7 },
+    ],
+    reasonNote: 'Төхөөрөмжийн гэмтэл ба сургалт дутмаг (24 харилцагч, 21%) нь манай талаас шууд шийдэж болох шалтгаан.',
+    takeaways: [
+      'Ашиглалтгүй 142 харилцагчийн 85%-тай холбогдсон; 9-р сарын мэдээлэлтэй 124 харилцагч дараагийн ээлжинд.',
+      'Гэмтэл ба сургалт дутмаг (21%) — техникч илгээх, онлайн сургалтад урих.',
+    ],
+  },
+}
+
+function InactiveUsageView({ data }: { data: InactiveUsageData }) {
+  const called = data.status.filter(s => s.called).reduce((t, s) => t + s.v, 0)
+  const success = data.status[0].v
+  const rBase = data.reasons.reduce((t, r) => t + r.count, 0)
+  const rMax = Math.max(...data.reasons.map(r => r.count), 1)
+  const FIX = '#e07b24'
+  return (
+    <div className="grid" style={{ gap: 15 }}>
+      <div className="substrip">
+        <AcqStat label={`${data.month} ашиглалтгүй`} value={data.total} sub="харилцагч" />
+        <AcqStat label="Залгасан" value={called} sub={`нийтийн ${pct1(called, data.total)}%`} />
+        <AcqStat label="Амжилттай холбогдсон" value={success} sub={`нийтийн ${pct1(success, data.total)}%`} />
+        <AcqStat label="Залгасан дундах амжилт" value={`${pct1(success, called)}%`} />
+      </div>
+
+      <div className="card">
+        <div className="card-h">
+          <div className="card-title"><span className="tdot" style={{ background: careCol.blue }} />{data.total} харилцагчийн холболтын төлөв</div>
+        </div>
+        <div style={{ display: 'flex', height: 22, borderRadius: 8, overflow: 'hidden', background: careCol.track }}>
+          {data.status.map(s => (
+            <div key={s.n} title={`${s.n} · ${s.v}`} style={{ width: `${s.v / data.total * 100}%`, background: s.c }} />
+          ))}
+        </div>
+        <div className="legend" style={{ marginTop: 12 }}>
+          {data.status.map(s => (
+            <div key={s.n} className="lg">
+              <div className="lg-l"><span className="lg-mk" style={{ background: s.c }} />{s.n}</div>
+              <div>
+                <span className="lg-v">{s.v}</span>
+                <span className="lg-c">нийтийн {pct1(s.v, data.total)}%{s.called ? ` · залгасны ${pct1(s.v, called)}%` : ''}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {data.notes.map((n, i) => <div key={i} style={{ fontSize: 11.5, color: careCol.muted }}>{n}</div>)}
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-h">
+          <div className="card-title"><span className="tdot" style={{ background: careCol.violet }} />Ашиглаагүй шалтгаан</div>
+          <div style={{ fontSize: 11, color: careCol.muted }}>шалтгаан бүртгэгдсэн {rBase} харилцагчаас</div>
+        </div>
+        {data.reasons.map(r => (
+          <div key={r.n} className="hbar">
+            <div className="hbar-top">
+              <span className="n">{r.n}</span>
+              <span className="v">{r.count} · {pct1(r.count, rBase)}%</span>
+            </div>
+            <div className="hbar-track"><div className="hbar-fill" style={{ width: `${r.count / rMax * 100}%`, background: r.fixable ? FIX : careCol.blue }} /></div>
+          </div>
+        ))}
+        <div style={{ fontSize: 11.5, color: careCol.muted, marginTop: 8 }}>
+          <span className="lg-mk" style={{ background: FIX, display: 'inline-block', marginRight: 6 }} />{data.reasonNote}
+        </div>
+      </div>
+
+      <CareTakeaways items={data.takeaways} start={1} />
+    </div>
+  )
+}
+
 function SubDataPending({ label }: { label: string }) {
   return (
     <div style={{ background: careCol.card, border: `1px solid ${careCol.line}`, borderRadius: 16, padding: 48, textAlign: 'center', color: careCol.muted, fontSize: 13.5 }}>
@@ -2820,8 +3154,10 @@ function SubDataPending({ label }: { label: string }) {
 }
 
 function AcqSection({ period }: { period: CarePeriodKey }) {
-  const [sub, setSub] = useState<AcqSubKey>('ontime')
   const data = CARE_ACQ_DATA[period]
+  const connect = CARE_ACQ_CONNECT[period]
+  const ontimePro = CARE_ACQ_ONTIME_PRO[period]
+  const [sub, setSub] = useState<AcqSubKey>(data || ontimePro ? 'ontime' : connect ? 'mbp' : 'ontime')
   return (
     <div>
       <div className="subnav-row">
@@ -2835,6 +3171,10 @@ function AcqSection({ period }: { period: CarePeriodKey }) {
       </div>
       {sub === 'mpos' ? (
         <SubDataPending label="Mpos" />
+      ) : sub === 'mbp' && connect ? (
+        <AcqMbpConnect data={connect} />
+      ) : sub === 'ontime' && ontimePro ? (
+        <AcqOntimePro data={ontimePro} />
       ) : data ? (
         <>
           {sub === 'ontime' && <AcqOntime data={data.ontime} />}
@@ -3141,8 +3481,9 @@ function InactiveMbpView({ data }: { data: InactiveMbpData }) {
   )
 }
 
-function InactiveSection() {
-  const [sub, setSub] = useState<AcqSubKey>('ontime')
+function InactiveSection({ period }: { period: CarePeriodKey }) {
+  const usage = CARE_INACTIVE_USAGE[period]
+  const [sub, setSub] = useState<AcqSubKey>(usage ? 'mbp' : 'ontime')
   return (
     <div>
       <div className="subnav-row">
@@ -3154,7 +3495,9 @@ function InactiveSection() {
           ))}
         </div>
       </div>
-      {sub === 'mbp' ? (
+      {sub === 'mbp' && usage ? (
+        <InactiveUsageView data={usage} />
+      ) : sub === 'mbp' ? (
         <InactiveMbpView data={INACTIVE_MBP_DATA} />
       ) : (
         <>
@@ -3480,8 +3823,15 @@ const RETENTION_DATA: RetentionData = {
   ],
 }
 
-function RetentionSection() {
-  const data = RETENTION_DATA
+// Сунгалтын Target — хугацаа тус бүрээр (₮). 11.01–11.17 — хэрэглэгчээс.
+const RETENTION_TARGET: Record<CarePeriodKey, { goal: number; current: number }> = {
+  'p2026-11-01': { goal: 169_700_000, current: 76_565_000 },
+  'p2026-09-15': { goal: RETENTION_DATA.totalTarget, current: RETENTION_DATA.currentTarget },
+}
+
+function RetentionSection({ period }: { period: CarePeriodKey }) {
+  const tg = RETENTION_TARGET[period]
+  const data = { ...RETENTION_DATA, totalTarget: tg.goal, currentTarget: tg.current }
   const pct = Math.round(data.currentTarget / data.totalTarget * 100)
   const totalOutcomes = data.outcomes.reduce((a, o) => a + o.v, 0)
   const reasonMax = data.topReasons[0]?.count || 1
@@ -3572,7 +3922,7 @@ function CareSection({ onBack, theme, onToggleTheme }: { onBack: () => void; the
               <span className="wst-ic">🗓</span>
               <span className="wst-label">
                 <b>{CARE_PERIODS.find(p => p.key === period)?.label}</b>
-                <i>Тайлант долоо хоног</i>
+                <i>Тайлант хугацаа</i>
               </span>
               <span className="wst-caret">▾</span>
             </button>
@@ -3581,7 +3931,7 @@ function CareSection({ onBack, theme, onToggleTheme }: { onBack: () => void; the
                 <div className="weeksel-backdrop" onClick={() => setPeriodOpen(false)} />
                 <div className="weeksel-panel" role="listbox" aria-label="Хугацаа сонгох">
                   <div className="wsp-month">
-                    <div className="wsp-month-h">Долоо хоногоор</div>
+                    <div className="wsp-month-h">Хугацаагаар</div>
                     {CARE_PERIODS.map(p => (
                       <button
                         key={p.key}
@@ -3625,10 +3975,10 @@ function CareSection({ onBack, theme, onToggleTheme }: { onBack: () => void; the
         </div>
       </div>
 
-      {nav === 'acq' && <AcqSection period={period} />}
-      {nav === 'inactive' && <InactiveSection />}
+      {nav === 'acq' && <AcqSection key={period} period={period} />}
+      {nav === 'inactive' && <InactiveSection key={period} period={period} />}
       {nav === 'return' && <ReturnSection />}
-      {nav === 'retention' && <RetentionSection />}
+      {nav === 'retention' && <RetentionSection period={period} />}
     </div>
   )
 }
