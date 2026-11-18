@@ -565,6 +565,7 @@ type Agg = {
   mline?: MlineData         // Mline POS шугамын тусдаа үзүүлэлт
   issueStatus?: Record<string, [number, number, number]>  // топ асуудал → [шийдсэн, хүлээгдэж/шийдээгүй, шилжүүлсэн]
   levelsTitle?: string      // levels картын гарчиг (default "Асуудлын түвшин")
+  rd?: RdData               // "РД солиулсан" тайлан — байхгүй бол prodSubcats / issues-ийн "РД солих" тикетийн тоог харуулна
   agentIssues?: Record<string, string>  // ажилтан → топ 3 асуудлын төрөл
 }
 // Mline POS шугам: шууд ирсэн дуудлага + Operator queue-ээс шилжиж ирсэн дуудлага, ажилтан (6xx дотуур) тус бүрээр.
@@ -576,6 +577,28 @@ type MlineData = {
   transferred: number; transAns: number; ok: number
   rows: { ext: string; n: string; direct: number; trans: number; transAns: number; ok: number; daily?: ([number, number] | null)[] }[]
   days?: { d: string; dir: number; dirAns: number; trans: number; transAns: number; ok?: number; noDur?: boolean }[]
+}
+// "РД солиулсан" тайлан: success = амжилттай (шийдсэн огноотой), paid = төлбөр төлсөн, pending = харилцагчийг хүлээж байгаа.
+type RdData = {
+  label: string
+  total?: number; success: number; paid: number; pending?: number
+  weeks?: { label: string; success: number; paid: number }[]
+  agents?: { n: string; success: number; paid: number }[]
+  agentsLabel?: string
+}
+// Эх сурвалж: "РД солиулсан 7 хоногийн тайлан.pdf" (RD_solih_7honogoor.xlsx, 2026.11.02 – 11.15).
+// Ажилтны задаргаа зөвхөн 2 долоо хоногийн нийтээр байгаа; хүлээгдэж буй 1 аль долоо хоногийнх нь тодорхойгүй.
+const RD_NOV = {
+  weeks: [
+    { label: '11.02 – 11.08', success: 3, paid: 3 },
+    { label: '11.09 – 11.15', success: 5, paid: 4 },
+  ],
+  agents: [
+    { n: 'Zolbayr', success: 5, paid: 4 },
+    { n: 'Soyolzul.Ts', success: 2, paid: 2 },
+    { n: 'Saranchimeg', success: 1, paid: 1 },
+  ],
+  agentsLabel: '11.02 – 11.15 · 2 долоо хоног',
 }
 const RA: Agg = {
   uniq: 845, callTransferred: 20 as number | null, resolved: 1328, unresolved: 20, tkTransferred: 52,
@@ -1840,6 +1863,9 @@ const RQ: Agg = {
 const RR: Agg = {
   uniq: 908, callTransferred: null as number | null, resolved: 1346, unresolved: 29, tkTransferred: 24, unresWaiting: 21,
   levels: mkLv([['Level 1',942],['Level 2',417],['Level 3',39],['P4 (Low)',1]]),
+  // РД W1 — хэрэглэгчээс: 3 РД, 100% төлсөн (Zolbayr 2, Saranchimeg 1).
+  rd: { label: '11.02 – 11.08', success: 3, paid: 3, agentsLabel: '11.02 – 11.08',
+        agents: [{ n: 'Zolbayr', success: 2, paid: 2 }, { n: 'Saranchimeg', success: 1, paid: 1 }] },
   channels: mkCh([['Утсаар',1352],['Сошиал',45],['Дуудлагаар',2]]),
   products: mkPr([['MPLUS',755],['PROPOS',544],['MPOS',95],['Бусад',5]]),
   // "Засварын төрөл 3"-аар топ 10 (156 тикетэд бүртгээгүй). Ангиллын шошго (t) нь өмнөх долоо хоногуудын дэд ангиллаас таамагласан.
@@ -1932,6 +1958,9 @@ const RS: Agg = {
   uniq: 1058, callTransferred: null as number | null, resolved: 1217, unresolved: 29, tkTransferred: 26, unresWaiting: 12, missedUniq: 390,
   // levels — хэрэглэгчээс: Level 1 757 + Level 2 470 + Level 3 44 + P1 (Critical) 1 = 1,272.
   levels: mkLv([['Level 1',757],['Level 2',470],['Level 3',44],['P1 (Critical)',1]]),
+  // РД W2 — 2 долоо хоногийн ажилтны нийтээс W1-ийг хасаж гаргав (Zolbayr 5/4 − 2/2 = 3/2, Soyolzul.Ts 2/2, Saranchimeg 1/1 − 1/1 = 0).
+  rd: { label: '11.09 – 11.15', success: 5, paid: 4, agentsLabel: '11.09 – 11.15',
+        agents: [{ n: 'Zolbayr', success: 3, paid: 2 }, { n: 'Soyolzul.Ts', success: 2, paid: 2 }] },
   channels: mkCh([['Утсаар',1256],['Сошиал',14],['Дуудлагаар',2]]),
   products: mkPr([['MPLUS',647],['PROPOS',548],['MPOS',73],['Бусад',4]]),
   // PDF 14 — "Засварын төрөл 3"-аар топ 10 (107 тикетэд бүртгээгүй). Ангиллын шошго (t) таамаг.
@@ -2148,6 +2177,7 @@ const RM11: Agg = {
   ...mergeAgg(RR, RS),
   unresWaiting: (RR.unresWaiting ?? 0) + (RS.unresWaiting ?? 0),
   mline: mergeMline(RR.mline!, RS.mline!),
+  rd: { label: '11.02 – 11.15', total: 9, success: 8, paid: 7, pending: 1, ...RD_NOV },
 }
 const JUL_DAYS = DAILY_ALL.filter(r => r.d < '2026-08-01').map(r => r.d)
 const AUG_DAYS = DAILY_ALL.filter(r => r.d >= '2026-08-01' && r.d < '2026-09-01').map(r => r.d)
@@ -3884,7 +3914,232 @@ function RetentionSection({ period }: { period: CarePeriodKey }) {
   )
 }
 
-function CareSection({ onBack, theme, onToggleTheme }: { onBack: () => void; theme: 'dark' | 'light'; onToggleTheme: (e: React.MouseEvent) => void }) {
+// ── RD — "РД солиулсан" тайлан (Call / Care-тэй адил тусдаа хуудас) ─────────────
+type RdPeriodKey = 'M11' | 'W18' | 'W19'
+const RD_PERIODS: { key: RdPeriodKey; label: string; sub: string }[] = [
+  { key: 'M11', label: '11-р сар', sub: '2026.11.02 – 11.15' },
+  // RD-ийн өөрийн дугаарлалт: W1 = Call-ын W18, W2 = W19
+  { key: 'W18', label: 'W1', sub: '2026.11.02 – 11.08' },
+  { key: 'W19', label: 'W2', sub: '2026.11.09 – 11.15' },
+]
+
+// Дэлгэрэнгүй жагсаалт — "RD_solih_7honogoor1.pdf" (хуудас 1–3 мөр мөрөөрөө таарна). paid: null = хүлээгдэж буй.
+type RdRecord = { no: number; shop: string; phone: string; oldRd: string; newRd: string; solved: string | null; agent: string | null; product: string; paid: boolean | null }
+const RD_RECORDS: RdRecord[] = [
+  { no: 1, shop: 'Мишиг',                     phone: '88948000', oldRd: 'ВЮ87020425', newRd: '3152103',    solved: '2026-11-12 16:56', agent: 'Soyolzul.Ts', product: 'Pro', paid: true },
+  { no: 2, shop: 'Уужим супермаркет',         phone: '88650004', oldRd: 'КД97122504', newRd: '3952436',    solved: '2026-11-12 19:02', agent: 'Soyolzul.Ts', product: 'Pro', paid: true },
+  { no: 3, shop: 'Оффроуд австрали овэрланд', phone: '88096522', oldRd: '6286062',    newRd: '8427003',    solved: '2026-11-11 10:50', agent: 'Zolbayr',     product: 'Pro', paid: true },
+  { no: 4, shop: 'Мазаалай',                  phone: '99299050', oldRd: 'МВ90120204', newRd: 'ТА87041568', solved: '2026-11-11 15:58', agent: 'Zolbayr',     product: 'Pro', paid: true },
+  { no: 5, shop: 'Үр гүнцэг',                 phone: '96100696', oldRd: 'ЕТ89092901', newRd: 'ИР89081013', solved: '2026-11-08 11:32', agent: 'Saranchimeg', product: 'Pro', paid: true },
+  { no: 6, shop: 'Баян Хан-Хөхий',            phone: '99676357', oldRd: '4372581',    newRd: '4370449',    solved: '2026-11-03 14:24', agent: 'Zolbayr',     product: 'Pro', paid: true },
+  { no: 7, shop: 'Star supermarket',          phone: '88099049', oldRd: 'УМ90040924', newRd: '7025593',    solved: '2026-11-09 15:04', agent: 'Zolbayr',     product: 'Pro', paid: false },
+  { no: 8, shop: 'Уран хас',                  phone: '99100561', oldRd: 'ФМ85111539', newRd: '4397738',    solved: null,               agent: null,          product: 'Pro', paid: null },
+  { no: 9, shop: 'Зүрх мартахгүй',            phone: '91069095', oldRd: 'АМ91072700', newRd: 'ФБ91120910', solved: '2026-11-02 15:05', agent: 'Zolbayr',     product: 'Pro', paid: true },
+]
+const RD_GROUPS: { key: 'W18' | 'W19' | 'pending'; label: string; sub: string; test: (r: RdRecord) => boolean }[] = [
+  { key: 'W18', label: 'W1', sub: '2026.11.02 – 11.08', test: r => r.solved != null && r.solved.slice(0, 10) <= '2026-11-08' },
+  { key: 'W19', label: 'W2', sub: '2026.11.09 – 11.15', test: r => r.solved != null && r.solved.slice(0, 10) >= '2026-11-09' && r.solved.slice(0, 10) <= '2026-11-15' },
+  { key: 'pending', label: 'Хүлээгдэж буй', sub: 'Харилцагчийг хүлээж байгаа', test: r => r.solved == null },
+]
+
+function RdRecordList({ pk }: { pk: RdPeriodKey }) {
+  // 11-р сар: нэг "Нийт" бүлэг, мөр бүрийн ард W1 / W2 шошго. W1 / W2 таб: тухайн долоо хоногийн бүлэг.
+  const all = pk === 'M11'
+  const groups = all
+    ? [{ key: 'all', label: 'Нийт', sub: '2026.11.02 – 11.15', test: (_: RdRecord) => true }]
+    : RD_GROUPS.filter(g => g.key === pk)
+  const weekOf = (r: RdRecord) => RD_GROUPS.find(g => g.test(r))!
+  const payCell = (r: RdRecord) => r.paid == null
+    ? <span style={{ color: C.gold, fontWeight: 600 }}>Хүлээж байгаа</span>
+    : r.paid ? <span style={{ color: careCol.blue, fontWeight: 600 }}>Төлсөн</span>
+    : <span style={{ color: '#e07b24', fontWeight: 600 }}>Төлөөгүй</span>
+  return (
+    <div className="card">
+      <div className="card-h">
+        <div className="card-title"><span className="tdot" style={{ background: C.gold }} />Дэлгэрэнгүй жагсаалт</div>
+        <div style={{ fontSize: 11, color: careCol.muted }}>Дээр нь дарж задлана</div>
+      </div>
+      {groups.map(g => {
+        // огноогоор эрэмбэлж, хүлээгдэж буйг хамгийн сүүлд
+        const rows = RD_RECORDS.filter(g.test).sort((a, b) => (a.solved ?? '9999').localeCompare(b.solved ?? '9999'))
+        const paid = rows.filter(r => r.paid).length
+        const pending = rows.filter(r => r.paid == null).length
+        return (
+          <details key={pk + g.key} className="rd-grp" open={!all}>
+            <summary>
+              <span className="rd-grp-l"><b>{g.label}</b><i>{g.sub}</i></span>
+              <span className="rd-grp-r">
+                <b style={{ color: 'var(--text)' }}>{rows.length}</b> бичлэг · {paid} төлсөн{pending ? ` · ${pending} хүлээгдэж буй` : ''}
+                {all && RD_GROUPS.map(w => {
+                  const n = rows.filter(w.test).length
+                  return n ? <span key={w.key} className={`rd-wk rd-wk-${w.key}`}>{w.key === 'pending' ? 'Хүлээгдэж' : w.label} {n}</span> : null
+                })}
+              </span>
+            </summary>
+            {rows.length === 0 ? (
+              <div style={{ fontSize: 12, color: careCol.muted, padding: '8px 4px' }}>Бичлэг алга.</div>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table className="tbl rd-tbl">
+                  <thead><tr>
+                    <th>№</th><th>Дэлгүүрийн нэр</th><th>Холбогдсон дугаар</th><th>Хуучин РД</th><th>Шинэ РД</th>
+                    <th>Шийдсэн огноо</th><th>Ажилтан</th><th>Бүтээгдэхүүн</th><th>Төлбөр</th>{all && <th>7 хоног</th>}
+                  </tr></thead>
+                  <tbody>
+                    {rows.map((r, i) => {
+                      const w = weekOf(r)
+                      return (
+                        <tr key={r.no}>
+                          <td className="num">{i + 1}</td>
+                          <td className="name">{r.shop}</td>
+                          <td className="num">{r.phone}</td>
+                          <td className="num">{r.oldRd}</td>
+                          <td className="num">{r.newRd}</td>
+                          <td className="num">{r.solved ?? '—'}</td>
+                          <td>{r.agent ?? '—'}</td>
+                          <td>{r.product}</td>
+                          <td>{payCell(r)}</td>
+                          {all && <td><span className={`rd-wk rd-wk-${w.key}`}>{w.key === 'pending' ? 'Хүлээгдэж' : w.label}</span></td>}
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </details>
+        )
+      })}
+    </div>
+  )
+}
+
+function RdSection({ onCall, onCare, theme, onToggleTheme }: {
+  onCall: () => void; onCare: () => void; theme: 'dark' | 'light'; onToggleTheme: (e: React.MouseEvent) => void
+}) {
+  const [pk, setPk] = useState<RdPeriodKey>('M11')
+  const per = RD_PERIODS.find(p => p.key === pk)!
+  const rd = REPORTS[pk].agg.rd
+  const navBtn = { width: 'auto', padding: '0 16px', fontSize: 13, fontWeight: 700 } as const
+  const PAID = careCol.blue
+  // Зурвасны зөөлөн өнгө (текстэд PAID-ийг хэвээр ашиглана)
+  const soft = (c: string) => `color-mix(in srgb, ${c} 45%, var(--panel))`
+  const BAR_SUCC = soft('var(--violet)'), BAR_PAID = soft('var(--blue)'), BAR_UNPAID = soft('#e07b24')
+  const pctOf = (a: number, b: number) => (b ? Math.round(a / b * 100) : 0)
+
+  return (
+    <div className="wrap">
+      <div className="topbar">
+        <div className="brand">
+          <img className="logo-img" src={ontimeLogo} alt="Ontime" width={120} height={83} />
+          <div>
+            <h1>CRM Dashboard</h1>
+            <div className="sub">
+              <span>OnTime Support · RD</span> ·
+              <span>{per.sub}</span>
+            </div>
+          </div>
+        </div>
+        <div className="topctrls">
+          <button type="button" className="theme-btn" onClick={onCall} title="Call рүү очих" style={navBtn}>Call</button>
+          <button type="button" className="theme-btn" onClick={onCare} title="Care рүү очих" style={navBtn}>Care</button>
+          <button type="button" className="theme-btn" onClick={onToggleTheme} title={theme === 'dark' ? 'Цайвар загвар' : 'Бараан загвар'} aria-label="Загвар солих">
+            {theme === 'dark' ? '☀' : '☾'}
+          </button>
+        </div>
+      </div>
+
+      <div className="subnav-row">
+        <div className="subnav">
+          {RD_PERIODS.map(p => (
+            <button key={p.key} type="button" className={pk === p.key ? 'on' : ''} onClick={() => setPk(p.key)}>{p.label}</button>
+          ))}
+        </div>
+      </div>
+
+      {!rd ? (
+        <div style={{ background: careCol.card, border: `1px solid ${careCol.line}`, borderRadius: 16, padding: 48, textAlign: 'center', color: careCol.muted, fontSize: 13.5 }}>
+          Энэ хугацаанд РД солиулсан мэдээлэл алга байна.
+        </div>
+      ) : (() => {
+        const unpaid = rd.success - rd.paid
+        const aMax = Math.max(...(rd.agents ?? []).map(a => a.success), 1)
+        return (
+          <div className="grid" style={{ gap: 15 }}>
+            <div className="substrip">
+              {rd.total != null && <AcqStat label="Нийт бүртгэл" value={rd.total} sub="бүртгэгдсэн бүх дэлгүүр" />}
+              <AcqStat label="Амжилттай" value={rd.success} sub="шийдсэн огноотой бичлэг" />
+              <AcqStat label="Төлбөр төлсөн" value={rd.paid} sub={`амжилттайн ${pctOf(rd.paid, rd.success)}%`} />
+              <AcqStat label="Төлөөгүй" value={unpaid} sub={unpaid ? 'амжилттай боловч төлбөргүй' : 'бүгд төлсөн'} />
+              {rd.pending != null && <AcqStat label="Хүлээгдэж буй" value={rd.pending} sub="харилцагчийг хүлээж байгаа" />}
+            </div>
+
+            {rd.weeks && (
+              <div className="two grid" style={{ gap: 15 }}>
+                {rd.weeks.map((w, i) => {
+                  const wu = w.success - w.paid
+                  return (
+                    <div key={w.label} className="card">
+                      <div className="card-h">
+                        <div className="card-title"><span className="tdot" style={{ background: PAID }} />{i + 1}-р 7 хоног</div>
+                        <div style={{ fontSize: 11, color: careCol.muted }}>2026.{w.label}</div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 28, margin: '4px 0 12px' }}>
+                        <div><div className="cbig" style={{ fontSize: 30 }}>{w.success}</div><div style={{ fontSize: 11, color: careCol.muted }}>Амжилттай</div></div>
+                        <div><div className="cbig" style={{ fontSize: 30, color: PAID }}>{w.paid}</div><div style={{ fontSize: 11, color: careCol.muted }}>Төлбөр төлсөн</div></div>
+                      </div>
+                      <div style={{ display: 'flex', height: 10, borderRadius: 6, overflow: 'hidden', background: careCol.track }}>
+                        <div style={{ width: `${pctOf(w.paid, w.success)}%`, background: BAR_PAID }} />
+                        <div style={{ width: `${pctOf(wu, w.success)}%`, background: BAR_UNPAID }} />
+                      </div>
+                      <div style={{ fontSize: 12, fontWeight: 600, marginTop: 8, color: careCol.ink }}>
+                        {pctOf(w.paid, w.success)}% төлсөн · төлөөгүй {wu}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            {rd.agents && (
+              <div className="card">
+                <div className="card-h">
+                  <div className="card-title"><span className="tdot" style={{ background: careCol.violet }} />Ажилтнаар</div>
+                  <div style={{ fontSize: 11, color: careCol.muted }}>{rd.agentsLabel}</div>
+                </div>
+                <div className="legend-inline" style={{ marginBottom: 10 }}>
+                  <span><i style={{ background: BAR_SUCC }} />Амжилттай</span>
+                  <span><i style={{ background: BAR_PAID }} />Төлбөр төлсөн</span>
+                </div>
+                {rd.agents.map(a => {
+                  const au = a.success - a.paid
+                  return (
+                    <div key={a.n} className="hbar" style={{ marginBottom: 14 }}>
+                      <div className="hbar-top">
+                        <span className="n">{a.n} <span style={{ fontSize: 11, color: careCol.muted, fontWeight: 400 }}>· {pctOf(a.paid, a.success)}% төлсөн{au ? ` · ${au} төлөөгүй` : ''}</span></span>
+                        <span className="v">{a.success} / <span style={{ color: PAID }}>{a.paid}</span></span>
+                      </div>
+                      <div className="hbar-track" style={{ marginBottom: 4 }}><div className="hbar-fill" style={{ width: `${a.success / aMax * 100}%`, background: BAR_SUCC }} /></div>
+                      <div className="hbar-track"><div className="hbar-fill" style={{ width: `${a.paid / aMax * 100}%`, background: BAR_PAID }} /></div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            <RdRecordList pk={pk} />
+
+            <div style={{ fontSize: 11, color: careCol.muted }}>
+              Эх сурвалж: RD_solih_7honogoor.xlsx · 7 хоног Даваа–Ням{rd.pending != null ? '' : ' · хүлээгдэж буй 1 тикет аль долоо хоногийнх нь тодорхойгүй (11-р сар харагдацад)'}
+            </div>
+          </div>
+        )
+      })()}
+    </div>
+  )
+}
+
+function CareSection({ onBack, onRd, theme, onToggleTheme }: { onBack: () => void; onRd?: () => void; theme: 'dark' | 'light'; onToggleTheme: (e: React.MouseEvent) => void }) {
   const [nav, setNav] = useState<CareNavKey>('acq')
   const [period, setPeriod] = useState<CarePeriodKey>(CARE_PERIODS[0].key)
   const [periodOpen, setPeriodOpen] = useState(false)
@@ -3962,6 +4217,11 @@ function CareSection({ onBack, theme, onToggleTheme }: { onBack: () => void; the
           <button type="button" className="theme-btn" onClick={onBack} title="Call рүү буцах" aria-label="Call рүү буцах" style={{ width: 'auto', padding: '0 16px', fontSize: 13, fontWeight: 700 }}>
             Call
           </button>
+          {onRd && (
+            <button type="button" className="theme-btn" onClick={onRd} title="RD рүү очих" aria-label="RD рүү очих" style={{ width: 'auto', padding: '0 16px', fontSize: 13, fontWeight: 700 }}>
+              RD
+            </button>
+          )}
         </div>
       </div>
 
@@ -3987,9 +4247,9 @@ export { ErrorBoundary }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function App() {
-  const [topTab, setTopTab] = useState<'call' | 'care'>('call')
+  const [topTab, setTopTab] = useState<'call' | 'care' | 'rd'>('call')
   const [rep, setRep] = useState<RepKey>('W19')
-  const [selDays, setSelDays] = useState<Set<string>>(new Set(REPORTS.W13.defaultDays))
+  const [selDays, setSelDays] = useState<Set<string>>(() => new Set(REPORTS[rep].defaultDays))
   const [selProd, setSelProd] = useState<string | null>(null)
   const [expandedCat, setExpandedCat] = useState<string | null>(null)
   const reducedMotion = useReducedMotion()
@@ -4196,7 +4456,8 @@ export default function App() {
   const avgR = rated.length ? rated.reduce((a, x) => a + x.r!, 0) / rated.length : null
   const showOutage = selDays.has('2026-07-07')
 
-  if (topTab === 'care') return <CareSection onBack={() => setTopTab('call')} theme={theme} onToggleTheme={toggleTheme} />
+  if (topTab === 'care') return <CareSection onBack={() => setTopTab('call')} onRd={() => setTopTab('rd')} theme={theme} onToggleTheme={toggleTheme} />
+  if (topTab === 'rd') return <RdSection onCall={() => setTopTab('call')} onCare={() => setTopTab('care')} theme={theme} onToggleTheme={toggleTheme} />
 
   return (
     <div className="wrap">
@@ -4225,6 +4486,16 @@ export default function App() {
             style={{ width: 'auto', padding: '0 16px', fontSize: 13, fontWeight: 700 }}
           >
             Care
+          </button>
+          <button
+            type="button"
+            className="theme-btn"
+            onClick={() => setTopTab('rd')}
+            title="RD рүү очих"
+            aria-label="RD рүү очих"
+            style={{ width: 'auto', padding: '0 16px', fontSize: 13, fontWeight: 700 }}
+          >
+            RD
           </button>
           <button
             type="button"
